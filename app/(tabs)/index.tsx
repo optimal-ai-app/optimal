@@ -15,7 +15,7 @@ import Animated, {
   useAnimatedStyle,
   withTiming 
 } from 'react-native-reanimated';
-import { Clock, ListTodo, Plus, MessageSquare, ChevronRight, Target, Flag, CheckCircle2, MoreVertical } from 'lucide-react-native';
+import { Clock, ListTodo, Plus, MessageSquare, ChevronRight, Target, Flag, CircleCheck as CheckCircle2, MoveVertical as MoreVertical } from 'lucide-react-native';
 import { Button } from '@/src/components/Button';
 import { Card } from '@/src/components/Card';
 import { Header } from '@/src/components/Header';
