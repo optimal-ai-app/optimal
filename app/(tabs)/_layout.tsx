@@ -1,6 +1,6 @@
 import React from 'react';
 import { Tabs } from 'expo-router';
-import { Chrome as Home, MessageSquare, ChartBar as BarChart, Settings } from 'lucide-react-native';
+import { MessageSquare, ChartBar as BarChart, Settings } from 'lucide-react-native';
 
 import { colors } from '@/src/constants/colors';
 
