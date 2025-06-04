@@ -5,19 +5,22 @@ import {
   ScrollView, 
   TouchableOpacity, 
   StyleSheet,
-  Switch 
+  Switch,
+  Pressable
 } from 'react-native';
-import { Link } from 'expo-router';
+import { Link, router } from 'expo-router';
 import Animated, { 
   FadeInDown, 
   useSharedValue, 
   useAnimatedStyle,
   withTiming 
 } from 'react-native-reanimated';
-import { Clock, ListTodo, Plus, MessageSquare, ChevronRight, Target, Flag } from 'lucide-react-native';
+import { Clock, ListTodo, Plus, MessageSquare, ChevronRight, Target, Flag, CheckCircle2, MoreVertical } from 'lucide-react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 
 import { Card } from '@/src/components/Card';
 import { Header } from '@/src/components/Header';
+import { Button } from '@/src/components/Button';
 import { useAuthContext } from '@/src/context/AuthContext';
 import { colors } from '@/src/constants/colors';
 import { fonts } from '@/src/constants/fonts';
@@ -107,6 +110,12 @@ export default function HomeScreen() {
     if (hour < 18) return 'Good afternoon';
     return 'Good evening';
   };
+
+  // Animated style for focus overlay
+  const focusOverlayStyle = useAnimatedStyle(() => ({
+    opacity: focusOpacity.value,
+    display: focusOpacity.value === 0 ? 'none' : 'flex',
+  }));
   
   return (
     <View style={styles.container}>
