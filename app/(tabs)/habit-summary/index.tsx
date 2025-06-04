@@ -3,15 +3,23 @@ import {
   View, 
   Text, 
   StyleSheet, 
-  TextInput, 
   TouchableOpacity,
   ScrollView,
   Pressable
 } from 'react-native';
-import { Link } from 'expo-router';
+import { Link, useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { FadeInDown } from 'react-native-reanimated';
-import { Target, Clock, Flag, ChevronRight, MoveVertical as MoreVertical, CircleCheck as CheckCircle2 } from 'lucide-react-native';
+import { 
+  Target, 
+  Clock, 
+  Flag, 
+  ChevronRight, 
+  MoveVertical as MoreVertical, 
+  CircleCheck as CheckCircle2,
+  MessageSquare,
+  Plus
+} from 'lucide-react-native';
 
 import { Header } from '@/src/components/Header';
 import { Card } from '@/src/components/Card';
@@ -41,39 +49,21 @@ interface Goal {
 }
 
 export default function HabitSummaryScreen() {
+  const router = useRouter();
+  
   // State
-  const [goalInput, setGoalInput] = useState('');
   const [tasks, setTasks] = useState<Task[]>([]);
   const [goals, setGoals] = useState<Goal[]>([]);
   
-  // Handle goal submission
-  const handleSubmitGoal = () => {
-    if (!goalInput.trim()) return;
-    
-    // In a real app, this would be handled by an AI service
-    // For demo, we'll create a simple task and goal
-    const newGoal: Goal = {
-      id: Date.now().toString(),
-      title: goalInput,
-      targetValue: 30, // Example for "30 pushups"
-      currentValue: 0,
-      unit: 'pushups',
-      createdAt: new Date(),
-      tasks: []
-    };
-    
-    const newTask: Task = {
-      id: Date.now().toString(),
-      title: '10 pushups',
-      completionTime: '15 minutes',
-      priority: '!!',
-      description: 'Work towards your goal of 30 pushups',
-      completed: false
-    };
-    
-    setTasks(prev => [...prev, newTask]);
-    setGoals(prev => [...prev, newGoal]);
-    setGoalInput('');
+  // Handle new goal via agent
+  const handleNewGoal = () => {
+    router.push({
+      pathname: '/(tabs)/agent',
+      params: {
+        action: 'new-goal',
+        prompt: "I'd like to help you set a new goal. What would you like to achieve?"
+      }
+    });
   };
   
   // Handle task completion
@@ -110,24 +100,32 @@ export default function HabitSummaryScreen() {
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
       >
-        {/* Goal Input Section */}
+        {/* Quick Actions */}
         <Animated.View entering={FadeInDown.duration(500).delay(100)}>
-          <Card style={styles.inputCard}>
-            <Text style={styles.inputLabel}>What's your goal?</Text>
-            <TextInput
-              style={styles.input}
-              value={goalInput}
-              onChangeText={setGoalInput}
-              placeholder="e.g., Do 30 pushups daily"
-              placeholderTextColor={colors.text.muted}
-              multiline
-            />
-            <Button
-              title="Save Goal"
-              onPress={handleSubmitGoal}
-              fullWidth
-              style={styles.saveButton}
-            />
+          <Card style={styles.quickActionsCard}>
+            <View style={styles.quickActionsGrid}>
+              <TouchableOpacity 
+                style={styles.quickActionButton}
+                onPress={handleNewGoal}
+              >
+                <View style={[styles.quickActionIcon, { backgroundColor: colors.button.primary }]}>
+                  <Plus size={24} color={colors.text.primary} />
+                </View>
+                <Text style={styles.quickActionText}>Set New Goal</Text>
+              </TouchableOpacity>
+              
+              <Link href={{ 
+                pathname: '/(tabs)/agent',
+                params: { action: 'log-progress' }
+              }} asChild>
+                <TouchableOpacity style={styles.quickActionButton}>
+                  <View style={[styles.quickActionIcon, { backgroundColor: colors.button.accent }]}>
+                    <MessageSquare size={24} color={colors.text.primary} />
+                  </View>
+                  <Text style={styles.quickActionText}>Log Progress</Text>
+                </TouchableOpacity>
+              </Link>
+            </View>
           </Card>
         </Animated.View>
         
@@ -150,7 +148,13 @@ export default function HabitSummaryScreen() {
                   index === tasks.length - 1 && styles.lastTaskItem,
                 ]}
                 onLongPress={() => {
-                  // Handle long press to edit task
+                  router.push({
+                    pathname: '/(tabs)/agent',
+                    params: { 
+                      action: 'edit-task',
+                      taskId: task.id
+                    }
+                  });
                 }}
               >
                 <TouchableOpacity
@@ -199,7 +203,13 @@ export default function HabitSummaryScreen() {
                 <TouchableOpacity 
                   style={styles.taskMoreButton}
                   onPress={() => {
-                    // Handle more options
+                    router.push({
+                      pathname: '/(tabs)/agent',
+                      params: { 
+                        action: 'task-options',
+                        taskId: task.id
+                      }
+                    });
                   }}
                 >
                   <MoreVertical size={20} color={colors.text.muted} />
@@ -209,7 +219,7 @@ export default function HabitSummaryScreen() {
             
             {tasks.length === 0 && (
               <Text style={styles.emptyText}>
-                No tasks yet. Add a goal to get started!
+                No tasks yet. Set a new goal to get started!
               </Text>
             )}
           </Card>
@@ -270,9 +280,16 @@ export default function HabitSummaryScreen() {
             ))}
             
             {goals.length === 0 && (
-              <Text style={styles.emptyText}>
-                No goals yet. Add one to get started!
-              </Text>
+              <View style={styles.emptyGoalsContainer}>
+                <Text style={styles.emptyText}>
+                  No goals yet. Let's set your first goal!
+                </Text>
+                <Button
+                  title="Set a Goal"
+                  onPress={handleNewGoal}
+                  style={styles.emptyGoalsButton}
+                />
+              </View>
             )}
           </Card>
         </Animated.View>
@@ -296,29 +313,32 @@ const styles = StyleSheet.create({
     paddingBottom: 32,
   },
   
-  inputCard: {
+  quickActionsCard: {
     padding: 16,
   },
   
-  inputLabel: {
-    fontSize: fonts.sizes.lg,
-    fontWeight: fonts.weights.bold,
-    color: colors.text.primary,
-    marginBottom: 12,
+  quickActionsGrid: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
   },
   
-  input: {
-    backgroundColor: colors.background.container,
-    borderRadius: 8,
-    padding: 12,
-    color: colors.text.primary,
-    fontSize: fonts.sizes.md,
-    minHeight: 80,
-    textAlignVertical: 'top',
+  quickActionButton: {
+    alignItems: 'center',
   },
   
-  saveButton: {
-    marginTop: 16,
+  quickActionIcon: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  
+  quickActionText: {
+    fontSize: fonts.sizes.sm,
+    color: colors.text.primary,
+    fontWeight: fonts.weights.medium,
   },
   
   tasksCard: {
@@ -466,5 +486,14 @@ const styles = StyleSheet.create({
   goalSubtitle: {
     fontSize: fonts.sizes.sm,
     color: colors.text.muted,
+  },
+  
+  emptyGoalsContainer: {
+    alignItems: 'center',
+    paddingVertical: 16,
+  },
+  
+  emptyGoalsButton: {
+    marginTop: 16,
   },
 });
