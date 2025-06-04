@@ -5,22 +5,24 @@ import {
   ScrollView, 
   TouchableOpacity, 
   StyleSheet,
-  Switch 
+  Switch,
+  Pressable
 } from 'react-native';
-import { Link } from 'expo-router';
+import { Link, router } from 'expo-router';
 import Animated, { 
   FadeInDown, 
   useSharedValue, 
   useAnimatedStyle,
   withTiming 
 } from 'react-native-reanimated';
-import { Clock, ListTodo, Plus, MessageSquare, ChevronRight, Target, Flag } from 'lucide-react-native';
-import { Button } from '@/src/components/Button'
+import { Clock, ListTodo, Plus, MessageSquare, ChevronRight, Target, Flag, CheckCircle2, MoreVertical } from 'lucide-react-native';
+import { Button } from '@/src/components/Button';
 import { Card } from '@/src/components/Card';
 import { Header } from '@/src/components/Header';
 import { useAuthContext } from '@/src/context/AuthContext';
 import { colors } from '@/src/constants/colors';
 import { fonts } from '@/src/constants/fonts';
+import { LinearGradient } from 'expo-linear-gradient';
 
 // Task type definition
 interface Task {
@@ -56,6 +58,12 @@ export default function HomeScreen() {
   
   // Animation value for focus mode
   const focusOpacity = useSharedValue(0);
+  
+  // Animated style for focus overlay
+  const focusOverlayStyle = useAnimatedStyle(() => ({
+    opacity: focusOpacity.value,
+    pointerEvents: focusOpacity.value > 0 ? 'auto' : 'none',
+  }));
   
   // Handle focus mode toggle
   const toggleFocusMode = () => {
