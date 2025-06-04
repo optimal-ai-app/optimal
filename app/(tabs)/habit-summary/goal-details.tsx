@@ -11,14 +11,7 @@ import {
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { FadeInDown } from 'react-native-reanimated';
-import { 
-  Calendar,
-  Target,
-  Flag,
-  Trash2,
-  Edit3,
-  CheckCircle2
-} from 'lucide-react-native';
+import { Calendar, Target, Flag, Trash2, CreditCard as Edit3, CircleCheck as CheckCircle2 } from 'lucide-react-native';
 
 import { Header } from '@/src/components/Header';
 import { Card } from '@/src/components/Card';

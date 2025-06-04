@@ -11,14 +11,7 @@ import {
 import { Link } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { FadeInDown } from 'react-native-reanimated';
-import { 
-  Target, 
-  Clock, 
-  Flag, 
-  ChevronRight,
-  MoreVertical,
-  CheckCircle2
-} from 'lucide-react-native';
+import { Target, Clock, Flag, ChevronRight, MoveVertical as MoreVertical, CircleCheck as CheckCircle2 } from 'lucide-react-native';
 
 import { Header } from '@/src/components/Header';
 import { Card } from '@/src/components/Card';
