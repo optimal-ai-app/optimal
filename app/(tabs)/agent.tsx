@@ -8,7 +8,8 @@ import {
   StyleSheet,
   KeyboardAvoidingView,
   Platform,
-  Keyboard
+  Keyboard,
+  Modal
 } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -20,11 +21,21 @@ import Animated, {
   useSharedValue,
   withTiming
 } from 'react-native-reanimated';
-import { Send, Mic, X, Check, Link as LinkIcon } from 'lucide-react-native';
+import { Send, Mic, X, Check, Target, Calendar, Brain, Flag } from 'lucide-react-native';
 
 import { Header } from '@/src/components/Header';
+import { Card } from '@/src/components/Card';
 import { colors } from '@/src/constants/colors';
 import { fonts } from '@/src/constants/fonts';
+
+// Template type
+interface Template {
+  id: string;
+  title: string;
+  icon: React.ReactNode;
+  prompt: string;
+  context: string;
+}
 
 // Message type
 interface Message {
@@ -32,19 +43,40 @@ interface Message {
   text: string;
   sender: 'user' | 'agent';
   timestamp: Date;
-  context?: {
-    type: 'goal_response' | 'goal_setting';
-    value?: string;
-  };
+  context?: string;
 }
 
-// Goal type
-interface Goal {
-  id: string;
-  title: string;
-  createdAt: Date;
-  completed: boolean;
-}
+// Templates data
+const templates: Template[] = [
+  {
+    id: 'new-goal',
+    title: 'Set New Goal',
+    icon: <Target size={24} color={colors.button.primary} />,
+    prompt: "I want to set a new goal. Here's what I want to achieve:",
+    context: 'goal_setting'
+  },
+  {
+    id: 'daily-plan',
+    title: 'Plan My Day',
+    icon: <Calendar size={24} color={colors.button.accent} />,
+    prompt: "Help me plan my day. Here's what I need to accomplish:",
+    context: 'daily_planning'
+  },
+  {
+    id: 'brainstorm',
+    title: 'Brainstorm Ideas',
+    icon: <Brain size={24} color={colors.status.success} />,
+    prompt: "I need help brainstorming ideas for:",
+    context: 'brainstorming'
+  },
+  {
+    id: 'progress',
+    title: 'Track Progress',
+    icon: <Flag size={24} color={colors.status.warning} />,
+    prompt: "I want to update my progress on:",
+    context: 'progress_tracking'
+  }
+];
 
 export default function AgentScreen() {
   // Get params from navigation
@@ -58,24 +90,28 @@ export default function AgentScreen() {
   // State
   const [message, setMessage] = useState('');
   const [isRecording, setIsRecording] = useState(false);
-  const [activeContext, setActiveContext] = useState<'goal_setting' | null>(
-    action === 'new-goal' ? 'goal_setting' : null
-  );
+  const [showTemplates, setShowTemplates] = useState(false);
+  const [activeContext, setActiveContext] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
-      text: action === 'new-goal' 
-        ? "I'm here to help you set a new goal. What would you like to achieve?"
-        : "Hi there! I'm your AI accountability agent. How can I help you today?",
+      text: "Hi there! I'm your AI accountability agent. How can I help you today?",
       sender: 'agent',
       timestamp: new Date(Date.now() - 5 * 60000),
-      context: action === 'new-goal' ? { type: 'goal_setting' } : undefined
     },
   ]);
   
   // Animation values
   const micScale = useSharedValue(1);
   const inputHeight = useSharedValue(50);
+  
+  // Handle template selection
+  const handleTemplateSelect = (template: Template) => {
+    setMessage(template.prompt);
+    setActiveContext(template.context);
+    setShowTemplates(false);
+    inputRef.current?.focus();
+  };
   
   // Handle send message
   const handleSendMessage = () => {
@@ -87,56 +123,61 @@ export default function AgentScreen() {
       text: message,
       sender: 'user',
       timestamp: new Date(),
-      context: activeContext ? { type: activeContext } : undefined
+      context: activeContext
     };
     
     setMessages(prev => [...prev, newMessage]);
     setMessage('');
     
-    // Handle goal setting context
-    if (activeContext === 'goal_setting') {
-      // Create new goal
-      const newGoal: Goal = {
-        id: Date.now().toString(),
-        title: message,
-        createdAt: new Date(),
-        completed: false
+    // Simulate agent typing
+    setTimeout(() => {
+      const agentResponse: Message = {
+        id: (Date.now() + 1).toString(),
+        text: getAgentResponse(message, activeContext),
+        sender: 'agent',
+        timestamp: new Date(),
       };
       
-      // Store goal in local storage or state management
-      // This is where you would integrate with your goal storage system
-      
-      // Reset context
+      setMessages(prev => [...prev, agentResponse]);
       setActiveContext(null);
       
-      // Add agent confirmation
-      setTimeout(() => {
-        const agentResponse: Message = {
-          id: (Date.now() + 1).toString(),
-          text: `Great! I've added "${message}" to your goals. Would you like to break this down into smaller tasks?`,
-          sender: 'agent',
-          timestamp: new Date(),
-        };
-        
-        setMessages(prev => [...prev, agentResponse]);
-        scrollToBottom();
-      }, 1000);
-    } else {
-      // Regular message handling
-      setTimeout(() => {
-        const agentResponse: Message = {
-          id: (Date.now() + 1).toString(),
-          text: getAgentResponse(message),
-          sender: 'agent',
-          timestamp: new Date(),
-        };
-        
-        setMessages(prev => [...prev, agentResponse]);
-        scrollToBottom();
-      }, 1000);
-    }
+      // Scroll to bottom
+      scrollToBottom();
+    }, 1000);
     
+    // Scroll to bottom
     scrollToBottom();
+  };
+  
+  // Get agent response based on context
+  const getAgentResponse = (userMessage: string, context: string | null) => {
+    switch (context) {
+      case 'goal_setting':
+        return `I've noted your goal: "${userMessage.replace('I want to set a new goal. Here\'s what I want to achieve:', '').trim()}". Let's break this down into actionable steps. What's the first milestone you'd like to achieve?`;
+      case 'daily_planning':
+        return "I'll help you organize these tasks. Would you like me to prioritize them based on urgency or importance?";
+      case 'brainstorming':
+        return "Those are interesting ideas. Let's explore them further. Which aspect would you like to develop first?";
+      case 'progress_tracking':
+        return "Thanks for the update. Based on your progress, would you like to adjust your goals or keep the current trajectory?";
+      default:
+        return getDefaultResponse(userMessage);
+    }
+  };
+  
+  // Default response generator
+  const getDefaultResponse = (userMessage: string) => {
+    const lowerCaseMessage = userMessage.toLowerCase();
+    
+    if (lowerCaseMessage.includes('goal')) {
+      return "Setting clear goals is important for accountability. Let's break down your goal into smaller, manageable tasks. What specific outcome are you looking for?";
+    } else if (lowerCaseMessage.includes('stuck') || lowerCaseMessage.includes('procrastinating')) {
+      return "It sounds like you're experiencing some resistance. This is normal. Let's identify what's blocking you and create a strategy to overcome it. What do you think is the main obstacle?";
+    } else if (lowerCaseMessage.includes('progress') || lowerCaseMessage.includes('completed')) {
+      return "Great job on your progress! Celebrating small wins is crucial for maintaining motivation. What has been working well for you so far?";
+    } else {
+      return "I understand. Let's focus on how I can help you stay accountable to your goals. Would you like me to check in with you regularly about this?";
+    }
   };
   
   // Handle quick responses
@@ -148,7 +189,6 @@ export default function AgentScreen() {
       text,
       sender: 'user',
       timestamp: new Date(),
-      context: { type: 'goal_response', value: response }
     };
     
     setMessages(prev => [...prev, newMessage]);
@@ -177,57 +217,6 @@ export default function AgentScreen() {
     }, 100);
   };
   
-  // Toggle voice recording
-  const toggleRecording = () => {
-    if (Platform.OS === 'web') {
-      const newMessage: Message = {
-        id: Date.now().toString(),
-        text: "Voice recording is not available on web.",
-        sender: 'agent',
-        timestamp: new Date(),
-      };
-      
-      setMessages(prev => [...prev, newMessage]);
-      scrollToBottom();
-      return;
-    }
-    
-    setIsRecording(!isRecording);
-    micScale.value = withTiming(isRecording ? 1 : 1.2, { duration: 300 });
-    
-    if (!isRecording) {
-      // Starting recording
-    } else {
-      // Stopping recording
-      setTimeout(() => {
-        const transcribedText = "I finished my workout today.";
-        
-        const newMessage: Message = {
-          id: Date.now().toString(),
-          text: transcribedText,
-          sender: 'user',
-          timestamp: new Date(),
-        };
-        
-        setMessages(prev => [...prev, newMessage]);
-        
-        setTimeout(() => {
-          const agentResponse: Message = {
-            id: (Date.now() + 1).toString(),
-            text: "That's awesome! How did your workout go? Did you meet your fitness goals for today?",
-            sender: 'agent',
-            timestamp: new Date(),
-          };
-          
-          setMessages(prev => [...prev, agentResponse]);
-          scrollToBottom();
-        }, 1000);
-        
-        scrollToBottom();
-      }, 1000);
-    }
-  };
-  
   // Handle input focus
   const handleInputFocus = () => {
     inputHeight.value = withTiming(80, { duration: 200 });
@@ -245,39 +234,19 @@ export default function AgentScreen() {
     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
   
-  // Simple agent response generator
-  const getAgentResponse = (userMessage: string) => {
-    const lowerCaseMessage = userMessage.toLowerCase();
-    
-    if (lowerCaseMessage.includes('goal')) {
-      return "Setting clear goals is important for accountability. Let's break down your goal into smaller, manageable tasks. What specific outcome are you looking for?";
-    } else if (lowerCaseMessage.includes('stuck') || lowerCaseMessage.includes('procrastinating')) {
-      return "It sounds like you're experiencing some resistance. This is normal. Let's identify what's blocking you and create a strategy to overcome it. What do you think is the main obstacle?";
-    } else if (lowerCaseMessage.includes('progress') || lowerCaseMessage.includes('completed')) {
-      return "Great job on your progress! Celebrating small wins is crucial for maintaining motivation. What has been working well for you so far?";
-    } else if (lowerCaseMessage.includes('tired') || lowerCaseMessage.includes('motivation')) {
-      return "It's important to balance productivity with rest. Are you getting enough sleep and taking breaks? Sometimes a short reset can significantly improve your motivation and energy.";
-    } else {
-      return "I understand. Let's focus on how I can help you stay accountable to your goals. Would you like me to check in with you regularly about this?";
-    }
-  };
-  
-  // Animated styles
-  const micAnimatedStyle = useAnimatedStyle(() => {
-    return {
-      transform: [{ scale: micScale.value }],
-    };
-  });
-  
-  const inputAnimatedStyle = useAnimatedStyle(() => {
-    return {
-      height: inputHeight.value,
-    };
-  });
-  
   return (
     <View style={styles.container}>
-      <Header title="AI Agent" />
+      <Header 
+        title="AI Agent" 
+        rightAction={
+          <TouchableOpacity 
+            onPress={() => setShowTemplates(true)}
+            style={styles.templateButton}
+          >
+            <Target size={20} color={colors.text.primary} />
+          </TouchableOpacity>
+        }
+      />
       
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
@@ -335,7 +304,6 @@ export default function AgentScreen() {
           entering={FadeInUp.duration(500)}
           style={styles.inputContainer}
         >
-          {/* Quick response buttons */}
           <View style={styles.quickResponseContainer}>
             <TouchableOpacity
               style={styles.quickResponseButton}
@@ -343,9 +311,6 @@ export default function AgentScreen() {
             >
               <Check size={16} color={colors.status.success} />
               <Text style={styles.quickResponseText}>Yes</Text>
-              {activeContext === 'goal_setting' && (
-                <Text style={styles.contextTag}>Set Goal</Text>
-              )}
             </TouchableOpacity>
             
             <TouchableOpacity
@@ -354,24 +319,17 @@ export default function AgentScreen() {
             >
               <X size={16} color={colors.status.error} />
               <Text style={styles.quickResponseText}>No</Text>
-              {activeContext === 'goal_setting' && (
-                <Text style={styles.contextTag}>Set Goal</Text>
-              )}
             </TouchableOpacity>
           </View>
           
           <View style={styles.inputRow}>
-            <Animated.View style={[styles.textInputContainer, inputAnimatedStyle]}>
+            <Animated.View style={[styles.textInputContainer, { height: inputHeight }]}>
               <TextInput
                 ref={inputRef}
                 style={styles.textInput}
                 value={message}
                 onChangeText={setMessage}
-                placeholder={
-                  activeContext === 'goal_setting'
-                    ? "Enter your goal..."
-                    : "Type your message..."
-                }
+                placeholder={activeContext ? "Continue with your message..." : "Type your message..."}
                 placeholderTextColor={colors.text.muted}
                 multiline
                 onFocus={handleInputFocus}
@@ -389,20 +347,55 @@ export default function AgentScreen() {
               </TouchableOpacity>
             ) : (
               <TouchableOpacity
-                style={[
-                  styles.micButton,
-                  isRecording && styles.micButtonRecording,
-                ]}
-                onPress={toggleRecording}
+                style={styles.templateButton}
+                onPress={() => setShowTemplates(true)}
               >
-                <Animated.View style={micAnimatedStyle}>
-                  <Mic size={20} color={colors.text.primary} />
-                </Animated.View>
+                <Target size={20} color={colors.text.primary} />
               </TouchableOpacity>
             )}
           </View>
         </Animated.View>
       </KeyboardAvoidingView>
+      
+      {/* Templates Modal */}
+      <Modal
+        visible={showTemplates}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowTemplates(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <Animated.View 
+            entering={FadeInUp.duration(300)}
+            style={styles.modalContent}
+          >
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Choose a Template</Text>
+              <TouchableOpacity
+                onPress={() => setShowTemplates(false)}
+                style={styles.closeButton}
+              >
+                <X size={20} color={colors.text.muted} />
+              </TouchableOpacity>
+            </View>
+            
+            <View style={styles.templateGrid}>
+              {templates.map((template) => (
+                <TouchableOpacity
+                  key={template.id}
+                  style={styles.templateItem}
+                  onPress={() => handleTemplateSelect(template)}
+                >
+                  <View style={styles.templateIcon}>
+                    {template.icon}
+                  </View>
+                  <Text style={styles.templateTitle}>{template.title}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </Animated.View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -516,16 +509,6 @@ const styles = StyleSheet.create({
     marginLeft: 4,
   },
   
-  contextTag: {
-    color: colors.button.primary,
-    fontSize: fonts.sizes.xs,
-    marginLeft: 8,
-    backgroundColor: 'rgba(61, 74, 211, 0.1)',
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 8,
-  },
-  
   inputRow: {
     flexDirection: 'row',
     alignItems: 'flex-end',
@@ -557,7 +540,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   
-  micButton: {
+  templateButton: {
     width: 40,
     height: 40,
     borderRadius: 20,
@@ -566,7 +549,65 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   
-  micButtonRecording: {
-    backgroundColor: colors.status.error,
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'flex-end',
+  },
+  
+  modalContent: {
+    backgroundColor: colors.background.card,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    padding: 16,
+    maxHeight: '50%',
+  },
+  
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  
+  modalTitle: {
+    fontSize: fonts.sizes.lg,
+    fontWeight: fonts.weights.bold,
+    color: colors.text.primary,
+  },
+  
+  closeButton: {
+    padding: 8,
+  },
+  
+  templateGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+  },
+  
+  templateItem: {
+    width: '48%',
+    backgroundColor: colors.background.container,
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
+    alignItems: 'center',
+  },
+  
+  templateIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: 'rgba(61, 74, 211, 0.1)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  
+  templateTitle: {
+    fontSize: fonts.sizes.md,
+    color: colors.text.primary,
+    textAlign: 'center',
   },
 });
