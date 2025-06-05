@@ -10,6 +10,7 @@ import {
   Platform,
   Keyboard
 } from 'react-native';
+import { useLocalSearchParams } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { 
   FadeInUp, 
@@ -31,9 +32,25 @@ interface Message {
   text: string;
   sender: 'user' | 'agent';
   timestamp: Date;
+  context?: {
+    type: 'goal_response' | 'goal_setting';
+    value?: string;
+  };
+}
+
+// Goal type
+interface Goal {
+  id: string;
+  title: string;
+  createdAt: Date;
+  completed: boolean;
 }
 
 export default function AgentScreen() {
+  // Get params from navigation
+  const params = useLocalSearchParams();
+  const action = params.action as string | undefined;
+  
   // Refs
   const scrollViewRef = useRef<ScrollView>(null);
   const inputRef = useRef<TextInput>(null);
@@ -41,12 +58,18 @@ export default function AgentScreen() {
   // State
   const [message, setMessage] = useState('');
   const [isRecording, setIsRecording] = useState(false);
+  const [activeContext, setActiveContext] = useState<'goal_setting' | null>(
+    action === 'new-goal' ? 'goal_setting' : null
+  );
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
-      text: 'Hi there! I\'m your AI accountability agent. How can I help you today?',
+      text: action === 'new-goal' 
+        ? "I'm here to help you set a new goal. What would you like to achieve?"
+        : "Hi there! I'm your AI accountability agent. How can I help you today?",
       sender: 'agent',
       timestamp: new Date(Date.now() - 5 * 60000),
+      context: action === 'new-goal' ? { type: 'goal_setting' } : undefined
     },
   ]);
   
@@ -64,32 +87,56 @@ export default function AgentScreen() {
       text: message,
       sender: 'user',
       timestamp: new Date(),
+      context: activeContext ? { type: activeContext } : undefined
     };
     
     setMessages(prev => [...prev, newMessage]);
     setMessage('');
     
-    // Simulate agent typing
-    setTimeout(() => {
-      const agentResponse: Message = {
-        id: (Date.now() + 1).toString(),
-        text: getAgentResponse(message),
-        sender: 'agent',
-        timestamp: new Date(),
+    // Handle goal setting context
+    if (activeContext === 'goal_setting') {
+      // Create new goal
+      const newGoal: Goal = {
+        id: Date.now().toString(),
+        title: message,
+        createdAt: new Date(),
+        completed: false
       };
       
-      setMessages(prev => [...prev, agentResponse]);
+      // Store goal in local storage or state management
+      // This is where you would integrate with your goal storage system
       
-      // Scroll to bottom
+      // Reset context
+      setActiveContext(null);
+      
+      // Add agent confirmation
       setTimeout(() => {
-        scrollViewRef.current?.scrollToEnd({ animated: true });
-      }, 100);
-    }, 1000);
+        const agentResponse: Message = {
+          id: (Date.now() + 1).toString(),
+          text: `Great! I've added "${message}" to your goals. Would you like to break this down into smaller tasks?`,
+          sender: 'agent',
+          timestamp: new Date(),
+        };
+        
+        setMessages(prev => [...prev, agentResponse]);
+        scrollToBottom();
+      }, 1000);
+    } else {
+      // Regular message handling
+      setTimeout(() => {
+        const agentResponse: Message = {
+          id: (Date.now() + 1).toString(),
+          text: getAgentResponse(message),
+          sender: 'agent',
+          timestamp: new Date(),
+        };
+        
+        setMessages(prev => [...prev, agentResponse]);
+        scrollToBottom();
+      }, 1000);
+    }
     
-    // Scroll to bottom
-    setTimeout(() => {
-      scrollViewRef.current?.scrollToEnd({ animated: true });
-    }, 100);
+    scrollToBottom();
   };
   
   // Handle quick responses
@@ -101,11 +148,11 @@ export default function AgentScreen() {
       text,
       sender: 'user',
       timestamp: new Date(),
+      context: { type: 'goal_response', value: response }
     };
     
     setMessages(prev => [...prev, newMessage]);
     
-    // Simulate agent typing
     setTimeout(() => {
       const agentResponse: Message = {
         id: (Date.now() + 1).toString(),
@@ -117,14 +164,14 @@ export default function AgentScreen() {
       };
       
       setMessages(prev => [...prev, agentResponse]);
-      
-      // Scroll to bottom
-      setTimeout(() => {
-        scrollViewRef.current?.scrollToEnd({ animated: true });
-      }, 100);
+      scrollToBottom();
     }, 1000);
     
-    // Scroll to bottom
+    scrollToBottom();
+  };
+  
+  // Scroll to bottom helper
+  const scrollToBottom = () => {
     setTimeout(() => {
       scrollViewRef.current?.scrollToEnd({ animated: true });
     }, 100);
@@ -133,7 +180,6 @@ export default function AgentScreen() {
   // Toggle voice recording
   const toggleRecording = () => {
     if (Platform.OS === 'web') {
-      // Web doesn't support voice recording, show message
       const newMessage: Message = {
         id: Date.now().toString(),
         text: "Voice recording is not available on web.",
@@ -142,12 +188,7 @@ export default function AgentScreen() {
       };
       
       setMessages(prev => [...prev, newMessage]);
-      
-      // Scroll to bottom
-      setTimeout(() => {
-        scrollViewRef.current?.scrollToEnd({ animated: true });
-      }, 100);
-      
+      scrollToBottom();
       return;
     }
     
@@ -156,12 +197,8 @@ export default function AgentScreen() {
     
     if (!isRecording) {
       // Starting recording
-      // In a real app, start the recording here
     } else {
       // Stopping recording
-      // In a real app, stop recording and process the audio
-      
-      // Simulate a transcribed message
       setTimeout(() => {
         const transcribedText = "I finished my workout today.";
         
@@ -174,7 +211,6 @@ export default function AgentScreen() {
         
         setMessages(prev => [...prev, newMessage]);
         
-        // Simulate agent response
         setTimeout(() => {
           const agentResponse: Message = {
             id: (Date.now() + 1).toString(),
@@ -184,17 +220,10 @@ export default function AgentScreen() {
           };
           
           setMessages(prev => [...prev, agentResponse]);
-          
-          // Scroll to bottom
-          setTimeout(() => {
-            scrollViewRef.current?.scrollToEnd({ animated: true });
-          }, 100);
+          scrollToBottom();
         }, 1000);
         
-        // Scroll to bottom
-        setTimeout(() => {
-          scrollViewRef.current?.scrollToEnd({ animated: true });
-        }, 100);
+        scrollToBottom();
       }, 1000);
     }
   };
@@ -314,6 +343,9 @@ export default function AgentScreen() {
             >
               <Check size={16} color={colors.status.success} />
               <Text style={styles.quickResponseText}>Yes</Text>
+              {activeContext === 'goal_setting' && (
+                <Text style={styles.contextTag}>Set Goal</Text>
+              )}
             </TouchableOpacity>
             
             <TouchableOpacity
@@ -322,6 +354,9 @@ export default function AgentScreen() {
             >
               <X size={16} color={colors.status.error} />
               <Text style={styles.quickResponseText}>No</Text>
+              {activeContext === 'goal_setting' && (
+                <Text style={styles.contextTag}>Set Goal</Text>
+              )}
             </TouchableOpacity>
           </View>
           
@@ -332,7 +367,11 @@ export default function AgentScreen() {
                 style={styles.textInput}
                 value={message}
                 onChangeText={setMessage}
-                placeholder="Type your message..."
+                placeholder={
+                  activeContext === 'goal_setting'
+                    ? "Enter your goal..."
+                    : "Type your message..."
+                }
                 placeholderTextColor={colors.text.muted}
                 multiline
                 onFocus={handleInputFocus}
@@ -475,6 +514,16 @@ const styles = StyleSheet.create({
     color: colors.text.secondary,
     fontSize: fonts.sizes.sm,
     marginLeft: 4,
+  },
+  
+  contextTag: {
+    color: colors.button.primary,
+    fontSize: fonts.sizes.xs,
+    marginLeft: 8,
+    backgroundColor: 'rgba(61, 74, 211, 0.1)',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 8,
   },
   
   inputRow: {
