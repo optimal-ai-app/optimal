@@ -1,6 +1,6 @@
 import React from 'react';
 import { Tabs } from 'expo-router';
-import { MessageSquare, ChartBar as BarChart, Settings, ListTodo } from 'lucide-react-native';
+import { Chrome as Home, MessageSquare, ChartBar as BarChart, Settings } from 'lucide-react-native';
 
 import { colors } from '@/src/constants/colors';
 
@@ -23,11 +23,11 @@ export default function TabsLayout() {
       }}
     >
       <Tabs.Screen
-        name="habit-summary"
+        name="index"
         options={{
-          title: 'Summary',
+          title: 'Home',
           tabBarIcon: ({ color, size }) => (
-            <ListTodo color={color} size={size} />
+            <Home color={color} size={size} />
           ),
         }}
       />

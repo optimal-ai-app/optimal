@@ -5,8 +5,7 @@ import {
   StyleSheet, 
   TouchableOpacity, 
   ScrollView,
-  Dimensions,
-  Platform
+  Dimensions
 } from 'react-native';
 import Animated, { 
   FadeIn, 
@@ -75,7 +74,7 @@ export default function AnalyticsScreen() {
   const progressCircleStyle = useAnimatedStyle(() => {
     return {
       transform: [{ rotate: `${progressValue.value * 360}deg` }],
-      ...(Platform.OS === 'web' ? { transformOrigin: 'bottom' } : {}),
+      transformOrigin: 'bottom',
     };
   });
   
@@ -198,8 +197,6 @@ export default function AnalyticsScreen() {
                   contentInset={{ top: 10, bottom: 10 }}
                   spacing={0.2}
                   gridMin={0}
-                  animate={true}
-                  renderPlaceholder={() => null}
                 >
                   <Grid />
                 </BarChart>
@@ -235,8 +232,6 @@ export default function AnalyticsScreen() {
                   data={lineData.map(item => item.value)}
                   svg={{ stroke: colors.button.accent, strokeWidth: 3 }}
                   contentInset={{ top: 20, bottom: 20 }}
-                  animate={true}
-                  renderPlaceholder={() => null}
                 >
                   <Grid />
                 </LineChart>
@@ -255,8 +250,6 @@ export default function AnalyticsScreen() {
                 data={pieData}
                 innerRadius={30}
                 padAngle={0.02}
-                animate={true}
-                renderPlaceholder={() => null}
               />
               
               <View style={styles.legendContainer}>
@@ -384,6 +377,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.button.primary,
     borderRadius: 4,
     bottom: 50,
+    transformOrigin: 'bottom',
   },
   
   progressInnerCircle: {
