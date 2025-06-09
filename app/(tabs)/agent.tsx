@@ -9,6 +9,7 @@ import {
   Keyboard,
   ViewStyle,
   TextStyle
+} from 'react-native'
 import { useLocalSearchParams } from 'expo-router'
 import { LinearGradient } from 'expo-linear-gradient'
 import Animated, {
