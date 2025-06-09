@@ -1,0 +1,1 @@
+export { InputCarousel } from './InputCarousel';
