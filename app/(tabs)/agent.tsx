@@ -8,14 +8,21 @@ import {
   Platform,
   Keyboard,
   ViewStyle,
-  TextStyle
+  TextStyle,
+  Animated as RNAnimated,
+  Easing
 } from 'react-native'
 import { useLocalSearchParams } from 'expo-router'
 import { LinearGradient } from 'expo-linear-gradient'
 import Animated, {
   FadeInUp,
   FadeInRight,
-  FadeInLeft
+  FadeInLeft,
+  withRepeat,
+  withSequence,
+  withTiming,
+  useAnimatedStyle,
+  useSharedValue
 } from 'react-native-reanimated'
 
 import { Header } from '@/src/components/Header'
@@ -66,6 +73,52 @@ const carouselOptions = [
   }
 ]
 
+const LoadingDots = () => {
+  const dots = [useSharedValue(0.3), useSharedValue(0.3), useSharedValue(0.3)]
+
+  useEffect(() => {
+    dots.forEach((dot, index) => {
+      const delay = index * 200 // Reduced delay for smoother flow
+
+      setTimeout(() => {
+        dot.value = withRepeat(
+          withSequence(
+            withTiming(1, {
+              duration: 600,
+              easing: Easing.out(Easing.cubic)
+            }),
+            withTiming(0.2, {
+              duration: 600,
+              easing: Easing.in(Easing.cubic)
+            })
+          ),
+          -1,
+          false
+        )
+      }, delay)
+    })
+  }, [])
+
+  const dotStyles = dots.map(dot =>
+    useAnimatedStyle(() => ({
+      opacity: dot.value,
+      transform: [
+        {
+          scale: 0.7 + dot.value * 0.3 // Subtle scale animation
+        }
+      ]
+    }))
+  )
+
+  return (
+    <View style={styles.loadingContainer}>
+      {dotStyles.map((style, index) => (
+        <Animated.View key={index} style={[styles.dot, style]} />
+      ))}
+    </View>
+  )
+}
+
 export default function AgentScreen () {
   // Get params from navigation
   const params = useLocalSearchParams()
@@ -90,7 +143,7 @@ export default function AgentScreen () {
       addMessage({
         id: 'welcome',
         content:
-          params.action === 'new-goal' ? 'Let’s set a goal!' : 'Welcome!',
+          params.action === 'new-goal' ? "Let's set a goal!" : 'Welcome!',
         role: 'agent',
         timestamp: new Date()
       })
@@ -221,6 +274,25 @@ export default function AgentScreen () {
               </View>
             </Animated.View>
           ))}
+
+          {isLoading && (
+            <Animated.View
+              entering={FadeInLeft.duration(300)}
+              style={[styles.messageWrapper, styles.agentMessageWrapper]}
+            >
+              <View style={styles.agentAvatar}>
+                <LinearGradient
+                  colors={[colors.gradient.start, colors.gradient.end]}
+                  style={styles.avatarGradient}
+                >
+                  <Text style={styles.avatarText}>AI</Text>
+                </LinearGradient>
+              </View>
+              <View style={[styles.messageBubble, styles.agentMessageBubble]}>
+                <LoadingDots />
+              </View>
+            </Animated.View>
+          )}
         </ScrollView>
 
         <Animated.View
@@ -336,5 +408,21 @@ const styles = StyleSheet.create({
   inputContainer: {
     backgroundColor: colors.background.primary,
     paddingBottom: 0
+  } as ViewStyle,
+
+  loadingContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    height: 24,
+    gap: 4
+  } as ViewStyle,
+
+  dot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: colors.text.primary,
+    margin: 2
   } as ViewStyle
 })

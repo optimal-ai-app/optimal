@@ -1,25 +1,20 @@
-import React from 'react';
-import { 
-  View, 
-  Text, 
-  StyleSheet, 
+import React from 'react'
+import {
+  View,
+  Text,
+  StyleSheet,
   ScrollView,
-  TouchableOpacity 
-} from 'react-native';
-import { Link } from 'expo-router';
-import { LinearGradient } from 'expo-linear-gradient';
-import Animated, { FadeInDown } from 'react-native-reanimated';
-import { 
-  Flag,
-  ChevronRight,
-  Calendar,
-  Target
-} from 'lucide-react-native';
+  TouchableOpacity
+} from 'react-native'
+import { Link } from 'expo-router'
+import { LinearGradient } from 'expo-linear-gradient'
+import Animated, { FadeInDown } from 'react-native-reanimated'
+import { Flag, ChevronRight, Calendar, Target } from 'lucide-react-native'
 
-import { Header } from '@/src/components/Header';
-import { Card } from '@/src/components/Card';
-import { colors } from '@/src/constants/colors';
-import { fonts } from '@/src/constants/fonts';
+import { Header } from '@/src/components/Header'
+import { Card } from '@/src/components/Card'
+import { colors } from '@/src/constants/colors'
+import { fonts } from '@/src/constants/fonts'
 
 // Mock data for goals
 const goals = [
@@ -31,7 +26,7 @@ const goals = [
     unit: 'pushups',
     createdAt: new Date(),
     streak: 5,
-    completionRate: 85,
+    completionRate: 85
   },
   {
     id: '2',
@@ -41,7 +36,7 @@ const goals = [
     unit: 'minutes',
     createdAt: new Date(),
     streak: 3,
-    completionRate: 75,
+    completionRate: 75
   },
   {
     id: '3',
@@ -51,15 +46,15 @@ const goals = [
     unit: 'minutes',
     createdAt: new Date(),
     streak: 7,
-    completionRate: 90,
-  },
-];
+    completionRate: 90
+  }
+]
 
-export default function GoalsScreen() {
+export default function GoalsScreen () {
   return (
     <View style={styles.container}>
-      <Header title="Goals" showBackButton />
-      
+      <Header title='Goals' showBackButton />
+
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.content}
@@ -68,12 +63,12 @@ export default function GoalsScreen() {
         {/* Active Goals */}
         <Animated.View entering={FadeInDown.duration(500).delay(100)}>
           <Text style={styles.sectionTitle}>Active Goals</Text>
-          
+
           {goals.map((goal, index) => (
             <Link
               key={goal.id}
               href={{
-                pathname: "/habit-summary/goal-details",
+                pathname: '/home/goal-details',
                 params: { id: goal.id }
               }}
               asChild
@@ -88,33 +83,40 @@ export default function GoalsScreen() {
                       style={styles.goalProgress}
                     >
                       <Text style={styles.goalProgressText}>
-                        {Math.round((goal.currentValue / goal.targetValue) * 100)}%
+                        {Math.round(
+                          (goal.currentValue / goal.targetValue) * 100
+                        )}
+                        %
                       </Text>
                     </LinearGradient>
-                    
+
                     <View style={styles.goalTitleContainer}>
                       <Text style={styles.goalTitle}>{goal.title}</Text>
                       <Text style={styles.goalSubtitle}>
                         {goal.currentValue} / {goal.targetValue} {goal.unit}
                       </Text>
                     </View>
-                    
+
                     <ChevronRight size={20} color={colors.text.muted} />
                   </View>
-                  
+
                   <View style={styles.goalStats}>
                     <View style={styles.goalStat}>
                       <Calendar size={16} color={colors.button.primary} />
                       <Text style={styles.goalStatLabel}>Streak</Text>
-                      <Text style={styles.goalStatValue}>{goal.streak} days</Text>
+                      <Text style={styles.goalStatValue}>
+                        {goal.streak} days
+                      </Text>
                     </View>
-                    
+
                     <View style={styles.goalStat}>
                       <Target size={16} color={colors.button.accent} />
                       <Text style={styles.goalStatLabel}>Completion</Text>
-                      <Text style={styles.goalStatValue}>{goal.completionRate}%</Text>
+                      <Text style={styles.goalStatValue}>
+                        {goal.completionRate}%
+                      </Text>
                     </View>
-                    
+
                     <View style={styles.goalStat}>
                       <Flag size={16} color={colors.status.success} />
                       <Text style={styles.goalStatLabel}>Created</Text>
@@ -130,95 +132,95 @@ export default function GoalsScreen() {
         </Animated.View>
       </ScrollView>
     </View>
-  );
+  )
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background.primary,
+    backgroundColor: colors.background.primary
   },
-  
+
   scrollView: {
-    flex: 1,
+    flex: 1
   },
-  
+
   content: {
     padding: 16,
-    paddingBottom: 32,
+    paddingBottom: 32
   },
-  
+
   sectionTitle: {
     fontSize: fonts.sizes.xl,
     fontWeight: fonts.weights.bold,
     color: colors.text.primary,
-    marginBottom: 16,
+    marginBottom: 16
   },
-  
+
   goalCard: {
     padding: 16,
-    marginBottom: 16,
+    marginBottom: 16
   },
-  
+
   goalHeader: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'center'
   },
-  
+
   goalProgress: {
     width: 48,
     height: 48,
     borderRadius: 24,
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 12,
+    marginRight: 12
   },
-  
+
   goalProgressText: {
     fontSize: fonts.sizes.sm,
     fontWeight: fonts.weights.bold,
-    color: colors.text.primary,
+    color: colors.text.primary
   },
-  
+
   goalTitleContainer: {
-    flex: 1,
+    flex: 1
   },
-  
+
   goalTitle: {
     fontSize: fonts.sizes.md,
     fontWeight: fonts.weights.bold,
     color: colors.text.primary,
-    marginBottom: 4,
+    marginBottom: 4
   },
-  
+
   goalSubtitle: {
     fontSize: fonts.sizes.sm,
-    color: colors.text.muted,
+    color: colors.text.muted
   },
-  
+
   goalStats: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginTop: 16,
     paddingTop: 16,
     borderTopWidth: 1,
-    borderTopColor: colors.utility.divider,
+    borderTopColor: colors.utility.divider
   },
-  
+
   goalStat: {
-    alignItems: 'center',
+    alignItems: 'center'
   },
-  
+
   goalStatLabel: {
     fontSize: fonts.sizes.sm,
     color: colors.text.muted,
     marginTop: 4,
-    marginBottom: 2,
+    marginBottom: 2
   },
-  
+
   goalStatValue: {
     fontSize: fonts.sizes.md,
     fontWeight: fonts.weights.bold,
-    color: colors.text.primary,
-  },
-});
+    color: colors.text.primary
+  }
+})
