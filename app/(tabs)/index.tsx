@@ -25,6 +25,7 @@ import { Header } from '@/src/components/Header'
 import { Card } from '@/src/components/Card'
 import { Button } from '@/src/components/Button'
 import { GoalCreationModal } from '@/src/components/GoalCreationModal'
+import { TaskCreationModal } from '@/src/components/TaskCreationModal'
 import { colors } from '@/src/constants/colors'
 import { fonts } from '@/src/constants/fonts'
 import { useAuthContext } from '@/src/context/AuthContext'
@@ -58,6 +59,7 @@ export default function HomeScreen () {
   const [tasks, setTasks] = useState<Task[]>([])
   const [goals, setGoals] = useState<Goal[]>([])
   const [showGoalModal, setShowGoalModal] = useState(false)
+  const [showTaskModal, setShowTaskModal] = useState(false)
 
   // Handle new goal via agent
   const handleNewGoalWithAgent = () => {
@@ -73,6 +75,22 @@ export default function HomeScreen () {
   // Handle manual goal creation
   const handleNewGoalManually = () => {
     router.push('/home/create-goal')
+  }
+
+  // Handle new task via agent
+  const handleNewTaskWithAgent = () => {
+    router.push({
+      pathname: '/(tabs)/agent',
+      params: {
+        action: 'create-task',
+        prompt: 'Help me create a task'
+      }
+    })
+  }
+
+  // Handle manual task creation
+  const handleNewTaskManually = () => {
+    router.push('/home/create-task')
   }
 
   // Handle task completion
@@ -163,7 +181,14 @@ export default function HomeScreen () {
                 <Target size={20} color={colors.button.primary} />
                 <Text style={styles.sectionTitle}>Today's Tasks</Text>
               </View>
-              <Text style={styles.taskCount}>{tasks.length} tasks</Text>
+              <TouchableOpacity
+                onPress={() => setShowTaskModal(true)}
+                style={styles.addTaskButton}
+                accessibilityLabel="Add new task"
+                accessibilityRole="button"
+              >
+                <Plus size={20} color={colors.text.primary} />
+              </TouchableOpacity>
             </View>
 
             {tasks.map((task, index) => (
@@ -257,7 +282,7 @@ export default function HomeScreen () {
 
             {tasks.length === 0 && (
               <Text style={styles.emptyText}>
-                No tasks yet. Set a new goal to get started!
+                No tasks yet. Create your first task to get started!
               </Text>
             )}
           </Card>
@@ -351,6 +376,14 @@ export default function HomeScreen () {
         onCreateWithAgent={handleNewGoalWithAgent}
         onCreateManually={handleNewGoalManually}
       />
+
+      {/* Task Creation Modal */}
+      <TaskCreationModal
+        visible={showTaskModal}
+        onClose={() => setShowTaskModal(false)}
+        onCreateWithAgent={handleNewTaskWithAgent}
+        onCreateManually={handleNewTaskManually}
+      />
     </View>
   )
 }
@@ -422,9 +455,13 @@ const styles = StyleSheet.create({
     marginLeft: 8
   },
 
-  taskCount: {
-    fontSize: fonts.sizes.sm,
-    color: colors.text.muted
+  addTaskButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: colors.button.primary,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 
   taskItem: {
