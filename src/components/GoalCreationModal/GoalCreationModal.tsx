@@ -12,7 +12,7 @@ import Animated, {
   SlideInDown,
   SlideOutDown,
 } from 'react-native-reanimated';
-import { MessageSquare, Edit3 } from 'lucide-react-native';
+import { MessageSquare, CreditCard as Edit3 } from 'lucide-react-native';
 
 import { styles } from './GoalCreationModal.styles';
 import { colors } from '../../constants/colors';
