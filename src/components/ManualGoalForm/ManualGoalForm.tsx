@@ -8,7 +8,7 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import Animated, { FadeInDown } from 'react-native-reanimated';
-import { Calendar, CheckCircle } from 'lucide-react-native';
+import { Calendar, CircleCheck as CheckCircle } from 'lucide-react-native';
 
 import { Header } from '../Header';
 import { InputField } from '../InputField';
