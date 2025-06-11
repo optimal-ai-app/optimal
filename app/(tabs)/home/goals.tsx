@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState } from 'react'
 import {
   View,
   Text,
@@ -6,13 +6,14 @@ import {
   ScrollView,
   TouchableOpacity
 } from 'react-native'
-import { Link } from 'expo-router'
+import { Link, useRouter } from 'expo-router'
 import { LinearGradient } from 'expo-linear-gradient'
 import Animated, { FadeInDown } from 'react-native-reanimated'
-import { Flag, ChevronRight, Calendar, Target } from 'lucide-react-native'
+import { Flag, ChevronRight, Calendar, Target, Plus } from 'lucide-react-native'
 
 import { Header } from '@/src/components/Header'
 import { Card } from '@/src/components/Card'
+import { GoalCreationModal } from '@/src/components/GoalCreationModal'
 import { colors } from '@/src/constants/colors'
 import { fonts } from '@/src/constants/fonts'
 
@@ -51,9 +52,39 @@ const goals = [
 ]
 
 export default function GoalsScreen () {
+  const router = useRouter()
+  const [showGoalModal, setShowGoalModal] = useState(false)
+
+  const handleCreateWithAgent = () => {
+    router.push({
+      pathname: '/(tabs)/agent',
+      params: {
+        action: 'create-goal',
+        prompt: 'Help me create a goal'
+      }
+    })
+  }
+
+  const handleCreateManually = () => {
+    router.push('/home/create-goal')
+  }
+
   return (
     <View style={styles.container}>
-      <Header title='Goals' showBackButton />
+      <Header 
+        title='Goals' 
+        showBackButton 
+        rightAction={
+          <TouchableOpacity
+            onPress={() => setShowGoalModal(true)}
+            style={styles.addButton}
+            accessibilityLabel="Add new goal"
+            accessibilityRole="button"
+          >
+            <Plus size={24} color={colors.text.primary} />
+          </TouchableOpacity>
+        }
+      />
 
       <ScrollView
         style={styles.scrollView}
@@ -131,6 +162,13 @@ export default function GoalsScreen () {
           ))}
         </Animated.View>
       </ScrollView>
+
+      <GoalCreationModal
+        visible={showGoalModal}
+        onClose={() => setShowGoalModal(false)}
+        onCreateWithAgent={handleCreateWithAgent}
+        onCreateManually={handleCreateManually}
+      />
     </View>
   )
 }
@@ -148,6 +186,15 @@ const styles = StyleSheet.create({
   content: {
     padding: 16,
     paddingBottom: 32
+  },
+
+  addButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: colors.button.primary,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 
   sectionTitle: {

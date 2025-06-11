@@ -1,0 +1,1 @@
+export { ManualGoalForm } from './ManualGoalForm';

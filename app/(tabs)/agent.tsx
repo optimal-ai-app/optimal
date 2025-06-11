@@ -123,6 +123,7 @@ export default function AgentScreen () {
   // Get params from navigation
   const params = useLocalSearchParams()
   const action = params.action as string | undefined
+  const prompt = params.prompt as string | undefined
 
   // Refs
   const scrollViewRef = useRef<ScrollView>(null)
@@ -140,29 +141,50 @@ export default function AgentScreen () {
 
   useEffect(() => {
     if (messages.length === 0) {
+      let welcomeMessage = 'Welcome!'
+      
+      // Set welcome message based on action
+      if (action === 'create-goal') {
+        welcomeMessage = "I'd love to help you create a meaningful goal! What would you like to achieve?"
+      } else if (action === 'generate-tasks') {
+        welcomeMessage = "I'll help you break down your goal into actionable tasks. Let me know the details!"
+      }
+      
       addMessage({
         id: 'welcome',
-        content:
-          params.action === 'new-goal' ? "Let's set a goal!" : 'Welcome!',
+        content: welcomeMessage,
         role: 'agent',
         timestamp: new Date()
       })
     }
-  }, []) // Remove dependencies to prevent infinite loop
+
+    // Auto-send prompt if provided
+    if (prompt && messages.length <= 1) {
+      setMessage(prompt)
+      // Auto-send after a short delay
+      setTimeout(() => {
+        handleSendMessage(prompt)
+      }, 500)
+    }
+  }, [action, prompt]) // Remove dependencies to prevent infinite loop
 
   // Handle send message
-  const handleSendMessage = async () => {
-    if (!message.trim()) return
+  const handleSendMessage = async (messageText?: string) => {
+    const textToSend = messageText || message
+    if (!textToSend.trim()) return
 
-    const messageText = message
     setMessage('')
 
     // Determine context based on action
-    const context =
-      action === 'new-goal' ? { type: 'goal_setting' as const } : undefined
+    let context: ChatMessage['context'] | undefined
+    if (action === 'create-goal') {
+      context = { type: 'goal_setting' }
+    } else if (action === 'generate-tasks') {
+      context = { type: 'goal_response' }
+    }
 
     // Send message via store
-    await sendMessage(messageText, context)
+    await sendMessage(textToSend, context)
     scrollToBottom()
   }
 
@@ -302,14 +324,16 @@ export default function AgentScreen () {
           <ChatInput
             message={message}
             onMessageChange={setMessage}
-            onSendMessage={handleSendMessage}
+            onSendMessage={() => handleSendMessage()}
             onVoiceRecord={handleVoiceRecord}
             onHelpRequest={handleHelpRequest}
             isRecording={isRecording}
             carouselOptions={carouselOptions}
             placeholder={
-              action === 'new-goal'
-                ? 'Enter your goal...'
+              action === 'create-goal'
+                ? 'Describe your goal...'
+                : action === 'generate-tasks'
+                ? 'Tell me about your goal...'
                 : 'Type your message...'
             }
           />
