@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import {
   View,
   Text,
   ScrollView,
   TouchableOpacity,
   Platform,
+  TextInput,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import Animated, { FadeInDown } from 'react-native-reanimated';
@@ -31,7 +32,7 @@ export const ManualGoalForm: React.FC<ManualGoalFormProps> = ({
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [completionDate, setCompletionDate] = useState<Date | null>(null);
-  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [isDateFocused, setIsDateFocused] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [createdGoal, setCreatedGoal] = useState<{
     title: string;
@@ -39,23 +40,33 @@ export const ManualGoalForm: React.FC<ManualGoalFormProps> = ({
     completionDate: Date;
   } | null>(null);
 
+  const webDateInputRef = useRef<TextInput>(null);
+
   const isFormValid = title.trim() && description.trim() && completionDate;
 
   const handleDatePress = () => {
     if (Platform.OS === 'web') {
-      // For web, create a simple date input
-      const input = document.createElement('input');
-      input.type = 'date';
-      input.min = new Date().toISOString().split('T')[0];
-      input.onchange = (e) => {
-        const target = e.target as HTMLInputElement;
-        if (target.value) {
-          setCompletionDate(new Date(target.value));
-        }
-      };
-      input.click();
+      // Focus the hidden date input
+      webDateInputRef.current?.focus();
     } else {
-      setShowDatePicker(true);
+      // For native platforms, you would implement a date picker modal here
+      // For now, we'll simulate selecting a date
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      setCompletionDate(tomorrow);
+    }
+  };
+
+  const handleWebDateChange = (dateString: string) => {
+    if (dateString) {
+      const selectedDate = new Date(dateString);
+      // Ensure the date is not in the past
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      
+      if (selectedDate >= today) {
+        setCompletionDate(selectedDate);
+      }
     }
   };
 
@@ -100,6 +111,11 @@ export const ManualGoalForm: React.FC<ManualGoalFormProps> = ({
     });
   };
 
+  const getTodayDateString = () => {
+    const today = new Date();
+    return today.toISOString().split('T')[0];
+  };
+
   if (isSubmitted && createdGoal) {
     return (
       <View style={styles.container}>
@@ -107,11 +123,11 @@ export const ManualGoalForm: React.FC<ManualGoalFormProps> = ({
         
         <ScrollView style={styles.scrollView} contentContainerStyle={styles.content}>
           <Animated.View
-            entering={FadeInDown.duration(500)}
+            entering={FadeInDown.duration(600).delay(200)}
             style={styles.successContainer}
           >
             <View style={styles.successIcon}>
-              <CheckCircle size={32} color={colors.text.primary} />
+              <CheckCircle size={40} color={colors.text.primary} />
             </View>
             
             <Text style={styles.successTitle}>Goal Created Successfully!</Text>
@@ -149,7 +165,11 @@ export const ManualGoalForm: React.FC<ManualGoalFormProps> = ({
     <View style={styles.container}>
       <Header title="Create Goal" showBackButton />
       
-      <ScrollView style={styles.scrollView} contentContainerStyle={styles.content}>
+      <ScrollView 
+        style={styles.scrollView} 
+        contentContainerStyle={styles.content}
+        showsVerticalScrollIndicator={false}
+      >
         <Animated.View
           entering={FadeInDown.duration(500).delay(100)}
           style={styles.header}
@@ -172,44 +192,58 @@ export const ManualGoalForm: React.FC<ManualGoalFormProps> = ({
             maxLength={100}
           />
 
-          <InputField
-            label="Description"
-            value={description}
-            onChangeText={setDescription}
-            placeholder="Describe your goal in detail..."
-            multiline
-            numberOfLines={4}
-            maxLength={500}
-            style={{ height: 120 }}
-          />
+          <View style={styles.textAreaContainer}>
+            <InputField
+              label="Description"
+              value={description}
+              onChangeText={setDescription}
+              placeholder="Describe your goal in detail..."
+              multiline
+              numberOfLines={4}
+              maxLength={500}
+              style={{ minHeight: 120 }}
+            />
+          </View>
 
-          <View>
-            <Text style={{ 
-              fontSize: 14, 
-              color: colors.text.muted, 
-              marginBottom: 8,
-              marginLeft: 16 
-            }}>
-              Completion Date
-            </Text>
-            <TouchableOpacity
-              style={[
-                styles.datePickerButton,
-                showDatePicker && styles.datePickerButtonFocused,
-              ]}
-              onPress={handleDatePress}
-              activeOpacity={0.8}
-            >
-              <Text
+          <View style={styles.dateFieldContainer}>
+            <Text style={styles.dateLabel}>Completion Date</Text>
+            
+            {Platform.OS === 'web' ? (
+              <View style={{ position: 'relative' }}>
+                <TextInput
+                  ref={webDateInputRef}
+                  type="date"
+                  min={getTodayDateString()}
+                  onChange={(e: any) => handleWebDateChange(e.target.value)}
+                  onFocus={() => setIsDateFocused(true)}
+                  onBlur={() => setIsDateFocused(false)}
+                  style={[
+                    styles.webDateInput,
+                    isDateFocused && styles.webDateInputFocused,
+                  ]}
+                  placeholder="Select completion date"
+                />
+              </View>
+            ) : (
+              <TouchableOpacity
                 style={[
-                  styles.datePickerText,
-                  !completionDate && styles.datePickerPlaceholder,
+                  styles.datePickerButton,
+                  isDateFocused && styles.datePickerButtonFocused,
                 ]}
+                onPress={handleDatePress}
+                activeOpacity={0.8}
               >
-                {completionDate ? formatDate(completionDate) : 'Select completion date'}
-              </Text>
-              <Calendar size={20} color={colors.text.muted} />
-            </TouchableOpacity>
+                <Text
+                  style={[
+                    styles.datePickerText,
+                    !completionDate && styles.datePickerPlaceholder,
+                  ]}
+                >
+                  {completionDate ? formatDate(completionDate) : 'Select completion date'}
+                </Text>
+                <Calendar size={20} color={colors.text.muted} />
+              </TouchableOpacity>
+            )}
           </View>
         </Animated.View>
 

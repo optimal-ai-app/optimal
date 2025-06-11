@@ -24,6 +24,7 @@ import {
 import { Header } from '@/src/components/Header'
 import { Card } from '@/src/components/Card'
 import { Button } from '@/src/components/Button'
+import { GoalCreationModal } from '@/src/components/GoalCreationModal'
 import { colors } from '@/src/constants/colors'
 import { fonts } from '@/src/constants/fonts'
 import { useAuthContext } from '@/src/context/AuthContext'
@@ -56,17 +57,22 @@ export default function HomeScreen () {
   // State
   const [tasks, setTasks] = useState<Task[]>([])
   const [goals, setGoals] = useState<Goal[]>([])
+  const [showGoalModal, setShowGoalModal] = useState(false)
 
   // Handle new goal via agent
-  const handleNewGoal = () => {
+  const handleNewGoalWithAgent = () => {
     router.push({
       pathname: '/(tabs)/agent',
       params: {
-        action: 'new-goal',
-        prompt:
-          "I'd like to help you set a new goal. What would you like to achieve?"
+        action: 'create-goal',
+        prompt: 'Help me create a goal'
       }
     })
+  }
+
+  // Handle manual goal creation
+  const handleNewGoalManually = () => {
+    router.push('/home/create-goal')
   }
 
   // Handle task completion
@@ -107,7 +113,7 @@ export default function HomeScreen () {
             <View style={styles.quickActionsGrid}>
               <TouchableOpacity
                 style={styles.quickActionButton}
-                onPress={handleNewGoal}
+                onPress={() => setShowGoalModal(true)}
                 accessibilityLabel='Set New Goal'
                 accessibilityRole='button'
               >
@@ -329,7 +335,7 @@ export default function HomeScreen () {
                 </Text>
                 <Button
                   title='Set a Goal'
-                  onPress={handleNewGoal}
+                  onPress={() => setShowGoalModal(true)}
                   style={styles.emptyGoalsButton}
                 />
               </View>
@@ -337,6 +343,14 @@ export default function HomeScreen () {
           </Card>
         </Animated.View>
       </ScrollView>
+
+      {/* Goal Creation Modal */}
+      <GoalCreationModal
+        visible={showGoalModal}
+        onClose={() => setShowGoalModal(false)}
+        onCreateWithAgent={handleNewGoalWithAgent}
+        onCreateManually={handleNewGoalManually}
+      />
     </View>
   )
 }
