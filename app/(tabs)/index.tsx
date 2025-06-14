@@ -5,7 +5,10 @@ import {
   StyleSheet,
   TouchableOpacity,
   ScrollView,
-  Pressable
+  Pressable,
+  ViewStyle,
+  TextStyle,
+  Task
 } from 'react-native'
 import { Link, useRouter } from 'expo-router'
 import { LinearGradient } from 'expo-linear-gradient'
@@ -29,35 +32,14 @@ import { TaskCreationModal } from '@/src/components/TaskCreationModal'
 import { colors } from '@/src/constants/colors'
 import { fonts } from '@/src/constants/fonts'
 import { useAuthContext } from '@/src/context/AuthContext'
-
-// Task type definition
-interface Task {
-  id: string
-  title: string
-  completionTime: string
-  priority: '!' | '!!' | '!!!'
-  description?: string
-  completed?: boolean
-}
-
-// Goal type definition
-interface Goal {
-  id: string
-  title: string
-  targetValue: number
-  currentValue: number
-  unit: string
-  createdAt: Date
-  tasks: Task[]
-}
+import { Goal, useUserGoals, useUserTasks } from '@/src/stores'
 
 export default function HomeScreen () {
   const router = useRouter()
-  const { user } = useAuthContext()
 
   // State
-  const [tasks, setTasks] = useState<Task[]>([])
-  const [goals, setGoals] = useState<Goal[]>([])
+  const tasks: Task[] = useUserTasks() as unknown as Task[]
+  const goals: Goal[] = useUserGoals() as unknown as Goal[]
   const [showGoalModal, setShowGoalModal] = useState(false)
   const [showTaskModal, setShowTaskModal] = useState(false)
 
@@ -91,15 +73,6 @@ export default function HomeScreen () {
   // Handle manual task creation
   const handleNewTaskManually = () => {
     router.push('/home/create-task')
-  }
-
-  // Handle task completion
-  const toggleTaskCompletion = (taskId: string) => {
-    setTasks(prev =>
-      prev.map(task =>
-        task.id === taskId ? { ...task, completed: !task.completed } : task
-      )
-    )
   }
 
   // Get priority color
@@ -138,7 +111,7 @@ export default function HomeScreen () {
                 <View
                   style={[
                     styles.quickActionIcon,
-                    { backgroundColor: colors.button.primary }
+                    { backgroundColor: colors.button.primary } as ViewStyle
                   ]}
                 >
                   <Plus size={24} color={colors.text.primary} />
@@ -161,7 +134,7 @@ export default function HomeScreen () {
                   <View
                     style={[
                       styles.quickActionIcon,
-                      { backgroundColor: colors.button.accent }
+                      { backgroundColor: colors.button.accent } as ViewStyle
                     ]}
                   >
                     <MessageSquare size={24} color={colors.text.primary} />
@@ -184,8 +157,8 @@ export default function HomeScreen () {
               <TouchableOpacity
                 onPress={() => setShowTaskModal(true)}
                 style={styles.addTaskButton}
-                accessibilityLabel="Add new task"
-                accessibilityRole="button"
+                accessibilityLabel='Add new task'
+                accessibilityRole='button'
               >
                 <Plus size={20} color={colors.text.primary} />
               </TouchableOpacity>
@@ -194,10 +167,12 @@ export default function HomeScreen () {
             {tasks.map((task, index) => (
               <Pressable
                 key={task.id}
-                style={[
-                  styles.taskItem,
-                  index === tasks.length - 1 && styles.lastTaskItem
-                ]}
+                style={
+                  [
+                    styles.taskItem,
+                    index === tasks.length - 1 ? styles.lastTaskItem : null
+                  ].filter(Boolean) as ViewStyle[]
+                }
                 onLongPress={() => {
                   router.push({
                     pathname: '/(tabs)/agent',
@@ -213,7 +188,7 @@ export default function HomeScreen () {
               >
                 <TouchableOpacity
                   style={styles.taskCheckbox}
-                  onPress={() => toggleTaskCompletion(task.id)}
+                  onPress={() => {}}
                   accessibilityLabel={
                     task.completed ? 'Mark as incomplete' : 'Mark as complete'
                   }
@@ -230,10 +205,12 @@ export default function HomeScreen () {
 
                 <View style={styles.taskContent}>
                   <Text
-                    style={[
-                      styles.taskTitle,
-                      task.completed && styles.taskTitleCompleted
-                    ]}
+                    style={
+                      [
+                        styles.taskTitle,
+                        task.completed ? styles.taskTitleCompleted : null
+                      ].filter(Boolean) as TextStyle[]
+                    }
                     numberOfLines={2}
                   >
                     {task.title}
@@ -252,7 +229,9 @@ export default function HomeScreen () {
                       <Text
                         style={[
                           styles.taskMetaText,
-                          { color: getPriorityColor(task.priority) }
+                          {
+                            color: getPriorityColor(task.priority)
+                          } as TextStyle
                         ]}
                       >
                         {task.priority}
@@ -308,50 +287,55 @@ export default function HomeScreen () {
               </Link>
             </View>
 
-            {goals.slice(0, 2).map((goal, index) => (
-              <Link
-                key={goal.id}
-                href={{
-                  pathname: '/home/goal-details',
-                  params: { id: goal.id }
-                }}
-                asChild
-              >
-                <TouchableOpacity
-                  style={[
-                    styles.goalPreview,
-                    index === Math.min(goals.length - 1, 1) &&
-                      (styles.lastGoalPreview as any)
-                  ]}
-                  accessibilityLabel={`Goal: ${goal.title}`}
-                  accessibilityRole='button'
-                  accessibilityHint='View goal details'
+            {goals.slice(0, 2).map((goal, index) => {
+              const isLast = index === Math.min(goals.length - 1, 1)
+              const goalPreviewStyle = {
+                ...styles.goalPreview,
+                ...(isLast ? { borderBottomWidth: 0 } : {})
+              } as ViewStyle
+
+              const progressStyle = {
+                width: 48,
+                height: 48,
+                borderRadius: 24,
+                justifyContent: 'center',
+                alignItems: 'center',
+                marginRight: 12,
+                backgroundColor: colors.button.primary
+              } as ViewStyle
+
+              return (
+                <Link
+                  key={goal.id}
+                  href={{
+                    pathname: '/home/goal-details',
+                    params: { id: goal.id }
+                  }}
+                  asChild
                 >
-                  <LinearGradient
-                    colors={[colors.gradient.start, colors.gradient.end]}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 0 }}
-                    style={styles.goalProgress}
+                  <TouchableOpacity
+                    style={goalPreviewStyle}
+                    accessibilityLabel={`Goal: ${goal.title}`}
+                    accessibilityRole='button'
+                    accessibilityHint='View goal details'
                   >
-                    <Text style={styles.goalProgressText}>
-                      {Math.round((goal.currentValue / goal.targetValue) * 100)}
-                      %
-                    </Text>
-                  </LinearGradient>
+                    <View style={progressStyle}>
+                      <Text style={styles.goalProgressText}>
+                        {Math.round(goal.progress)}%
+                      </Text>
+                    </View>
 
-                  <View style={styles.goalContent}>
-                    <Text style={styles.goalTitle} numberOfLines={1}>
-                      {goal.title}
-                    </Text>
-                    <Text style={styles.goalSubtitle}>
-                      {goal.currentValue} / {goal.targetValue} {goal.unit}
-                    </Text>
-                  </View>
+                    <View style={styles.goalContent}>
+                      <Text style={styles.goalTitle} numberOfLines={1}>
+                        {goal.title}
+                      </Text>
+                    </View>
 
-                  <ChevronRight size={20} color={colors.text.muted} />
-                </TouchableOpacity>
-              </Link>
-            ))}
+                    <ChevronRight size={20} color={colors.text.muted} />
+                  </TouchableOpacity>
+                </Link>
+              )
+            })}
 
             {goals.length === 0 && (
               <View style={styles.emptyGoalsContainer}>
@@ -392,29 +376,29 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background.primary
-  },
+  } as ViewStyle,
 
   scrollView: {
     flex: 1
-  },
+  } as ViewStyle,
 
   content: {
     padding: 16,
     paddingBottom: 32
-  },
+  } as ViewStyle,
 
   quickActionsCard: {
     padding: 16
-  },
+  } as ViewStyle,
 
   quickActionsGrid: {
     flexDirection: 'row',
     justifyContent: 'space-around'
-  },
+  } as ViewStyle,
 
   quickActionButton: {
     alignItems: 'center'
-  },
+  } as ViewStyle,
 
   quickActionIcon: {
     width: 56,
@@ -423,37 +407,37 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 8
-  },
+  } as ViewStyle,
 
   quickActionText: {
     fontSize: fonts.sizes.sm,
     color: colors.text.primary,
-    fontWeight: fonts.weights.medium as any
-  },
+    fontWeight: '500'
+  } as TextStyle,
 
   tasksCard: {
     padding: 16,
     marginTop: 16
-  },
+  } as ViewStyle,
 
   sectionHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     marginBottom: 16
-  },
+  } as ViewStyle,
 
   sectionTitleContainer: {
     flexDirection: 'row',
     alignItems: 'center'
-  },
+  } as ViewStyle,
 
   sectionTitle: {
     fontSize: fonts.sizes.lg,
-    fontWeight: fonts.weights.bold,
+    fontWeight: '700',
     color: colors.text.primary,
     marginLeft: 8
-  },
+  } as TextStyle,
 
   addTaskButton: {
     width: 32,
@@ -461,8 +445,8 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     backgroundColor: colors.button.primary,
     justifyContent: 'center',
-    alignItems: 'center',
-  },
+    alignItems: 'center'
+  } as ViewStyle,
 
   taskItem: {
     flexDirection: 'row',
@@ -470,75 +454,75 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     borderBottomWidth: 1,
     borderBottomColor: colors.utility.divider
-  },
+  } as ViewStyle,
 
   lastTaskItem: {
     borderBottomWidth: 0
-  },
+  } as ViewStyle,
 
   taskCheckbox: {
     marginRight: 12
-  },
+  } as ViewStyle,
 
   taskContent: {
     flex: 1
-  },
+  } as ViewStyle,
 
   taskTitle: {
     fontSize: fonts.sizes.md,
     color: colors.text.primary,
     marginBottom: 4
-  },
+  } as TextStyle,
 
   taskTitleCompleted: {
     textDecorationLine: 'line-through',
     color: colors.text.muted
-  },
+  } as TextStyle,
 
   taskMeta: {
     flexDirection: 'row',
     alignItems: 'center'
-  },
+  } as ViewStyle,
 
   taskMetaItem: {
     flexDirection: 'row',
     alignItems: 'center',
     marginRight: 16
-  },
+  } as ViewStyle,
 
   taskMetaText: {
     fontSize: fonts.sizes.sm,
     color: colors.text.muted,
     marginLeft: 4
-  },
+  } as TextStyle,
 
   taskMoreButton: {
     padding: 8,
     marginRight: -8
-  },
+  } as ViewStyle,
 
   emptyText: {
     fontSize: fonts.sizes.md,
     color: colors.text.muted,
     textAlign: 'center',
     marginTop: 8
-  },
+  } as TextStyle,
 
   goalsCard: {
     padding: 16,
     marginTop: 16
-  },
+  } as ViewStyle,
 
   viewAllButton: {
     flexDirection: 'row',
     alignItems: 'center'
-  },
+  } as ViewStyle,
 
   viewAllText: {
     fontSize: fonts.sizes.sm,
     color: colors.button.primary,
     marginRight: 4
-  },
+  } as TextStyle,
 
   goalPreview: {
     flexDirection: 'row',
@@ -546,48 +530,30 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     borderBottomWidth: 1,
     borderBottomColor: colors.utility.divider
-  },
-
-  lastGoalPreview: {
-    borderBottomWidth: 0
-  },
-
-  goalProgress: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 12
-  },
+  } as ViewStyle,
 
   goalProgressText: {
     fontSize: fonts.sizes.sm,
-    fontWeight: fonts.weights.bold,
+    fontWeight: '700',
     color: colors.text.primary
-  },
+  } as TextStyle,
 
   goalContent: {
     flex: 1
-  },
+  } as ViewStyle,
 
   goalTitle: {
     fontSize: fonts.sizes.md,
     color: colors.text.primary,
     marginBottom: 4
-  },
-
-  goalSubtitle: {
-    fontSize: fonts.sizes.sm,
-    color: colors.text.muted
-  },
+  } as TextStyle,
 
   emptyGoalsContainer: {
     alignItems: 'center',
     paddingVertical: 16
-  },
+  } as ViewStyle,
 
   emptyGoalsButton: {
     marginTop: 16
-  }
+  } as ViewStyle
 })

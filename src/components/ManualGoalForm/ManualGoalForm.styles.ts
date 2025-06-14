@@ -7,21 +7,21 @@ export const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background.primary,
   },
-  
+
   scrollView: {
     flex: 1,
   },
-  
+
   content: {
     padding: 20,
     paddingBottom: 40,
   },
-  
+
   header: {
     marginBottom: 32,
     alignItems: 'center',
   },
-  
+
   title: {
     fontSize: fonts.sizes.xxl,
     fontWeight: fonts.weights.bold,
@@ -29,23 +29,23 @@ export const styles = StyleSheet.create({
     marginBottom: 8,
     textAlign: 'center',
   },
-  
+
   subtitle: {
     fontSize: fonts.sizes.md,
     color: colors.text.secondary,
     textAlign: 'center',
     lineHeight: 22,
   },
-  
+
   form: {
     gap: 24,
   },
-  
+
   // Date picker field container
   dateFieldContainer: {
     marginBottom: 16,
   },
-  
+
   dateLabel: {
     fontSize: fonts.sizes.sm,
     color: colors.text.muted,
@@ -53,7 +53,7 @@ export const styles = StyleSheet.create({
     marginLeft: 4,
     fontWeight: fonts.weights.medium,
   },
-  
+
   datePickerButton: {
     height: 56,
     paddingHorizontal: 16,
@@ -65,33 +65,33 @@ export const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
   },
-  
+
   datePickerButtonFocused: {
     borderColor: colors.button.primary,
     backgroundColor: colors.background.card,
   },
-  
+
   datePickerText: {
     fontSize: fonts.sizes.md,
     color: colors.text.primary,
     fontWeight: fonts.weights.medium,
   },
-  
+
   datePickerPlaceholder: {
     color: colors.text.muted,
     fontWeight: fonts.weights.regular,
   },
-  
+
   // Text area styling
   textAreaContainer: {
     minHeight: 120,
   },
-  
+
   actionButtons: {
     marginTop: 32,
     gap: 16,
   },
-  
+
   createButton: {
     backgroundColor: colors.button.primary,
     borderRadius: 12,
@@ -106,24 +106,24 @@ export const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 4,
   },
-  
+
   createButtonDisabled: {
     backgroundColor: colors.background.container,
     opacity: 0.5,
     shadowOpacity: 0,
     elevation: 0,
   },
-  
+
   createButtonText: {
     fontSize: fonts.sizes.md,
     color: colors.text.primary,
     fontWeight: fonts.weights.bold,
   },
-  
+
   createButtonTextDisabled: {
     color: colors.text.muted,
   },
-  
+
   // Success screen styles
   successContainer: {
     backgroundColor: colors.background.card,
@@ -140,7 +140,7 @@ export const styles = StyleSheet.create({
     shadowRadius: 16,
     elevation: 8,
   },
-  
+
   successIcon: {
     width: 80,
     height: 80,
@@ -150,7 +150,7 @@ export const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 24,
   },
-  
+
   successTitle: {
     fontSize: fonts.sizes.xl,
     fontWeight: fonts.weights.bold,
@@ -158,7 +158,7 @@ export const styles = StyleSheet.create({
     marginBottom: 12,
     textAlign: 'center',
   },
-  
+
   successMessage: {
     fontSize: fonts.sizes.md,
     color: colors.text.secondary,
@@ -167,13 +167,13 @@ export const styles = StyleSheet.create({
     lineHeight: 24,
     paddingHorizontal: 8,
   },
-  
+
   successActions: {
     flexDirection: 'row',
     gap: 16,
     width: '100%',
   },
-  
+
   successButton: {
     flex: 1,
     backgroundColor: colors.button.primary,
@@ -181,24 +181,24 @@ export const styles = StyleSheet.create({
     paddingVertical: 16,
     alignItems: 'center',
   },
-  
+
   successButtonSecondary: {
     backgroundColor: colors.background.container,
     borderWidth: 2,
     borderColor: colors.button.primary,
   },
-  
+
   successButtonText: {
     fontSize: fonts.sizes.md,
     color: colors.text.primary,
     fontWeight: fonts.weights.bold,
   },
-  
+
   successButtonTextSecondary: {
     color: colors.button.primary,
     fontWeight: fonts.weights.bold,
   },
-  
+
   // Web date input styles
   webDateInput: {
     height: 56,
@@ -211,7 +211,7 @@ export const styles = StyleSheet.create({
     color: colors.text.primary,
     fontFamily: 'system',
   },
-  
+
   webDateInputFocused: {
     borderColor: colors.button.primary,
     backgroundColor: colors.background.card,

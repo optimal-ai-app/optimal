@@ -4,7 +4,8 @@ import {
   Chrome as Home,
   MessageSquare,
   ChartBar as BarChart,
-  Settings
+  Settings,
+  Plus
 } from 'lucide-react-native'
 
 import { colors } from '@/src/constants/colors'
@@ -46,6 +47,7 @@ export default function TabsLayout () {
       <Tabs.Screen
         name='analytics'
         options={{
+          href: null,
           title: 'Analytics',
           tabBarIcon: ({ color, size }) => (
             <BarChart color={color} size={size} />

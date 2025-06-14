@@ -9,7 +9,14 @@ import {
 import { Link, useRouter } from 'expo-router'
 import { LinearGradient } from 'expo-linear-gradient'
 import Animated, { FadeInDown } from 'react-native-reanimated'
-import { Flag, ChevronRight, Calendar, Target, Plus } from 'lucide-react-native'
+import {
+  Flag,
+  ChevronRight,
+  Calendar,
+  Target,
+  Plus,
+  ChevronLeft
+} from 'lucide-react-native'
 
 import { Header } from '@/src/components/Header'
 import { Card } from '@/src/components/Card'
@@ -71,15 +78,15 @@ export default function GoalsScreen () {
 
   return (
     <View style={styles.container}>
-      <Header 
-        title='Goals' 
-        showBackButton 
+      <Header
+        title='Goals'
+        showBackButton
         rightAction={
           <TouchableOpacity
             onPress={() => setShowGoalModal(true)}
             style={styles.addButton}
-            accessibilityLabel="Add new goal"
-            accessibilityRole="button"
+            accessibilityLabel='Add new goal'
+            accessibilityRole='button'
           >
             <Plus size={24} color={colors.text.primary} />
           </TouchableOpacity>
@@ -194,7 +201,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     backgroundColor: colors.button.primary,
     justifyContent: 'center',
-    alignItems: 'center',
+    alignItems: 'center'
   },
 
   sectionTitle: {
