@@ -1,7 +1,16 @@
 import React from 'react'
 import { View, Text, TouchableOpacity, ViewStyle } from 'react-native'
 import { Link } from 'expo-router'
-import { ChevronRight, Target, Flame } from 'lucide-react-native'
+import {
+  ChevronRight,
+  Target,
+  Flame,
+  Calendar,
+  Clock,
+  Trophy,
+  TrendingUp,
+  AlertCircle
+} from 'lucide-react-native'
 import { Goal } from '@/src/stores'
 import { colors } from '@/src/constants/colors'
 import { styles } from './GoalCard.styles'
@@ -21,15 +30,36 @@ export const GoalCard: React.FC<Props> = ({ goal }) => {
     return colors.status?.error || '#EF4444'
   }
 
+  const getProgressIcon = (progress: number) => {
+    if (progress >= 80)
+      return <Trophy size={16} color={colors.status?.success || '#10B981'} />
+    if (progress >= 50)
+      return (
+        <TrendingUp size={16} color={colors.status?.warning || '#F59E0B'} />
+      )
+    return <AlertCircle size={16} color={colors.status?.error || '#EF4444'} />
+  }
+
   const formatDueDate = (date: Date) => {
     const now = new Date()
     const diffTime = date.getTime() - now.getTime()
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
 
-    if (diffDays === 0) return 'Completion day: today!'
-    if (diffDays === 1) return 'Completion day: tomorrow!'
-    if (diffDays > 0) return `Completion day in: ${diffDays} days`
-    return 'Completion day: overdue!'
+    if (diffDays === 0) return 'Today'
+    if (diffDays === 1) return 'Tomorrow'
+    if (diffDays > 0) return `${diffDays} days left`
+    return 'Overdue'
+  }
+
+  const isOverdue =
+    goal.dueDate.getTime() + 1 * 24 * 60 * 60 * 1000 < new Date().getTime() &&
+    goal.status === 'active'
+
+  const progressWidth = Math.max(0, Math.min(100, goal.progress))
+
+  const combinedStyle: ViewStyle = {
+    ...styles.goalPreview,
+    ...(isOverdue ? styles.overdueGoal : {})
   }
 
   return (
@@ -41,7 +71,7 @@ export const GoalCard: React.FC<Props> = ({ goal }) => {
       asChild
     >
       <TouchableOpacity
-        style={goalPreviewStyle}
+        style={combinedStyle}
         accessibilityLabel={`Goal: ${goal.title}`}
         accessibilityRole='button'
         accessibilityHint='View goal details'
@@ -50,11 +80,13 @@ export const GoalCard: React.FC<Props> = ({ goal }) => {
           {/* Header with title and status */}
           <View style={styles.headerRow}>
             <View style={styles.titleContainer}>
-              <Target
-                size={16}
-                color={colors.text.primary}
-                style={styles.titleIcon}
-              />
+              <View style={styles.titleIconContainer}>
+                <Target
+                  size={16}
+                  color={colors.text.primary}
+                  style={styles.titleIcon}
+                />
+              </View>
               <Text style={styles.goalTitle} numberOfLines={1}>
                 {goal.title}
               </Text>
@@ -79,20 +111,24 @@ export const GoalCard: React.FC<Props> = ({ goal }) => {
           {/* Progress and stats row */}
           <View style={styles.statsRow}>
             <View style={styles.progressContainer}>
+              <View style={styles.progressHeader}>
+                {getProgressIcon(goal.progress)}
+                <Text style={styles.progressText}>
+                  {Math.round(goal.progress)}% complete
+                </Text>
+              </View>
               <View style={styles.progressBar}>
                 <View
                   style={[
                     styles.progressFill,
                     {
-                      width: `${goal.progress}%`,
+                      flex: progressWidth,
                       backgroundColor: getProgressColor(goal.progress)
                     }
                   ]}
                 />
+                <View style={{ flex: 100 - progressWidth }} />
               </View>
-              <Text style={styles.progressText}>
-                {Math.round(goal.progress)}% complete
-              </Text>
             </View>
 
             <View style={styles.statsContainer}>
@@ -105,9 +141,17 @@ export const GoalCard: React.FC<Props> = ({ goal }) => {
 
           {/* Due date */}
           <View style={styles.footerRow}>
-            <Text style={styles.dueDateText}>
-              {formatDueDate(goal.dueDate)}
-            </Text>
+            <View style={styles.dueDateContainer}>
+              <Calendar
+                size={14}
+                color={isOverdue ? colors.status?.error : colors.text.secondary}
+              />
+              <Text
+                style={[styles.dueDateText, isOverdue && styles.overdueText]}
+              >
+                {formatDueDate(goal.dueDate)}
+              </Text>
+            </View>
             <ChevronRight size={20} color={colors.text.muted} />
           </View>
         </View>

@@ -25,6 +25,7 @@ export {
     useUserDeleteTask,
     useUserGetGoals,
     useUserGetTasks,
+    useGoalName,
     type User,
     type Goal,
     type Task

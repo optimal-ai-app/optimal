@@ -42,6 +42,7 @@ interface UserState {
     tasks: Task[]
     error: string | null
     isLoading: boolean
+    goalMap: Map<string, Goal>
 }
 
 interface UserActions {
@@ -59,7 +60,7 @@ interface UserActions {
     getTask: (id: string) => Task
     setError: (error: string | null) => void
     setLoading: (loading: boolean) => void
-
+    getGoalName: (goalId?: string) => string | null
 }
 
 type UserStore = UserActions & UserState
@@ -71,11 +72,13 @@ export const useUserStore = create<UserStore>((set, get) => ({
     tasks: tasks, //change this to get from backend
     isLoading: false,
     error: null,
+    goalMap: new Map(goals.map(goal => [goal.id, goal])),
 
     // Actions
     addGoal: (goal: Goal) => {
         set(state => ({
-            goals: [...state.goals, goal]
+            goals: [...state.goals, goal],
+            goalMap: new Map(state.goalMap).set(goal.id, goal)
         }))
     },
 
@@ -87,7 +90,8 @@ export const useUserStore = create<UserStore>((set, get) => ({
 
     updateGoal: (goal: Goal) => {
         set(state => ({
-            goals: state.goals.map(g => g.id === goal.id ? goal : g)
+            goals: state.goals.map(g => g.id === goal.id ? goal : g),
+            goalMap: new Map(state.goalMap).set(goal.id, goal)
         }))
     },
 
@@ -98,9 +102,14 @@ export const useUserStore = create<UserStore>((set, get) => ({
     },
 
     deleteGoal: (goal: Goal) => {
-        set(state => ({
-            goals: state.goals.filter(g => g.id !== goal.id)
-        }))
+        set(state => {
+            const newMap = new Map(state.goalMap)
+            newMap.delete(goal.id)
+            return {
+                goals: state.goals.filter(g => g.id !== goal.id),
+                goalMap: newMap
+            }
+        })
     },
 
     deleteTask: (task: Task) => {
@@ -135,7 +144,13 @@ export const useUserStore = create<UserStore>((set, get) => ({
 
     setLoading: (loading: boolean) => {
         set({ isLoading: loading })
-    }
+    },
+
+    getGoalName: (goalId?: string) => {
+        if (!goalId) return null
+        const goal = get().goalMap.get(goalId)
+        return goal ? goal.title : null
+    },
 }))
 
 // Selector hooks for better performance
@@ -151,3 +166,7 @@ export const useUserDeleteGoal = () => useUserStore(state => state.deleteGoal)
 export const useUserDeleteTask = () => useUserStore(state => state.deleteTask)
 export const useUserGetGoals = () => useUserStore(state => state.getGoals)
 export const useUserGetTasks = () => useUserStore(state => state.getTasks)
+
+// Add new selector for getting goal names
+export const useGoalName = (goalId?: string) =>
+    useUserStore(state => state.getGoalName(goalId))

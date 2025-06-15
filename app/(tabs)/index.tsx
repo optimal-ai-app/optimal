@@ -48,6 +48,41 @@ export default function HomeScreen () {
   const [activeFilters, setActiveFilters] = useState<TaskFilterType[]>(['all'])
   const [activeSort, setActiveSort] = useState<TaskSortType>('dueDate')
 
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  const tomorrow = new Date(today)
+  tomorrow.setDate(tomorrow.getDate() + 1)
+
+  const { todaysTasks, upcomingTasks } = useMemo(() => {
+    const todayTasks = tasks.filter(task => {
+      const taskDate = new Date(task.dueDate)
+      taskDate.setHours(0, 0, 0, 0)
+      return (
+        taskDate.getTime() === today.getTime() && task.status !== 'completed'
+      )
+    })
+
+    const upcoming = tasks
+      .filter(task => {
+        const taskDate = new Date(task.dueDate)
+        taskDate.setHours(0, 0, 0, 0)
+        return (
+          taskDate.getTime() > today.getTime() && task.status !== 'completed'
+        )
+      })
+      .sort((a, b) => a.dueDate.getTime() - b.dueDate.getTime())
+      .slice(0, 3)
+
+    return {
+      todaysTasks: todayTasks,
+      upcomingTasks: upcoming
+    }
+  }, [tasks])
+
+  const displayedTasks = todaysTasks.length > 0 ? todaysTasks : upcomingTasks
+  const sectionTitle =
+    todaysTasks.length > 0 ? "Today's Tasks" : 'Upcoming Tasks'
+
   const handleFilterChange = (
     filters: TaskFilterType[],
     sortBy: TaskSortType
@@ -180,43 +215,53 @@ export default function HomeScreen () {
         </Animated.View>
 
         {/* Tasks Section */}
-        <Animated.View entering={FadeInDown.duration(500).delay(200)}>
-          <Card style={styles.tasksCard}>
-            <View style={styles.sectionHeader}>
-              <View style={styles.sectionTitleContainer}>
-                <Target size={20} color={colors.button.primary} />
-                <Text style={styles.sectionTitle}>Today's Tasks</Text>
-              </View>
-              <View style={styles.sectionActions}>
-                <TaskFilter onFilterChange={handleFilterChange} />
-                <TouchableOpacity
-                  onPress={() => setShowTaskModal(true)}
-                  style={styles.addTaskButton}
-                  accessibilityLabel='Add new task'
-                  accessibilityRole='button'
-                >
-                  <Plus size={20} color={colors.text.primary} />
-                </TouchableOpacity>
-              </View>
+        <Card style={styles.sectionCard}>
+          <View style={styles.sectionHeader}>
+            <View style={styles.sectionTitleContainer}>
+              <Text style={styles.sectionTitle}>{sectionTitle}</Text>
+              {todaysTasks.length === 0 && upcomingTasks.length > 0 && (
+                <Text style={styles.sectionSubtitle}>
+                  Next 3 upcoming tasks
+                </Text>
+              )}
             </View>
+            <View style={styles.sectionActions}>
+              <TouchableOpacity
+                onPress={() => router.push('/(tabs)/tasks')}
+                style={styles.viewAllButton}
+                accessibilityLabel='View all tasks'
+                accessibilityRole='button'
+              >
+                <Text style={styles.viewAllText}>View All</Text>
+                <ChevronRight size={16} color={colors.text.primary} />
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => setShowTaskModal(true)}
+                style={styles.addTaskButton}
+                accessibilityLabel='Add new task'
+                accessibilityRole='button'
+              >
+                <Plus size={20} color={colors.text.primary} />
+              </TouchableOpacity>
+            </View>
+          </View>
 
-            {filteredAndSortedTasks.map((task, index, filteredTasks) => (
-              <TaskCard
-                key={task.id}
-                task={task}
-                isLast={index === filteredTasks.length - 1}
-              />
-            ))}
+          {displayedTasks.map((task, index, filteredTasks) => (
+            <TaskCard
+              key={task.id}
+              task={task}
+              isLast={index === filteredTasks.length - 1}
+            />
+          ))}
 
-            {filteredAndSortedTasks.length === 0 && (
-              <Text style={styles.emptyText}>
-                {tasks.length === 0
-                  ? 'No tasks yet. Create your first task to get started!'
-                  : 'No tasks match the current filters.'}
-              </Text>
-            )}
-          </Card>
-        </Animated.View>
+          {displayedTasks.length === 0 && (
+            <Text style={styles.emptyText}>
+              {tasks.length === 0
+                ? 'No tasks yet. Create your first task to get started!'
+                : 'No tasks for today or upcoming.'}
+            </Text>
+          )}
+        </Card>
 
         {/* Goals Preview */}
         <Animated.View entering={FadeInDown.duration(500).delay(300)}>
@@ -238,9 +283,13 @@ export default function HomeScreen () {
               </Link>
             </View>
 
-            {goals.slice(0, 2).map((goal, index) => {
-              return <GoalCard key={goal.id} goal={goal} />
-            })}
+            {goals
+              .filter(goal => goal.status === 'active')
+              .sort(() => Math.random() - 0.5)
+              .slice(0, 2)
+              .map(goal => (
+                <GoalCard key={goal.id} goal={goal} />
+              ))}
 
             {goals.length === 0 && (
               <View style={styles.emptyGoalsContainer}>
@@ -320,7 +369,7 @@ const styles = StyleSheet.create({
     fontWeight: '500'
   } as TextStyle,
 
-  tasksCard: {
+  sectionCard: {
     padding: 16,
     marginTop: 16
   } as ViewStyle,
@@ -333,15 +382,19 @@ const styles = StyleSheet.create({
   } as ViewStyle,
 
   sectionTitleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center'
+    flexDirection: 'column'
   } as ViewStyle,
 
   sectionTitle: {
     fontSize: fonts.sizes.lg,
     fontWeight: '700',
-    color: colors.text.primary,
-    marginLeft: 8
+    color: colors.text.primary
+  } as TextStyle,
+
+  sectionSubtitle: {
+    fontSize: fonts.sizes.sm,
+    color: colors.text.muted,
+    marginTop: 2
   } as TextStyle,
 
   sectionActions: {
@@ -359,58 +412,16 @@ const styles = StyleSheet.create({
     alignItems: 'center'
   } as ViewStyle,
 
-  taskItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.utility.divider
-  } as ViewStyle,
-
-  lastTaskItem: {
-    borderBottomWidth: 0
-  } as ViewStyle,
-
-  taskCheckbox: {
-    marginRight: 12
-  } as ViewStyle,
-
-  taskContent: {
-    flex: 1
-  } as ViewStyle,
-
-  taskTitle: {
-    fontSize: fonts.sizes.md,
-    color: colors.text.primary,
-    marginBottom: 4
-  } as TextStyle,
-
-  taskTitleCompleted: {
-    textDecorationLine: 'line-through',
-    color: colors.text.muted
-  } as TextStyle,
-
-  taskMeta: {
+  viewAllButton: {
     flexDirection: 'row',
     alignItems: 'center'
   } as ViewStyle,
 
-  taskMetaItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginRight: 16
-  } as ViewStyle,
-
-  taskMetaText: {
+  viewAllText: {
     fontSize: fonts.sizes.sm,
-    color: colors.text.muted,
-    marginLeft: 4
+    color: colors.text.primary,
+    marginRight: 4
   } as TextStyle,
-
-  taskMoreButton: {
-    padding: 8,
-    marginRight: -8
-  } as ViewStyle,
 
   emptyText: {
     fontSize: fonts.sizes.md,
@@ -423,41 +434,6 @@ const styles = StyleSheet.create({
     padding: 16,
     marginTop: 16
   } as ViewStyle,
-
-  viewAllButton: {
-    flexDirection: 'row',
-    alignItems: 'center'
-  } as ViewStyle,
-
-  viewAllText: {
-    fontSize: fonts.sizes.sm,
-    color: colors.button.primary,
-    marginRight: 4
-  } as TextStyle,
-
-  goalPreview: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.utility.divider
-  } as ViewStyle,
-
-  goalProgressText: {
-    fontSize: fonts.sizes.sm,
-    fontWeight: '700',
-    color: colors.text.primary
-  } as TextStyle,
-
-  goalContent: {
-    flex: 1
-  } as ViewStyle,
-
-  goalTitle: {
-    fontSize: fonts.sizes.md,
-    color: colors.text.primary,
-    marginBottom: 4
-  } as TextStyle,
 
   emptyGoalsContainer: {
     alignItems: 'center',

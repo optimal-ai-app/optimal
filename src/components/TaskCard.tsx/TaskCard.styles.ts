@@ -122,4 +122,26 @@ export const styles = StyleSheet.create({
         borderRadius: 8,
         backgroundColor: 'rgba(255, 255, 255, 0.03)',
     } as ViewStyle,
+
+    titleContainer: {
+        marginBottom: 4,
+    } as ViewStyle,
+
+    goalBadge: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+        paddingHorizontal: 6,
+        paddingVertical: 2,
+        borderRadius: 8,
+        alignSelf: 'flex-start',
+        marginTop: 4,
+    } as ViewStyle,
+
+    goalText: {
+        fontSize: fonts.sizes.xs,
+        color: colors.button.primary,
+        fontWeight: '500',
+        marginLeft: 4,
+    } as TextStyle,
 });

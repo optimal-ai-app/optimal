@@ -7,12 +7,14 @@ import {
   CheckCircle2,
   Circle,
   Calendar,
-  AlertTriangle
+  AlertTriangle,
+  Target
 } from 'lucide-react-native'
 import { useRouter } from 'expo-router'
 import { Task } from '@/src/stores'
 import { colors } from '@/src/constants/colors'
 import { styles } from './TaskCard.styles'
+import { useGoalName } from '@/src/stores'
 
 type Props = {
   task: Task
@@ -21,6 +23,7 @@ type Props = {
 
 export const TaskCard: React.FC<Props> = ({ task, isLast }) => {
   const router = useRouter()
+  const goalName = useGoalName(task.goalId)
 
   const getPriorityConfig = (priority: '!' | '!!' | '!!!') => {
     switch (priority) {
@@ -122,15 +125,25 @@ export const TaskCard: React.FC<Props> = ({ task, isLast }) => {
       </TouchableOpacity>
 
       <View style={styles.taskContent}>
-        <Text
-          style={[
-            styles.taskTitle,
-            task.status === 'completed' && styles.completedTitle
-          ]}
-          numberOfLines={1}
-        >
-          {task.title}
-        </Text>
+        <View style={styles.titleContainer}>
+          <Text
+            style={[
+              styles.taskTitle,
+              task.status === 'completed' && styles.completedTitle
+            ]}
+            numberOfLines={1}
+          >
+            {task.title}
+          </Text>
+          {goalName && (
+            <View style={styles.goalBadge}>
+              <Target size={12} color={colors.button.primary} />
+              <Text style={styles.goalText} numberOfLines={1}>
+                {goalName}
+              </Text>
+            </View>
+          )}
+        </View>
 
         <View style={styles.metaRow}>
           <View

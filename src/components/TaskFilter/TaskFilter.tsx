@@ -11,7 +11,7 @@ import { Filter, X, Check } from 'lucide-react-native'
 import { colors } from '@/src/constants/colors'
 import { fonts } from '@/src/constants/fonts'
 
-export type TaskFilterType = 'all' | 'todo' | 'overdue' | 'completed'
+export type TaskFilterType = 'all' | 'todo' | 'overdue' | 'completed' | 'today'
 export type TaskSortType = 'dueDate' | 'alphabetical' | 'priority'
 
 interface TaskFilterProps {
@@ -25,6 +25,7 @@ export const TaskFilter: React.FC<TaskFilterProps> = ({ onFilterChange }) => {
 
   const filterOptions: { value: TaskFilterType; label: string }[] = [
     { value: 'all', label: 'All Tasks' },
+    { value: 'today', label: "Today's Tasks" },
     { value: 'todo', label: 'To-Do' },
     { value: 'overdue', label: 'Overdue' },
     { value: 'completed', label: 'Completed' }

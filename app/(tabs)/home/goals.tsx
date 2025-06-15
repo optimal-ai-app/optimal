@@ -23,45 +23,13 @@ import { Card } from '@/src/components/Card'
 import { GoalCreationModal } from '@/src/components/GoalCreationModal'
 import { colors } from '@/src/constants/colors'
 import { fonts } from '@/src/constants/fonts'
-
-// Mock data for goals
-const goals = [
-  {
-    id: '1',
-    title: 'Do 30 pushups',
-    targetValue: 30,
-    currentValue: 10,
-    unit: 'pushups',
-    createdAt: new Date(),
-    streak: 5,
-    completionRate: 85
-  },
-  {
-    id: '2',
-    title: 'Read for 30 minutes daily',
-    targetValue: 30,
-    currentValue: 20,
-    unit: 'minutes',
-    createdAt: new Date(),
-    streak: 3,
-    completionRate: 75
-  },
-  {
-    id: '3',
-    title: 'Meditate for 10 minutes',
-    targetValue: 10,
-    currentValue: 8,
-    unit: 'minutes',
-    createdAt: new Date(),
-    streak: 7,
-    completionRate: 90
-  }
-]
+import { GoalCard } from '@/src/components/GoalCard/GoalCard'
+import { useUserGoals, Goal } from '@/src/stores'
 
 export default function GoalsScreen () {
   const router = useRouter()
   const [showGoalModal, setShowGoalModal] = useState(false)
-
+  const goals = useUserGoals() as unknown as Goal[]
   const handleCreateWithAgent = () => {
     router.push({
       pathname: '/(tabs)/agent',
@@ -102,70 +70,8 @@ export default function GoalsScreen () {
         <Animated.View entering={FadeInDown.duration(500).delay(100)}>
           <Text style={styles.sectionTitle}>Active Goals</Text>
 
-          {goals.map((goal, index) => (
-            <Link
-              key={goal.id}
-              href={{
-                pathname: '/home/goal-details',
-                params: { id: goal.id }
-              }}
-              asChild
-            >
-              <TouchableOpacity>
-                <Card style={styles.goalCard}>
-                  <View style={styles.goalHeader}>
-                    <LinearGradient
-                      colors={[colors.gradient.start, colors.gradient.end]}
-                      start={{ x: 0, y: 0 }}
-                      end={{ x: 1, y: 0 }}
-                      style={styles.goalProgress}
-                    >
-                      <Text style={styles.goalProgressText}>
-                        {Math.round(
-                          (goal.currentValue / goal.targetValue) * 100
-                        )}
-                        %
-                      </Text>
-                    </LinearGradient>
-
-                    <View style={styles.goalTitleContainer}>
-                      <Text style={styles.goalTitle}>{goal.title}</Text>
-                      <Text style={styles.goalSubtitle}>
-                        {goal.currentValue} / {goal.targetValue} {goal.unit}
-                      </Text>
-                    </View>
-
-                    <ChevronRight size={20} color={colors.text.muted} />
-                  </View>
-
-                  <View style={styles.goalStats}>
-                    <View style={styles.goalStat}>
-                      <Calendar size={16} color={colors.button.primary} />
-                      <Text style={styles.goalStatLabel}>Streak</Text>
-                      <Text style={styles.goalStatValue}>
-                        {goal.streak} days
-                      </Text>
-                    </View>
-
-                    <View style={styles.goalStat}>
-                      <Target size={16} color={colors.button.accent} />
-                      <Text style={styles.goalStatLabel}>Completion</Text>
-                      <Text style={styles.goalStatValue}>
-                        {goal.completionRate}%
-                      </Text>
-                    </View>
-
-                    <View style={styles.goalStat}>
-                      <Flag size={16} color={colors.status.success} />
-                      <Text style={styles.goalStatLabel}>Created</Text>
-                      <Text style={styles.goalStatValue}>
-                        {goal.createdAt.toLocaleDateString()}
-                      </Text>
-                    </View>
-                  </View>
-                </Card>
-              </TouchableOpacity>
-            </Link>
+          {goals.map(goal => (
+            <GoalCard key={goal.id} goal={goal} />
           ))}
         </Animated.View>
       </ScrollView>
