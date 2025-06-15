@@ -21,7 +21,7 @@ export const goals: Goal[] = [
         createdAt: new Date(),
         dueDate: new Date(),
         status: 'active',
-        priority: 'medium',
+        // priority: 'medium',
         tags: ['tag3', 'tag4'],
         progress: 75,
         updatedAt: new Date(),
@@ -35,10 +35,10 @@ export const tasks: Task[] = [
         title: 'Task 1',
         description: 'Description 1',
         createdAt: new Date(),
-        dueDate: new Date(),
+        dueDate: new Date(Date.now() + 0 * 24 * 60 * 60 * 1000),
         status: 'todo',
         updatedAt: new Date(),
-        completionDate: new Date(),
+        completionDate: new Date(Date.now() + 4 * 24 * 60 * 60 * 1000),
         priority: '!'
     }
 ]   

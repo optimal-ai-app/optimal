@@ -15,11 +15,8 @@ import { LinearGradient } from 'expo-linear-gradient'
 import Animated, { FadeInDown } from 'react-native-reanimated'
 import {
   Target,
-  Clock,
   Flag,
   ChevronRight,
-  MoveVertical as MoreVertical,
-  CircleCheck as CheckCircle2,
   MessageSquare,
   Plus
 } from 'lucide-react-native'
@@ -33,6 +30,8 @@ import { colors } from '@/src/constants/colors'
 import { fonts } from '@/src/constants/fonts'
 import { useAuthContext } from '@/src/context/AuthContext'
 import { Goal, useUserGoals, useUserTasks } from '@/src/stores'
+import { TaskCard } from '@/src/components/TaskCard.tsx/TaskCard'
+import { GoalCard } from '@/src/components/GoalCard/GoalCard'
 
 export default function HomeScreen () {
   const router = useRouter()
@@ -73,20 +72,6 @@ export default function HomeScreen () {
   // Handle manual task creation
   const handleNewTaskManually = () => {
     router.push('/home/create-task')
-  }
-
-  // Get priority color
-  const getPriorityColor = (priority: '!' | '!!' | '!!!') => {
-    switch (priority) {
-      case '!':
-        return colors.status.success
-      case '!!':
-        return colors.status.warning
-      case '!!!':
-        return colors.status.error
-      default:
-        return colors.text.muted
-    }
   }
 
   return (
@@ -165,98 +150,11 @@ export default function HomeScreen () {
             </View>
 
             {tasks.map((task, index) => (
-              <Pressable
+              <TaskCard
                 key={task.id}
-                style={
-                  [
-                    styles.taskItem,
-                    index === tasks.length - 1 ? styles.lastTaskItem : null
-                  ].filter(Boolean) as ViewStyle[]
-                }
-                onLongPress={() => {
-                  router.push({
-                    pathname: '/(tabs)/agent',
-                    params: {
-                      action: 'edit-task',
-                      taskId: task.id
-                    }
-                  })
-                }}
-                accessibilityLabel={`Task: ${task.title}`}
-                accessibilityRole='button'
-                accessibilityHint='Long press to edit task'
-              >
-                <TouchableOpacity
-                  style={styles.taskCheckbox}
-                  onPress={() => {}}
-                  accessibilityLabel={
-                    task.completed ? 'Mark as incomplete' : 'Mark as complete'
-                  }
-                  accessibilityRole='checkbox'
-                  accessibilityState={{ checked: task.completed }}
-                >
-                  <CheckCircle2
-                    size={24}
-                    color={
-                      task.completed ? colors.status.success : colors.text.muted
-                    }
-                  />
-                </TouchableOpacity>
-
-                <View style={styles.taskContent}>
-                  <Text
-                    style={
-                      [
-                        styles.taskTitle,
-                        task.completed ? styles.taskTitleCompleted : null
-                      ].filter(Boolean) as TextStyle[]
-                    }
-                    numberOfLines={2}
-                  >
-                    {task.title}
-                  </Text>
-
-                  <View style={styles.taskMeta}>
-                    <View style={styles.taskMetaItem}>
-                      <Clock size={14} color={colors.text.muted} />
-                      <Text style={styles.taskMetaText}>
-                        {task.completionTime}
-                      </Text>
-                    </View>
-
-                    <View style={styles.taskMetaItem}>
-                      <Flag size={14} color={getPriorityColor(task.priority)} />
-                      <Text
-                        style={[
-                          styles.taskMetaText,
-                          {
-                            color: getPriorityColor(task.priority)
-                          } as TextStyle
-                        ]}
-                      >
-                        {task.priority}
-                      </Text>
-                    </View>
-                  </View>
-                </View>
-
-                <TouchableOpacity
-                  style={styles.taskMoreButton}
-                  onPress={() => {
-                    router.push({
-                      pathname: '/(tabs)/agent',
-                      params: {
-                        action: 'task-options',
-                        taskId: task.id
-                      }
-                    })
-                  }}
-                  accessibilityLabel='More options'
-                  accessibilityRole='button'
-                >
-                  <MoreVertical size={20} color={colors.text.muted} />
-                </TouchableOpacity>
-              </Pressable>
+                task={task}
+                isLast={index === tasks.length - 1}
+              />
             ))}
 
             {tasks.length === 0 && (
@@ -288,53 +186,7 @@ export default function HomeScreen () {
             </View>
 
             {goals.slice(0, 2).map((goal, index) => {
-              const isLast = index === Math.min(goals.length - 1, 1)
-              const goalPreviewStyle = {
-                ...styles.goalPreview,
-                ...(isLast ? { borderBottomWidth: 0 } : {})
-              } as ViewStyle
-
-              const progressStyle = {
-                width: 48,
-                height: 48,
-                borderRadius: 24,
-                justifyContent: 'center',
-                alignItems: 'center',
-                marginRight: 12,
-                backgroundColor: colors.button.primary
-              } as ViewStyle
-
-              return (
-                <Link
-                  key={goal.id}
-                  href={{
-                    pathname: '/home/goal-details',
-                    params: { id: goal.id }
-                  }}
-                  asChild
-                >
-                  <TouchableOpacity
-                    style={goalPreviewStyle}
-                    accessibilityLabel={`Goal: ${goal.title}`}
-                    accessibilityRole='button'
-                    accessibilityHint='View goal details'
-                  >
-                    <View style={progressStyle}>
-                      <Text style={styles.goalProgressText}>
-                        {Math.round(goal.progress)}%
-                      </Text>
-                    </View>
-
-                    <View style={styles.goalContent}>
-                      <Text style={styles.goalTitle} numberOfLines={1}>
-                        {goal.title}
-                      </Text>
-                    </View>
-
-                    <ChevronRight size={20} color={colors.text.muted} />
-                  </TouchableOpacity>
-                </Link>
-              )
+              return <GoalCard key={goal.id} goal={goal} />
             })}
 
             {goals.length === 0 && (

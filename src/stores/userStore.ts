@@ -17,7 +17,6 @@ export interface Goal {
     createdAt: Date
     dueDate: Date
     status: 'active' | 'completed' | 'archived'
-    priority: 'low' | 'medium' | 'high'
     tags: string[]
     progress: number
     updatedAt: Date
