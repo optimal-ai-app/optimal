@@ -51,10 +51,13 @@ export const TaskCard: React.FC<Props> = ({ task, isLast }) => {
     const isSameDay = now.toDateString() === date.toDateString()
 
     if (isSameDay) {
-      return date.toLocaleTimeString(undefined, {
-        hour: 'numeric',
-        minute: '2-digit'
-      })
+      return (
+        'Today, ' +
+        date.toLocaleTimeString(undefined, {
+          hour: 'numeric',
+          minute: '2-digit'
+        })
+      )
     }
 
     return date.toLocaleString(undefined, {

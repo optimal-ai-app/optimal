@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useMemo } from 'react'
 import {
   View,
   Text,
@@ -7,8 +7,7 @@ import {
   ScrollView,
   Pressable,
   ViewStyle,
-  TextStyle,
-  Task
+  TextStyle
 } from 'react-native'
 import { Link, useRouter } from 'expo-router'
 import { LinearGradient } from 'expo-linear-gradient'
@@ -29,9 +28,14 @@ import { TaskCreationModal } from '@/src/components/TaskCreationModal'
 import { colors } from '@/src/constants/colors'
 import { fonts } from '@/src/constants/fonts'
 import { useAuthContext } from '@/src/context/AuthContext'
-import { Goal, useUserGoals, useUserTasks } from '@/src/stores'
+import { Goal, Task, useUserGoals, useUserTasks } from '@/src/stores'
 import { TaskCard } from '@/src/components/TaskCard.tsx/TaskCard'
 import { GoalCard } from '@/src/components/GoalCard/GoalCard'
+import {
+  TaskFilter,
+  TaskFilterType,
+  TaskSortType
+} from '@/src/components/TaskFilter'
 
 export default function HomeScreen () {
   const router = useRouter()
@@ -41,6 +45,50 @@ export default function HomeScreen () {
   const goals: Goal[] = useUserGoals() as unknown as Goal[]
   const [showGoalModal, setShowGoalModal] = useState(false)
   const [showTaskModal, setShowTaskModal] = useState(false)
+  const [activeFilters, setActiveFilters] = useState<TaskFilterType[]>(['all'])
+  const [activeSort, setActiveSort] = useState<TaskSortType>('dueDate')
+
+  const handleFilterChange = (
+    filters: TaskFilterType[],
+    sortBy: TaskSortType
+  ) => {
+    setActiveFilters(filters)
+    setActiveSort(sortBy)
+  }
+
+  const filteredAndSortedTasks = useMemo(() => {
+    let filtered = tasks.filter(task => {
+      if (activeFilters.includes('all')) return true
+
+      const isOverdue =
+        task.dueDate.getTime() + 24 * 60 * 60 * 1000 < new Date().getTime() &&
+        task.status !== 'completed'
+      const isTodo = task.status !== 'completed'
+      const isCompleted = task.status === 'completed'
+
+      return (
+        (activeFilters.includes('todo') && isTodo) ||
+        (activeFilters.includes('overdue') && isOverdue) ||
+        (activeFilters.includes('completed') && isCompleted)
+      )
+    })
+
+    // Sort tasks
+    return filtered.sort((a, b) => {
+      switch (activeSort) {
+        case 'alphabetical':
+          return a.title.localeCompare(b.title)
+        case 'priority':
+          const priorityOrder = { '!!!': 3, '!!': 2, '!': 1 }
+          return (
+            (priorityOrder[b.priority] || 0) - (priorityOrder[a.priority] || 0)
+          )
+        case 'dueDate':
+        default:
+          return a.dueDate.getTime() - b.dueDate.getTime()
+      }
+    })
+  }, [tasks, activeFilters, activeSort])
 
   // Handle new goal via agent
   const handleNewGoalWithAgent = () => {
@@ -139,27 +187,32 @@ export default function HomeScreen () {
                 <Target size={20} color={colors.button.primary} />
                 <Text style={styles.sectionTitle}>Today's Tasks</Text>
               </View>
-              <TouchableOpacity
-                onPress={() => setShowTaskModal(true)}
-                style={styles.addTaskButton}
-                accessibilityLabel='Add new task'
-                accessibilityRole='button'
-              >
-                <Plus size={20} color={colors.text.primary} />
-              </TouchableOpacity>
+              <View style={styles.sectionActions}>
+                <TaskFilter onFilterChange={handleFilterChange} />
+                <TouchableOpacity
+                  onPress={() => setShowTaskModal(true)}
+                  style={styles.addTaskButton}
+                  accessibilityLabel='Add new task'
+                  accessibilityRole='button'
+                >
+                  <Plus size={20} color={colors.text.primary} />
+                </TouchableOpacity>
+              </View>
             </View>
 
-            {tasks.map((task, index) => (
+            {filteredAndSortedTasks.map((task, index, filteredTasks) => (
               <TaskCard
                 key={task.id}
                 task={task}
-                isLast={index === tasks.length - 1}
+                isLast={index === filteredTasks.length - 1}
               />
             ))}
 
-            {tasks.length === 0 && (
+            {filteredAndSortedTasks.length === 0 && (
               <Text style={styles.emptyText}>
-                No tasks yet. Create your first task to get started!
+                {tasks.length === 0
+                  ? 'No tasks yet. Create your first task to get started!'
+                  : 'No tasks match the current filters.'}
               </Text>
             )}
           </Card>
@@ -290,6 +343,12 @@ const styles = StyleSheet.create({
     color: colors.text.primary,
     marginLeft: 8
   } as TextStyle,
+
+  sectionActions: {
+    flexDirection: 'row',
+    gap: 8,
+    alignItems: 'center'
+  } as ViewStyle,
 
   addTaskButton: {
     width: 32,

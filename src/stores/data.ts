@@ -40,5 +40,38 @@ export const tasks: Task[] = [
         updatedAt: new Date(),
         completionDate: new Date(Date.now() + 4 * 24 * 60 * 60 * 1000),
         priority: '!'
+    },
+    {
+        id: '2',
+        title: 'Task 2',
+        description: 'Description 2',
+        createdAt: new Date(),
+        dueDate: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
+        status: 'todo',
+        updatedAt: new Date(),
+        completionDate: new Date(Date.now() + 4 * 24 * 60 * 60 * 1000),
+        priority: '!!'
+    },
+    {
+        id: '3',
+        title: 'Task 3',
+        description: 'Description 3',
+        createdAt: new Date(),
+        dueDate: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000),
+        status: 'todo',
+        updatedAt: new Date(),
+        completionDate: new Date(Date.now() + 4 * 24 * 60 * 60 * 1000),
+        priority: '!!'
+    },
+    {
+        id: '4',
+        title: 'Task 4',
+        description: 'Description 4',
+        createdAt: new Date(),
+        dueDate: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
+        status: 'todo',
+        updatedAt: new Date(),
+        completionDate: new Date(Date.now() + 4 * 24 * 60 * 60 * 1000),
+        priority: '!!!'
     }
 ]   
