@@ -14,14 +14,14 @@ import { TaskCard } from '@/src/components/TaskCard.tsx/TaskCard'
 import { TaskFilter } from '@/src/components/TaskFilter'
 import { colors } from '@/src/constants/colors'
 import { fonts } from '@/src/constants/fonts'
-import { useUserTasks } from '@/src/stores'
+import { useTasks } from '@/src/stores'
 import { useState, useMemo } from 'react'
 import { TaskFilterType, TaskSortType } from '@/src/components/TaskFilter'
 import { TaskCreationModal } from '@/src/components/TaskCreationModal'
 
 export default function TasksScreen () {
   const router = useRouter()
-  const tasks = useUserTasks()
+  const tasks = useTasks()
   const [showTaskModal, setShowTaskModal] = useState(false)
   const [activeFilters, setActiveFilters] = useState<TaskFilterType[]>(['all'])
   const [activeSort, setActiveSort] = useState<TaskSortType>('dueDate')

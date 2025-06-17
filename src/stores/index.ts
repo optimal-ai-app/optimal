@@ -13,20 +13,42 @@ export {
 
 export {
     useUserStore,
-    useUserGoals,
-    useUserTasks,
+    useUser,
     useUserLoading,
     useUserError,
-    useUserAddGoal,
-    useUserAddTask,
-    useUserUpdateGoal,
-    useUserUpdateTask,
-    useUserDeleteGoal,
-    useUserDeleteTask,
-    useUserGetGoals,
-    useUserGetTasks,
-    useGoalName,
+    useSetUser,
+    useClearUser
+} from './userStore'
+
+export {
+    useGoalStore,
+    useGoals,
+    useGoalLoading,
+    useGoalError,
+    useAddGoal,
+    useUpdateGoal,
+    useDeleteGoal,
+    useGetGoals,
+    useGetGoal,
+    useGoalName
+} from './goalStore'
+
+export {
+    useTaskStore,
+    useTasks,
+    useTaskLoading,
+    useTaskError,
+    useAddTask,
+    useUpdateTask,
+    useDeleteTask,
+    useGetTasks,
+    useGetTask,
+    useGetTasksByGoal
+} from './taskStore'
+
+// Export all types from the types file
+export {
     type User,
     type Goal,
     type Task
-} from './userStore'
+} from './types'

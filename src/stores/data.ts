@@ -1,4 +1,4 @@
-import { Goal, Task } from './userStore'
+import { Goal, Task } from './types'
 
 export const goals: Goal[] = [
     {

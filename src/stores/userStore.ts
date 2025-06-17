@@ -1,141 +1,37 @@
 import { create } from 'zustand'
 import httpService from '../../services/httpService'
-import { goals, tasks } from './data'
-
-// Types
-interface UserData {
-    id: string
-    userName: string
-    email: string
-}
-export type User = UserData | null
-
-export interface Goal {
-    id: string
-    title: string
-    description: string
-    createdAt: Date
-    dueDate: Date
-    status: 'active' | 'completed' | 'archived'
-    tags: string[]
-    progress: number
-    updatedAt: Date
-    streak: number
-}
-
-export interface Task {
-    id: string
-    title: string
-    description: string
-    createdAt: Date,
-    completionDate: Date,
-    priority: '!' | '!!' | '!!!',
-    dueDate: Date,
-    status: 'todo' | 'completed' | 'archived',
-    updatedAt: Date,
-    goalId?: string,
-}
+import { User } from './types'
 
 interface UserState {
     user: User
-    goals: Goal[]
-    tasks: Task[]
     error: string | null
     isLoading: boolean
-    goalMap: Map<string, Goal>
 }
 
 interface UserActions {
     //add login and sign up later
-    //add get userGoals and get userTasks later (connects to backend)
-    addGoal: (goal: Goal) => void
-    addTask: (task: Task) => void
-    updateGoal: (goal: Goal) => void
-    updateTask: (task: Task) => void
-    deleteGoal: (goal: Goal) => void
-    deleteTask: (task: Task) => void
-    getGoals: () => Goal[]
-    getTasks: () => Task[]
-    getGoal: (id: string) => Goal
-    getTask: (id: string) => Task
+    setUser: (user: User) => void
+    clearUser: () => void
     setError: (error: string | null) => void
     setLoading: (loading: boolean) => void
-    getGoalName: (goalId?: string) => string | null
 }
 
 type UserStore = UserActions & UserState
+
 // Zustand store
 export const useUserStore = create<UserStore>((set, get) => ({
     // Initial state
     user: null,
-    goals: goals, //change this to get from backend
-    tasks: tasks, //change this to get from backend
     isLoading: false,
     error: null,
-    goalMap: new Map(goals.map(goal => [goal.id, goal])),
 
     // Actions
-    addGoal: (goal: Goal) => {
-        set(state => ({
-            goals: [...state.goals, goal],
-            goalMap: new Map(state.goalMap).set(goal.id, goal)
-        }))
+    setUser: (user: User) => {
+        set({ user })
     },
 
-    addTask: (task: Task) => {
-        set(state => ({
-            tasks: [...state.tasks, task]
-        }))
-    },
-
-    updateGoal: (goal: Goal) => {
-        set(state => ({
-            goals: state.goals.map(g => g.id === goal.id ? goal : g),
-            goalMap: new Map(state.goalMap).set(goal.id, goal)
-        }))
-    },
-
-    updateTask: (task: Task) => {
-        set(state => ({
-            tasks: state.tasks.map(t => t.id === task.id ? task : t)
-        }))
-    },
-
-    deleteGoal: (goal: Goal) => {
-        set(state => {
-            const newMap = new Map(state.goalMap)
-            newMap.delete(goal.id)
-            return {
-                goals: state.goals.filter(g => g.id !== goal.id),
-                goalMap: newMap
-            }
-        })
-    },
-
-    deleteTask: (task: Task) => {
-        set(state => ({
-            tasks: state.tasks.filter(t => t.id !== task.id)
-        }))
-    },
-
-    getGoals: () => {
-        return get().goals
-    },
-
-    getTasks: () => {
-        return get().tasks
-    },
-
-    getGoal: (id: string) => {
-        const goal = get().goals.find(g => g.id === id)
-        if (!goal) throw new Error(`Goal with id ${id} not found`)
-        return goal
-    },
-
-    getTask: (id: string) => {
-        const task = get().tasks.find(t => t.id === id)
-        if (!task) throw new Error(`Task with id ${id} not found`)
-        return task
+    clearUser: () => {
+        set({ user: null })
     },
 
     setError: (error: string | null) => {
@@ -145,28 +41,13 @@ export const useUserStore = create<UserStore>((set, get) => ({
     setLoading: (loading: boolean) => {
         set({ isLoading: loading })
     },
-
-    getGoalName: (goalId?: string) => {
-        if (!goalId) return null
-        const goal = get().goalMap.get(goalId)
-        return goal ? goal.title : null
-    },
 }))
 
 // Selector hooks for better performance
-export const useUserGoals = () => useUserStore(state => state.goals)
-export const useUserTasks = () => useUserStore(state => state.tasks)
+export const useUser = () => useUserStore(state => state.user)
 export const useUserLoading = () => useUserStore(state => state.isLoading)
 export const useUserError = () => useUserStore(state => state.error)
-export const useUserAddGoal = () => useUserStore(state => state.addGoal)
-export const useUserAddTask = () => useUserStore(state => state.addTask)
-export const useUserUpdateGoal = () => useUserStore(state => state.updateGoal)
-export const useUserUpdateTask = () => useUserStore(state => state.updateTask)
-export const useUserDeleteGoal = () => useUserStore(state => state.deleteGoal)
-export const useUserDeleteTask = () => useUserStore(state => state.deleteTask)
-export const useUserGetGoals = () => useUserStore(state => state.getGoals)
-export const useUserGetTasks = () => useUserStore(state => state.getTasks)
-
-// Add new selector for getting goal names
-export const useGoalName = (goalId?: string) =>
-    useUserStore(state => state.getGoalName(goalId))
+export const useSetUser = () => useUserStore(state => state.setUser)
+export const useClearUser = () => useUserStore(state => state.clearUser)
+export const useSetError = () => useUserStore(state => state.setError)
+export const useSetLoading = () => useUserStore(state => state.setLoading)

@@ -28,7 +28,7 @@ import { TaskCreationModal } from '@/src/components/TaskCreationModal'
 import { colors } from '@/src/constants/colors'
 import { fonts } from '@/src/constants/fonts'
 import { useAuthContext } from '@/src/context/AuthContext'
-import { Goal, Task, useUserGoals, useUserTasks } from '@/src/stores'
+import { Goal, Task, useGoals, useTasks } from '@/src/stores'
 import { TaskCard } from '@/src/components/TaskCard.tsx/TaskCard'
 import { GoalCard } from '@/src/components/GoalCard/GoalCard'
 import {
@@ -41,8 +41,8 @@ export default function HomeScreen () {
   const router = useRouter()
 
   // State
-  const tasks: Task[] = useUserTasks() as unknown as Task[]
-  const goals: Goal[] = useUserGoals() as unknown as Goal[]
+  const tasks: Task[] = useTasks() as unknown as Task[]
+  const goals: Goal[] = useGoals() as unknown as Goal[]
   const [showGoalModal, setShowGoalModal] = useState(false)
   const [showTaskModal, setShowTaskModal] = useState(false)
   const [activeFilters, setActiveFilters] = useState<TaskFilterType[]>(['all'])
