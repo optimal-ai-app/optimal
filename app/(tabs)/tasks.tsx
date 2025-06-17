@@ -4,7 +4,8 @@ import {
   Text,
   StyleSheet,
   ScrollView,
-  TouchableOpacity
+  TouchableOpacity,
+  ActivityIndicator
 } from 'react-native'
 import { useRouter } from 'expo-router'
 import { Plus } from 'lucide-react-native'
@@ -15,13 +16,14 @@ import { TaskFilter } from '@/src/components/TaskFilter'
 import { colors } from '@/src/constants/colors'
 import { fonts } from '@/src/constants/fonts'
 import { useTasks } from '@/src/stores'
+import { useUserTasks } from '@/src/hooks/useUserTasks'
 import { useState, useMemo } from 'react'
 import { TaskFilterType, TaskSortType } from '@/src/components/TaskFilter'
 import { TaskCreationModal } from '@/src/components/TaskCreationModal'
 
 export default function TasksScreen () {
   const router = useRouter()
-  const tasks = useTasks()
+  const { isLoading, error, hasUser, tasks } = useUserTasks()
   const [showTaskModal, setShowTaskModal] = useState(false)
   const [activeFilters, setActiveFilters] = useState<TaskFilterType[]>(['all'])
   const [activeSort, setActiveSort] = useState<TaskSortType>('dueDate')
@@ -46,7 +48,8 @@ export default function TasksScreen () {
       const isToday = taskDate.getTime() === today.getTime()
       const isCompletedToday =
         task.status === 'completed' &&
-        new Date(task.completionDate).setHours(0, 0, 0, 0) === today.getTime()
+        new Date(task?.completionDate ?? '').setHours(0, 0, 0, 0) ===
+          today.getTime()
       const isOverdue =
         task.dueDate.getTime() + 24 * 60 * 60 * 1000 < new Date().getTime() &&
         task.status !== 'completed'
@@ -119,15 +122,30 @@ export default function TasksScreen () {
             </View>
           </View>
 
-          {filteredAndSortedTasks.map((task, index, filteredTasks) => (
-            <TaskCard
-              key={task.id}
-              task={task}
-              isLast={index === filteredTasks.length - 1}
-            />
-          ))}
+          {isLoading && (
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator size='large' color={colors.button.primary} />
+              <Text style={styles.loadingText}>Loading tasks...</Text>
+            </View>
+          )}
 
-          {filteredAndSortedTasks.length === 0 && (
+          {error && (
+            <View style={styles.errorContainer}>
+              <Text style={styles.errorText}>Error loading tasks: {error}</Text>
+            </View>
+          )}
+
+          {!isLoading &&
+            !error &&
+            filteredAndSortedTasks.map((task, index, filteredTasks) => (
+              <TaskCard
+                key={task.id}
+                task={task}
+                isLast={index === filteredTasks.length - 1}
+              />
+            ))}
+
+          {!isLoading && !error && filteredAndSortedTasks.length === 0 && (
             <Text style={styles.emptyText}>
               {tasks.length === 0
                 ? 'No tasks yet. Create your first task to get started!'
@@ -189,6 +207,28 @@ const styles = StyleSheet.create({
     backgroundColor: colors.button.primary,
     justifyContent: 'center',
     alignItems: 'center'
+  },
+  loadingContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 16
+  },
+  loadingText: {
+    fontSize: fonts.sizes.md,
+    color: colors.text.primary,
+    marginLeft: 8
+  },
+  errorContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 16
+  },
+  errorText: {
+    fontSize: fonts.sizes.md,
+    color: colors.status?.error,
+    marginLeft: 8
   },
   emptyText: {
     fontSize: fonts.sizes.md,

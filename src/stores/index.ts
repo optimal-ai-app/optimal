@@ -43,7 +43,8 @@ export {
     useDeleteTask,
     useGetTasks,
     useGetTask,
-    useGetTasksByGoal
+    useGetTasksByGoal,
+    useFetchUserTasks
 } from './taskStore'
 
 // Export all types from the types file

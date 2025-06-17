@@ -3,7 +3,9 @@ import httpService from '../../services/httpService'
 import { User } from './types'
 
 interface UserState {
-    user: User
+    id: string
+    userName: string
+    email: string
     error: string | null
     isLoading: boolean
 }
@@ -21,17 +23,19 @@ type UserStore = UserActions & UserState
 // Zustand store
 export const useUserStore = create<UserStore>((set, get) => ({
     // Initial state
-    user: null,
+    id: 'f506545e-8ad0-43fe-958f-7a5e8e94d7c9',
+    userName: '',
+    email: '',
     isLoading: false,
     error: null,
 
     // Actions
     setUser: (user: User) => {
-        set({ user })
+        set({ id: user?.id, userName: user?.userName, email: user?.email })
     },
 
     clearUser: () => {
-        set({ user: null })
+        set({ id: '', userName: '', email: '' })
     },
 
     setError: (error: string | null) => {
@@ -44,7 +48,9 @@ export const useUserStore = create<UserStore>((set, get) => ({
 }))
 
 // Selector hooks for better performance
-export const useUser = () => useUserStore(state => state.user)
+export const useUserId = () => useUserStore(state => state.id)
+export const useUserName = () => useUserStore(state => state.userName)
+export const useUserEmail = () => useUserStore(state => state.email)
 export const useUserLoading = () => useUserStore(state => state.isLoading)
 export const useUserError = () => useUserStore(state => state.error)
 export const useSetUser = () => useUserStore(state => state.setUser)

@@ -24,10 +24,9 @@ export interface Task {
     title: string
     description: string
     createdAt: Date,
-    completionDate: Date,
+    completionDate: Date | null,
     priority: '!' | '!!' | '!!!',
     dueDate: Date,
     status: 'todo' | 'completed' | 'archived',
-    updatedAt: Date,
     goalId?: string,
 } 

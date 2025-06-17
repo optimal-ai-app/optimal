@@ -84,7 +84,6 @@ export const tasks: Task[] = [
         createdAt: new Date(),
         dueDate: new Date(new Date().setHours(9, 30, 0, 0)), // Today 9:30 AM
         status: 'completed',
-        updatedAt: new Date(),
         completionDate: new Date(new Date().setHours(10, 0, 0, 0)),
         priority: '!!'
     },
@@ -96,7 +95,6 @@ export const tasks: Task[] = [
         createdAt: new Date(),
         dueDate: new Date(new Date().setHours(12, 0, 0, 0)), // Today 12:00 PM
         status: 'todo',
-        updatedAt: new Date(),
         completionDate: new Date(new Date().setHours(12, 0, 0, 0)),
         priority: '!!'
     },
@@ -108,7 +106,6 @@ export const tasks: Task[] = [
         createdAt: new Date(),
         dueDate: new Date(new Date().setHours(13, 0, 0, 0)), // Today 1:00 PM
         status: 'todo',
-        updatedAt: new Date(),
         completionDate: new Date(new Date().setHours(13, 0, 0, 0)),
         priority: '!'
     },
@@ -120,7 +117,7 @@ export const tasks: Task[] = [
         createdAt: new Date(),
         dueDate: new Date(new Date().setHours(14, 30, 0, 0)), // Today 2:30 PM
         status: 'todo',
-        updatedAt: new Date(),
+
         completionDate: new Date(new Date().setHours(15, 30, 0, 0)),
         priority: '!!!'
     },
@@ -132,7 +129,6 @@ export const tasks: Task[] = [
         createdAt: new Date(),
         dueDate: new Date(new Date().setHours(16, 0, 0, 0)), // Today 4:00 PM
         status: 'todo',
-        updatedAt: new Date(),
         completionDate: new Date(new Date().setHours(17, 0, 0, 0)),
         priority: '!!'
     },
@@ -144,7 +140,6 @@ export const tasks: Task[] = [
         createdAt: new Date(),
         dueDate: new Date(new Date().setHours(18, 30, 0, 0)), // Today 6:30 PM
         status: 'todo',
-        updatedAt: new Date(),
         completionDate: new Date(new Date().setHours(19, 30, 0, 0)),
         priority: '!!'
     },
@@ -156,7 +151,7 @@ export const tasks: Task[] = [
         createdAt: new Date(),
         dueDate: new Date(new Date().setHours(22, 0, 0, 0)), // Today 10:00 PM
         status: 'todo',
-        updatedAt: new Date(),
+
         completionDate: new Date(new Date().setHours(22, 30, 0, 0)),
         priority: '!'
     }

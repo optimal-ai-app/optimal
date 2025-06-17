@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import { Task } from './types'
 import { tasks } from './data'
+import httpService from '../../services/httpService'
 
 interface TaskState {
     tasks: Task[]
@@ -16,6 +17,7 @@ interface TaskActions {
     getTasks: () => Task[]
     getTask: (id: string) => Task
     getTasksByGoal: (goalId: string) => Task[]
+    fetchUserTasks: (userId: string) => Promise<void>
     setError: (error: string | null) => void
     setLoading: (loading: boolean) => void
 }
@@ -25,15 +27,26 @@ type TaskStore = TaskActions & TaskState
 // Zustand store
 export const useTaskStore = create<TaskStore>((set, get) => ({
     // Initial state
-    tasks: tasks, //change this to get from backend
+    tasks: [],
     isLoading: false,
     error: null,
 
     // Actions
-    addTask: (task: Task) => {
-        set(state => ({
-            tasks: [...state.tasks, task]
-        }))
+    addTask: async (task: Task) => {
+        const { setLoading, setError } = get()
+        try {
+            setLoading(true)
+            setError(null)
+            set(state => ({
+                tasks: [...state.tasks, task]
+            }))
+            const response = await httpService.post('/api/tasks/create', task)
+            console.log(response)
+        } catch (error) {
+            setError(error instanceof Error ? error.message : 'Failed to add task')
+        } finally {
+            setLoading(false)
+        }
     },
 
     updateTask: (task: Task) => {
@@ -62,6 +75,36 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
         return get().tasks.filter(t => t.goalId === goalId)
     },
 
+    fetchUserTasks: async (userId: string) => {
+        const { setLoading, setError } = get()
+        try {
+            setLoading(true)
+            setError(null)
+
+            const response = await httpService.get<any[]>(`api/tasks/user/${userId}`)
+
+            // Transform backend task format to frontend format
+            const transformedTasks: Task[] = response.map(task => ({
+                id: task.taskId,
+                title: task.title,
+                description: task.description,
+                createdAt: new Date(task.createdDate),
+                completionDate: task.completedDate ? new Date(task.completedDate) : null,
+                priority: task.priority,
+                dueDate: task.dueDate ? new Date(task.dueDate) : new Date(),
+                status: task.status,
+                goalId: task.goalId
+            }))
+
+            set({ tasks: transformedTasks })
+        } catch (error) {
+            console.error('Failed to fetch user tasks:', error)
+            setError(error instanceof Error ? error.message : 'Failed to fetch tasks')
+        } finally {
+            setLoading(false)
+        }
+    },
+
     setError: (error: string | null) => {
         set({ error })
     },
@@ -80,4 +123,5 @@ export const useUpdateTask = () => useTaskStore(state => state.updateTask)
 export const useDeleteTask = () => useTaskStore(state => state.deleteTask)
 export const useGetTasks = () => useTaskStore(state => state.getTasks)
 export const useGetTask = () => useTaskStore(state => state.getTask)
-export const useGetTasksByGoal = () => useTaskStore(state => state.getTasksByGoal) 
+export const useGetTasksByGoal = () => useTaskStore(state => state.getTasksByGoal)
+export const useFetchUserTasks = () => useTaskStore(state => state.fetchUserTasks) 

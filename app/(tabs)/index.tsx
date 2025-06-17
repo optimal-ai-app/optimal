@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react'
+import React, { useState, useMemo, useEffect } from 'react'
 import {
   View,
   Text,
@@ -28,7 +28,15 @@ import { TaskCreationModal } from '@/src/components/TaskCreationModal'
 import { colors } from '@/src/constants/colors'
 import { fonts } from '@/src/constants/fonts'
 import { useAuthContext } from '@/src/context/AuthContext'
-import { Goal, Task, useGoals, useTasks } from '@/src/stores'
+import {
+  Goal,
+  useGoals,
+  useTasks,
+  useTaskLoading,
+  useTaskError,
+  useFetchUserTasks
+} from '@/src/stores'
+import { useUserId } from '@/src/stores/userStore'
 import { TaskCard } from '@/src/components/TaskCard.tsx/TaskCard'
 import { GoalCard } from '@/src/components/GoalCard/GoalCard'
 import {
@@ -40,19 +48,26 @@ import {
 export default function HomeScreen () {
   const router = useRouter()
 
-  // State
-  const tasks: Task[] = useTasks() as unknown as Task[]
+  // All hooks must be called at the top, before any conditional logic
+  const userId = useUserId()
+  const tasks = useTasks()
+  const isLoading = useTaskLoading()
+  const error = useTaskError()
+  const fetchUserTasks = useFetchUserTasks()
   const goals: Goal[] = useGoals() as unknown as Goal[]
   const [showGoalModal, setShowGoalModal] = useState(false)
   const [showTaskModal, setShowTaskModal] = useState(false)
   const [activeFilters, setActiveFilters] = useState<TaskFilterType[]>(['all'])
   const [activeSort, setActiveSort] = useState<TaskSortType>('dueDate')
 
-  const today = new Date()
-  today.setHours(0, 0, 0, 0)
-  const tomorrow = new Date(today)
-  tomorrow.setDate(tomorrow.getDate() + 1)
+  // Fetch tasks when user ID changes
+  useEffect(() => {
+    if (userId) {
+      fetchUserTasks(userId)
+    }
+  }, [userId, fetchUserTasks])
 
+  // All useMemo hooks must also be called unconditionally
   const { todaysTasks, upcomingTasks } = useMemo(() => {
     const today = new Date()
     today.setHours(0, 0, 0, 0)
@@ -62,6 +77,7 @@ export default function HomeScreen () {
       taskDate.setHours(0, 0, 0, 0)
       const isCompletedToday =
         task.status === 'completed' &&
+        task.completionDate &&
         new Date(task.completionDate).setHours(0, 0, 0, 0) === today.getTime()
 
       return taskDate.getTime() === today.getTime() || isCompletedToday
@@ -83,18 +99,6 @@ export default function HomeScreen () {
       upcomingTasks: upcoming
     }
   }, [tasks])
-
-  const displayedTasks = todaysTasks.length > 0 ? todaysTasks : upcomingTasks
-  const sectionTitle =
-    todaysTasks.length > 0 ? "Today's Tasks" : 'Upcoming Tasks'
-
-  const handleFilterChange = (
-    filters: TaskFilterType[],
-    sortBy: TaskSortType
-  ) => {
-    setActiveFilters(filters)
-    setActiveSort(sortBy)
-  }
 
   const filteredAndSortedTasks = useMemo(() => {
     let filtered = tasks.filter(task => {
@@ -129,6 +133,60 @@ export default function HomeScreen () {
       }
     })
   }, [tasks, activeFilters, activeSort])
+
+  const hasUser = !!userId
+  const displayedTasks = todaysTasks.length > 0 ? todaysTasks : upcomingTasks
+  const sectionTitle =
+    todaysTasks.length > 0 ? "Today's Tasks" : 'Upcoming Tasks'
+
+  // Show loading state if tasks are being fetched
+  if (isLoading) {
+    return (
+      <View style={styles.container}>
+        <Header title='Home' />
+        <View style={styles.loadingContainer}>
+          <Text style={styles.loadingText}>Loading your tasks...</Text>
+        </View>
+      </View>
+    )
+  }
+
+  // Show error state if there's an error
+  if (error) {
+    return (
+      <View style={styles.container}>
+        <Header title='Home' />
+        <View style={styles.errorContainer}>
+          <Text style={styles.errorText}>Error loading tasks: {error}</Text>
+        </View>
+      </View>
+    )
+  }
+
+  // Show login prompt if no user
+  if (!hasUser) {
+    return (
+      <View style={styles.container}>
+        <Header title='Home' />
+        <View style={styles.loginContainer}>
+          <Text style={styles.loginText}>Please log in to view your tasks</Text>
+        </View>
+      </View>
+    )
+  }
+
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  const tomorrow = new Date(today)
+  tomorrow.setDate(tomorrow.getDate() + 1)
+
+  const handleFilterChange = (
+    filters: TaskFilterType[],
+    sortBy: TaskSortType
+  ) => {
+    setActiveFilters(filters)
+    setActiveSort(sortBy)
+  }
 
   // Handle new goal via agent
   const handleNewGoalWithAgent = () => {
@@ -447,5 +505,44 @@ const styles = StyleSheet.create({
 
   emptyGoalsButton: {
     marginTop: 16
-  } as ViewStyle
+  } as ViewStyle,
+
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 32
+  } as ViewStyle,
+
+  loadingText: {
+    fontSize: fonts.sizes.lg,
+    color: colors.text.muted,
+    textAlign: 'center'
+  } as TextStyle,
+
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 32
+  } as ViewStyle,
+
+  errorText: {
+    fontSize: fonts.sizes.lg,
+    color: colors.status.error,
+    textAlign: 'center'
+  } as TextStyle,
+
+  loginContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 32
+  } as ViewStyle,
+
+  loginText: {
+    fontSize: fonts.sizes.lg,
+    color: colors.text.muted,
+    textAlign: 'center'
+  } as TextStyle
 })
