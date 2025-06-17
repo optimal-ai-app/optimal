@@ -11,7 +11,7 @@ import {
   Target
 } from 'lucide-react-native'
 import { useRouter } from 'expo-router'
-import { Task } from '@/src/stores'
+import { Task, useUserUpdateTask } from '@/src/stores'
 import { colors } from '@/src/constants/colors'
 import { styles } from './TaskCard.styles'
 import { useGoalName } from '@/src/stores'
@@ -24,6 +24,7 @@ type Props = {
 export const TaskCard: React.FC<Props> = ({ task, isLast }) => {
   const router = useRouter()
   const goalName = useGoalName(task.goalId)
+  const updateTask = useUserUpdateTask()
 
   const getPriorityConfig = (priority: '!' | '!!' | '!!!') => {
     switch (priority) {
@@ -83,7 +84,13 @@ export const TaskCard: React.FC<Props> = ({ task, isLast }) => {
   const overdue = isOverdue()
 
   const handleToggleComplete = () => {
-    console.log('Toggle task completion:', task.id)
+    const updatedTask = {
+      ...task,
+      status: (task.status === 'completed' ? 'todo' : 'completed') as any,
+      completionDate: task.status === 'completed' ? new Date(0) : new Date(),
+      updatedAt: new Date()
+    }
+    updateTask(updatedTask)
   }
 
   return (

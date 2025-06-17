@@ -44,6 +44,9 @@ export default function TasksScreen () {
       today.setHours(0, 0, 0, 0)
 
       const isToday = taskDate.getTime() === today.getTime()
+      const isCompletedToday =
+        task.status === 'completed' &&
+        new Date(task.completionDate).setHours(0, 0, 0, 0) === today.getTime()
       const isOverdue =
         task.dueDate.getTime() + 24 * 60 * 60 * 1000 < new Date().getTime() &&
         task.status !== 'completed'
@@ -51,7 +54,7 @@ export default function TasksScreen () {
       const isCompleted = task.status === 'completed'
 
       return (
-        (activeFilters.includes('today') && isToday) ||
+        (activeFilters.includes('today') && (isToday || isCompletedToday)) ||
         (activeFilters.includes('todo') && isTodo) ||
         (activeFilters.includes('overdue') && isOverdue) ||
         (activeFilters.includes('completed') && isCompleted)

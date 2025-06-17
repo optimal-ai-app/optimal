@@ -54,12 +54,17 @@ export default function HomeScreen () {
   tomorrow.setDate(tomorrow.getDate() + 1)
 
   const { todaysTasks, upcomingTasks } = useMemo(() => {
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+
     const todayTasks = tasks.filter(task => {
       const taskDate = new Date(task.dueDate)
       taskDate.setHours(0, 0, 0, 0)
-      return (
-        taskDate.getTime() === today.getTime() && task.status !== 'completed'
-      )
+      const isCompletedToday =
+        task.status === 'completed' &&
+        new Date(task.completionDate).setHours(0, 0, 0, 0) === today.getTime()
+
+      return taskDate.getTime() === today.getTime() || isCompletedToday
     })
 
     const upcoming = tasks
