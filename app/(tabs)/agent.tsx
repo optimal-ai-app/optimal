@@ -10,7 +10,9 @@ import {
   ViewStyle,
   TextStyle,
   Animated as RNAnimated,
-  Easing
+  Easing,
+  TouchableOpacity,
+  FlatList
 } from 'react-native'
 import { useLocalSearchParams } from 'expo-router'
 import { LinearGradient } from 'expo-linear-gradient'
@@ -34,7 +36,10 @@ import {
   useSendMessage,
   useAddMessage,
   useChatLoading,
-  type ChatMessage
+  type ChatMessage,
+  useGoals,
+  useFetchUserGoals,
+  useUserId
 } from '@/src/stores'
 
 // Use ChatMessage type from store
@@ -119,6 +124,84 @@ const LoadingDots = () => {
   )
 }
 
+// Helper to extract tags and content from agent message
+function extractTagsAndContent (content: { summary: string; tags: string[] }): {
+  text: string
+  tags: string[]
+} {
+  try {
+    // If content is already an object (not a string), use it directly
+    const obj = typeof content === 'string' ? JSON.parse(content) : content
+    return {
+      text: obj.summary || '',
+      tags: Array.isArray(obj.tags) ? obj.tags : []
+    }
+  } catch {
+    // fallback for legacy/plaintext messages
+    return { text: typeof content === 'string' ? content : '', tags: [] }
+  }
+}
+
+// Component: Scrollable list of goal names
+const GoalNamesScroller = ({
+  onSelect
+}: {
+  onSelect: (goalName: string) => void
+}) => {
+  const goals = useGoals()
+  if (!goals.length) return null
+  return (
+    <FlatList
+      data={goals}
+      horizontal
+      keyExtractor={item => item.id}
+      style={{ marginTop: 8, marginBottom: 4 }}
+      contentContainerStyle={{ gap: 8, paddingHorizontal: 4 }}
+      showsHorizontalScrollIndicator={false}
+      renderItem={({ item }) => (
+        <TouchableOpacity
+          style={{
+            backgroundColor: colors.button.primary,
+            borderRadius: 16,
+            paddingVertical: 8,
+            paddingHorizontal: 16,
+            marginRight: 4
+          }}
+          onPress={() => onSelect(item.title)}
+        >
+          <Text style={{ color: colors.text.primary, fontWeight: '600' }}>
+            {item.title}
+          </Text>
+        </TouchableOpacity>
+      )}
+    />
+  )
+}
+
+// Component: Confirmation buttons for CONFIRM_TAG
+const ConfirmationButtons = ({
+  onConfirm
+}: {
+  onConfirm: (action: string) => void
+}) => {
+  return (
+    <View style={styles.confirmationContainer}>
+      <TouchableOpacity
+        style={[styles.confirmButton, styles.proceedButton]}
+        onPress={() => onConfirm('Yes')}
+      >
+        <Text style={styles.confirmButtonText}>Yes</Text>
+      </TouchableOpacity>
+      <TouchableOpacity
+        style={[styles.confirmButton, styles.tryElseButton]}
+        onPress={() => onConfirm('Something Else')}
+      >
+        <Text style={styles.confirmButtonText}>Something Else</Text>
+      </TouchableOpacity>
+    </View>
+  )
+}
+
 export default function AgentScreen () {
   // Get params from navigation
   const params = useLocalSearchParams()
@@ -136,37 +219,58 @@ export default function AgentScreen () {
   // State
   const [message, setMessage] = useState('')
   const [isRecording, setIsRecording] = useState(false)
+  const [promptSent, setPromptSent] = useState(false)
 
   const messages = useChatMessages()
+  const fetchUserGoals = useFetchUserGoals()
+  const userId = useUserId()
 
   useEffect(() => {
     if (messages.length === 0) {
       let welcomeMessage = 'Welcome!'
-      
+
       // Set welcome message based on action
       if (action === 'create-goal') {
-        welcomeMessage = "I'd love to help you create a meaningful goal! What would you like to achieve?"
+        welcomeMessage =
+          "I'd love to help you create a meaningful goal! What would you like to achieve?"
       } else if (action === 'generate-tasks') {
-        welcomeMessage = "I'll help you break down your goal into actionable tasks. Let me know the details!"
+        welcomeMessage =
+          "I'll help you break down your goal into actionable tasks. Let me know the details!"
       }
-      
+
       addMessage({
         id: 'welcome',
-        content: welcomeMessage,
+        content: {
+          summary: welcomeMessage,
+          tags: []
+        },
         role: 'agent',
         timestamp: new Date()
       })
     }
 
-    // Auto-send prompt if provided
-    if (prompt && messages.length <= 1) {
+    // Auto-send prompt if provided, but only once
+    if (prompt && !promptSent && messages.length <= 1) {
       setMessage(prompt)
-      // Auto-send after a short delay
+      setPromptSent(true)
       setTimeout(() => {
         handleSendMessage(prompt)
       }, 500)
     }
-  }, [action, prompt]) // Remove dependencies to prevent infinite loop
+
+    // Check if any agent message has the SHOW_USER_GOAL_NAMES tag
+    const shouldShowGoalNames = messages.some(msg => {
+      if (msg.role !== 'agent') return false
+      try {
+        return msg.content.tags.includes('SHOW_USER_GOAL_NAMES')
+      } catch {
+        return false
+      }
+    })
+    if (shouldShowGoalNames && userId) {
+      fetchUserGoals(userId)
+    }
+  }, [action, prompt, messages, userId, promptSent])
 
   // Handle send message
   const handleSendMessage = async (messageText?: string) => {
@@ -184,7 +288,7 @@ export default function AgentScreen () {
     }
 
     // Send message via store
-    await sendMessage(textToSend, context)
+    await sendMessage(textToSend, context, userId)
     scrollToBottom()
   }
 
@@ -204,7 +308,10 @@ export default function AgentScreen () {
       // For web, we'll show a message via the store
       addMessage({
         id: Date.now().toString(),
-        content: 'Voice recording is not available on web.',
+        content: {
+          summary: 'Voice recording is not available on web.',
+          tags: []
+        },
         role: 'agent',
         timestamp: new Date()
       })
@@ -255,47 +362,71 @@ export default function AgentScreen () {
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps='handled'
         >
-          {messages.map((msg, index) => (
-            <Animated.View
-              key={msg.id}
-              entering={
-                msg.role === 'user'
-                  ? FadeInRight.duration(300).delay(100)
-                  : FadeInLeft.duration(300).delay(100)
-              }
-              style={[
-                styles.messageWrapper,
-                msg.role === 'user'
-                  ? styles.userMessageWrapper
-                  : styles.agentMessageWrapper
-              ]}
-            >
-              {msg.role === 'agent' && (
-                <View style={styles.agentAvatar}>
-                  <LinearGradient
-                    colors={[colors.gradient.start, colors.gradient.end]}
-                    style={styles.avatarGradient}
+          {messages.map((msg, index) => {
+            if (msg.role === 'agent') {
+              const { text, tags } = extractTagsAndContent(msg.content)
+              // Only show tags on the latest agent message
+              const isLatestAgentMessage =
+                index === messages.length - 1 ||
+                (index === messages.length - 2 && isLoading)
+              const showGoalNames =
+                isLatestAgentMessage && tags.includes('SHOW_USER_GOAL_NAMES')
+              const showConfirmation =
+                isLatestAgentMessage && tags.includes('CONFIRM_TAG')
+              return (
+                <Animated.View
+                  key={msg.id}
+                  entering={FadeInLeft.duration(300).delay(100)}
+                  style={[styles.messageWrapper, styles.agentMessageWrapper]}
+                >
+                  <View style={styles.agentAvatar}>
+                    <LinearGradient
+                      colors={[colors.gradient.start, colors.gradient.end]}
+                      style={styles.avatarGradient}
+                    >
+                      <Text style={styles.avatarText}>AI</Text>
+                    </LinearGradient>
+                  </View>
+                  <View
+                    style={[styles.messageBubble, styles.agentMessageBubble]}
                   >
-                    <Text style={styles.avatarText}>AI</Text>
-                  </LinearGradient>
-                </View>
-              )}
-
-              <View
-                style={[
-                  styles.messageBubble,
-                  msg.role === 'user'
-                    ? styles.userMessageBubble
-                    : styles.agentMessageBubble
-                ]}
+                    <Text style={styles.messageText}>{text}</Text>
+                    {showGoalNames && (
+                      <GoalNamesScroller
+                        onSelect={goalName =>
+                          handleSendMessage(
+                            `I want to create tasks for Goal: "${goalName}"`
+                          )
+                        }
+                      />
+                    )}
+                    {showConfirmation && (
+                      <ConfirmationButtons
+                        onConfirm={action => handleSendMessage(action)}
+                      />
+                    )}
+                    <Text style={styles.timestamp}>
+                      {formatTime(msg.timestamp)}
+                    </Text>
+                  </View>
+                </Animated.View>
+              )
+            }
+            return (
+              <Animated.View
+                key={msg.id}
+                entering={FadeInRight.duration(300).delay(100)}
+                style={[styles.messageWrapper, styles.userMessageWrapper]}
               >
-                <Text style={styles.messageText}>{msg.content}</Text>
-                <Text style={styles.timestamp}>
-                  {formatTime(msg.timestamp)}
-                </Text>
-              </View>
-            </Animated.View>
-          ))}
+                <View style={[styles.messageBubble, styles.userMessageBubble]}>
+                  <Text style={styles.messageText}>{msg.content.summary}</Text>
+                  <Text style={styles.timestamp}>
+                    {formatTime(msg.timestamp)}
+                  </Text>
+                </View>
+              </Animated.View>
+            )
+          })}
 
           {isLoading && (
             <Animated.View
@@ -448,5 +579,39 @@ const styles = StyleSheet.create({
     borderRadius: 4,
     backgroundColor: colors.text.primary,
     margin: 2
-  } as ViewStyle
+  } as ViewStyle,
+
+  confirmationContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 12,
+    marginBottom: 8,
+    gap: 12
+  } as ViewStyle,
+
+  confirmButton: {
+    flex: 1,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center'
+  } as ViewStyle,
+
+  proceedButton: {
+    backgroundColor: colors.button.primary
+  } as ViewStyle,
+
+  tryElseButton: {
+    backgroundColor: colors.background.container,
+    borderWidth: 1,
+    borderColor: colors.text.muted
+  } as ViewStyle,
+
+  confirmButtonText: {
+    color: colors.text.primary,
+    fontSize: fonts.sizes.sm,
+    fontWeight: '600'
+  } as TextStyle
 })

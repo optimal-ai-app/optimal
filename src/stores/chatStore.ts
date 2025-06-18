@@ -4,7 +4,10 @@ import httpService from '../../services/httpService'
 // Types
 export interface ChatMessage {
     id: string
-    content: string
+    content: {
+        summary: string
+        tags: string[]
+    }
     role: 'user' | 'agent'
     timestamp: Date
     context?: {
@@ -20,7 +23,7 @@ interface ChatState {
 }
 
 interface ChatActions {
-    sendMessage: (message: string, context?: ChatMessage['context']) => Promise<void>
+    sendMessage: (message: string, context?: ChatMessage['context'], userId?: string) => Promise<void>
     addMessage: (message: ChatMessage) => void
     clearMessages: () => void
     setError: (error: string | null) => void
@@ -37,18 +40,25 @@ export const useChatStore = create<ChatStore>((set, get) => ({
     error: null,
 
     // Actions
-    sendMessage: async (message: string, context?: ChatMessage['context']) => {
+    sendMessage: async (message: string, context?: ChatMessage['context'], userId?: string) => {
         try {
             set({ isLoading: true, error: null })
 
             // Add user message to store
             const userMessage: ChatMessage = {
                 id: Date.now().toString(),
-                content: message,
+                content: {
+                    summary: message,
+                    tags: []
+                },
                 role: 'user',
                 timestamp: new Date(),
                 context
             }
+
+            console.log('userMessage', userMessage)
+            console.log('messages', get().messages)
+            console.log('context', context)
 
             set(state => ({
                 messages: [...state.messages, userMessage]
@@ -56,10 +66,12 @@ export const useChatStore = create<ChatStore>((set, get) => ({
 
             // Send message to backend
             console.log('messages', get().messages)
-            const response = await httpService.post<string>('/chat', {
+            const response = await httpService.post<any>('/chat', {
+                date: new Date().toISOString(),
+                userId: userId || 'user123', // Add userId to request
                 messages: get().messages.map(msg => ({
                     role: msg.role,
-                    content: msg.content
+                    content: JSON.stringify(msg.content)
                 }))
             })
 
@@ -67,11 +79,15 @@ export const useChatStore = create<ChatStore>((set, get) => ({
             if (!response) {
                 throw new Error('Invalid response from agent')
             }
+            console.log('response', response)
 
             // Add agent response to store
             const agentMessage: ChatMessage = {
                 id: (Date.now() + 1).toString(),
-                content: response,
+                content: {
+                    summary: response.content,
+                    tags: response.tags
+                },
                 role: 'agent',
                 timestamp: new Date()
             }
@@ -90,7 +106,10 @@ export const useChatStore = create<ChatStore>((set, get) => ({
             // Add error message from agent
             const errorAgentMessage: ChatMessage = {
                 id: (Date.now() + 2).toString(),
-                content: 'the agent is down right now',
+                content: {
+                    summary: 'the agent is down right now',
+                    tags: []
+                },
                 role: 'agent',
                 timestamp: new Date()
             }
