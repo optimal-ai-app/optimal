@@ -13,7 +13,9 @@ export {
 
 export {
     useUserStore,
-    useUser,
+    useUserId,
+    useUserName,
+    useUserEmail,
     useUserLoading,
     useUserError,
     useSetUser,
@@ -30,7 +32,8 @@ export {
     useDeleteGoal,
     useGetGoals,
     useGetGoal,
-    useGoalName
+    useGoalName,
+    useFetchUserGoals
 } from './goalStore'
 
 export {

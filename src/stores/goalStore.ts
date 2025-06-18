@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import { Goal } from './types'
 import { goals } from './data'
+import httpService from '@/services/httpService'
 
 interface GoalState {
     goals: Goal[]
@@ -19,6 +20,7 @@ interface GoalActions {
     getGoalName: (goalId?: string) => string | null
     setError: (error: string | null) => void
     setLoading: (loading: boolean) => void
+    fetchUserGoals: (userId: string) => Promise<void>
 }
 
 type GoalStore = GoalActions & GoalState
@@ -26,17 +28,27 @@ type GoalStore = GoalActions & GoalState
 // Zustand store
 export const useGoalStore = create<GoalStore>((set, get) => ({
     // Initial state
-    goals: goals, //change this to get from backend
+    goals: [],
     isLoading: false,
     error: null,
     goalMap: new Map(goals.map(goal => [goal.id, goal])),
 
     // Actions
-    addGoal: (goal: Goal) => {
-        set(state => ({
-            goals: [...state.goals, goal],
-            goalMap: new Map(state.goalMap).set(goal.id, goal)
-        }))
+    addGoal: async (goal: Goal) => {
+        const { setLoading, setError } = get()
+        try {
+            setLoading(true)
+            setError(null)
+            set(state => ({
+                goals: [...state.goals, goal]
+            }))
+            const response = await httpService.post('/api/goals/create', goal)
+            console.log(response)
+        } catch (error) {
+            setError(error instanceof Error ? error.message : 'Failed to add goal')
+        } finally {
+            setLoading(false)
+        }
     },
 
     updateGoal: (goal: Goal) => {
@@ -59,6 +71,34 @@ export const useGoalStore = create<GoalStore>((set, get) => ({
 
     getGoals: () => {
         return get().goals
+    },
+
+    fetchUserGoals: async (userId: string) => {
+        const { setLoading, setError } = get()
+        try {
+            setLoading(true)
+            setError(null)
+            const response = await httpService.get<any[]>(`api/goals/user/${userId}`)
+            // Transform backend task format to frontend format
+            const transformedGoals: Goal[] = response.map(goal => ({
+                id: goal.goalId,
+                title: goal.title,
+                description: goal.description,
+                progress: goal.progress,
+                streak: goal.streak,
+                createdAt: new Date(goal.createdDate),
+                dueDate: goal.dueDate ? new Date(goal.dueDate) : new Date(),
+                status: goal.status,
+                tags: goal.tags,
+                updatedAt: new Date(goal.updatedDate)
+            }))
+
+            set({ goals: transformedGoals })
+        } catch (error) {
+            setError(error instanceof Error ? error.message : 'Failed to fetch goals')
+        } finally {
+            setLoading(false)
+        }
     },
 
     getGoal: (id: string) => {
@@ -92,4 +132,5 @@ export const useDeleteGoal = () => useGoalStore(state => state.deleteGoal)
 export const useGetGoals = () => useGoalStore(state => state.getGoals)
 export const useGetGoal = () => useGoalStore(state => state.getGoal)
 export const useGoalName = (goalId?: string) =>
-    useGoalStore(state => state.getGoalName(goalId)) 
+    useGoalStore(state => state.getGoalName(goalId))
+export const useFetchUserGoals = () => useGoalStore(state => state.fetchUserGoals)

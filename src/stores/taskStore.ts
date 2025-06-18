@@ -11,7 +11,7 @@ interface TaskState {
 
 interface TaskActions {
     //add get userTasks later (connects to backend)
-    addTask: (task: Task) => void
+    addTask: (task: Task, userId: string) => void
     updateTask: (task: Task) => void
     deleteTask: (task: Task) => void
     getTasks: () => Task[]
@@ -32,7 +32,7 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
     error: null,
 
     // Actions
-    addTask: async (task: Task) => {
+    addTask: async (task: Task, userId: string) => {
         const { setLoading, setError } = get()
         try {
             setLoading(true)
@@ -40,7 +40,14 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
             set(state => ({
                 tasks: [...state.tasks, task]
             }))
-            const response = await httpService.post('/api/tasks/create', task)
+            const response = await httpService.post('/api/tasks/create', {
+                title: task.title,
+                description: task.description,
+                dueDate: task.dueDate,
+                priority: task.priority,
+                goalId: task.goalId,
+                userId: userId,
+            })
             console.log(response)
         } catch (error) {
             setError(error instanceof Error ? error.message : 'Failed to add task')

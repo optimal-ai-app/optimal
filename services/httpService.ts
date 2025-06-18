@@ -4,9 +4,11 @@ import axios, {
     AxiosRequestConfig,
     InternalAxiosRequestConfig,
 } from "axios";
+import { Platform } from "react-native";
 
 // Use environment variable for API URL if available, fallback to localhost
-const API_URL = process.env.REACT_APP_API_URL || "http://localhost:8080/";
+const API_URL = process.env.REACT_APP_API_URL ||
+    'https://4739-2601-646-8f80-94e0-6d10-c8b1-d11d-b215.ngrok-free.app';
 
 class HttpService {
     private axiosInstance: AxiosInstance;
@@ -79,5 +81,5 @@ class HttpService {
     }
 }
 
-const httpService = new HttpService("http://localhost:8080/");
+const httpService = new HttpService("https://4739-2601-646-8f80-94e0-6d10-c8b1-d11d-b215.ngrok-free.app");
 export default httpService;

@@ -24,7 +24,7 @@ export const styles = StyleSheet.create({
 
   title: {
     fontSize: fonts.sizes.xxl,
-    fontWeight: fonts.weights.bold,
+    fontWeight: fonts.weights.bold as 'bold',
     color: colors.text.primary,
     marginBottom: 8,
     textAlign: 'center',
@@ -51,7 +51,7 @@ export const styles = StyleSheet.create({
     color: colors.text.muted,
     marginBottom: 8,
     marginLeft: 4,
-    fontWeight: fonts.weights.medium,
+    fontWeight: fonts.weights.medium as '500',
   },
 
   datePickerButton: {
@@ -74,12 +74,12 @@ export const styles = StyleSheet.create({
   datePickerText: {
     fontSize: fonts.sizes.md,
     color: colors.text.primary,
-    fontWeight: fonts.weights.medium,
+    fontWeight: fonts.weights.medium as '500',
   },
 
   datePickerPlaceholder: {
     color: colors.text.muted,
-    fontWeight: fonts.weights.regular,
+    fontWeight: fonts.weights.regular as '400',
   },
 
   // Text area styling
@@ -117,7 +117,7 @@ export const styles = StyleSheet.create({
   createButtonText: {
     fontSize: fonts.sizes.md,
     color: colors.text.primary,
-    fontWeight: fonts.weights.bold,
+    fontWeight: fonts.weights.bold as 'bold',
   },
 
   createButtonTextDisabled: {
@@ -153,7 +153,7 @@ export const styles = StyleSheet.create({
 
   successTitle: {
     fontSize: fonts.sizes.xl,
-    fontWeight: fonts.weights.bold,
+    fontWeight: fonts.weights.bold as 'bold',
     color: colors.text.primary,
     marginBottom: 12,
     textAlign: 'center',
@@ -191,12 +191,12 @@ export const styles = StyleSheet.create({
   successButtonText: {
     fontSize: fonts.sizes.md,
     color: colors.text.primary,
-    fontWeight: fonts.weights.bold,
+    fontWeight: fonts.weights.bold as 'bold',
   },
 
   successButtonTextSecondary: {
     color: colors.button.primary,
-    fontWeight: fonts.weights.bold,
+    fontWeight: fonts.weights.bold as 'bold',
   },
 
   // Web date input styles
@@ -215,6 +215,5 @@ export const styles = StyleSheet.create({
   webDateInputFocused: {
     borderColor: colors.button.primary,
     backgroundColor: colors.background.card,
-    outline: 'none',
   },
 });

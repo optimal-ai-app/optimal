@@ -34,7 +34,10 @@ import {
   useTasks,
   useTaskLoading,
   useTaskError,
-  useFetchUserTasks
+  useFetchUserTasks,
+  useFetchUserGoals,
+  useGoalLoading,
+  useGoalError
 } from '@/src/stores'
 import { useUserId } from '@/src/stores/userStore'
 import { TaskCard } from '@/src/components/TaskCard.tsx/TaskCard'
@@ -54,7 +57,11 @@ export default function HomeScreen () {
   const isLoading = useTaskLoading()
   const error = useTaskError()
   const fetchUserTasks = useFetchUserTasks()
-  const goals: Goal[] = useGoals() as unknown as Goal[]
+  const goals = useGoals()
+  const isGoalLoading = useGoalLoading()
+  const goalError = useGoalError()
+  const fetchUserGoals = useFetchUserGoals()
+
   const [showGoalModal, setShowGoalModal] = useState(false)
   const [showTaskModal, setShowTaskModal] = useState(false)
   const [activeFilters, setActiveFilters] = useState<TaskFilterType[]>(['all'])
@@ -66,6 +73,12 @@ export default function HomeScreen () {
       fetchUserTasks(userId)
     }
   }, [userId, fetchUserTasks])
+
+  useEffect(() => {
+    if (userId) {
+      fetchUserGoals(userId)
+    }
+  }, [userId, fetchUserGoals])
 
   // All useMemo hooks must also be called unconditionally
   const { todaysTasks, upcomingTasks } = useMemo(() => {
@@ -99,40 +112,6 @@ export default function HomeScreen () {
       upcomingTasks: upcoming
     }
   }, [tasks])
-
-  const filteredAndSortedTasks = useMemo(() => {
-    let filtered = tasks.filter(task => {
-      if (activeFilters.includes('all')) return true
-
-      const isOverdue =
-        task.dueDate.getTime() + 24 * 60 * 60 * 1000 < new Date().getTime() &&
-        task.status !== 'completed'
-      const isTodo = task.status !== 'completed'
-      const isCompleted = task.status === 'completed'
-
-      return (
-        (activeFilters.includes('todo') && isTodo) ||
-        (activeFilters.includes('overdue') && isOverdue) ||
-        (activeFilters.includes('completed') && isCompleted)
-      )
-    })
-
-    // Sort tasks
-    return filtered.sort((a, b) => {
-      switch (activeSort) {
-        case 'alphabetical':
-          return a.title.localeCompare(b.title)
-        case 'priority':
-          const priorityOrder = { '!!!': 3, '!!': 2, '!': 1 }
-          return (
-            (priorityOrder[b.priority] || 0) - (priorityOrder[a.priority] || 0)
-          )
-        case 'dueDate':
-        default:
-          return a.dueDate.getTime() - b.dueDate.getTime()
-      }
-    })
-  }, [tasks, activeFilters, activeSort])
 
   const hasUser = !!userId
   const displayedTasks = todaysTasks.length > 0 ? todaysTasks : upcomingTasks
@@ -331,7 +310,6 @@ export default function HomeScreen () {
           <Card style={styles.goalsCard}>
             <View style={styles.sectionHeader}>
               <View style={styles.sectionTitleContainer}>
-                <Flag size={20} color={colors.button.accent} />
                 <Text style={styles.sectionTitle}>Active Goals</Text>
               </View>
               <Link href='/home/goals' asChild>
