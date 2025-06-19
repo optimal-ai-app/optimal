@@ -1,45 +1,65 @@
 /**
- * Application color palette
- * Consistent colors for the entire application
+ * Premium color palette inspired by leading travel websites
+ * Deep blues, crisp whites, and strategic accent colors for trust and professionalism
  */
 
 export const colors = {
-  // Main colors
+  // Main colors - Deep blue palette for trust and professionalism
   background: {
-    primary: '#101725',
-    card: '#1E2433',
-    container: '#2B324A'
+    primary: '#0A1628', // Deep navy for premium feel
+    card: '#1A2332', // Elevated card background
+    container: '#243142', // Container background
+    surface: '#FFFFFF', // Pure white for contrast
+    overlay: 'rgba(10, 22, 40, 0.95)' // Dark overlay with transparency
   },
   
-  // Button colors
+  // Button colors - Vibrant blues for action
   button: {
-    primary: '#3D4AD3',
-    accent: '#67A9F9'
+    primary: '#003B95', // Deep Expedia-like blue
+    primaryHover: '#0052CC', // Hover state
+    accent: '#0066FF', // Bright accent blue
+    accentHover: '#0052CC', // Accent hover
+    secondary: '#F8F9FA', // Light secondary
+    secondaryHover: '#E9ECEF' // Secondary hover
   },
   
-  // Text colors
+  // Text colors - High contrast for readability
   text: {
-    primary: '#FFFFFF',
-    secondary: '#D3D6E0',
-    muted: '#B1B5C9'
+    primary: '#FFFFFF', // Pure white for dark backgrounds
+    secondary: '#B8C5D1', // Muted blue-gray
+    muted: '#8A9BA8', // Subtle text
+    inverse: '#1A2332', // Dark text for light backgrounds
+    accent: '#003B95' // Accent text color
   },
   
-  // Status colors
+  // Status colors - Clear feedback states
   status: {
-    success: '#13D69D',
-    warning: '#F9A826',
-    error: '#FF4D4D'
+    success: '#00C851', // Vibrant green
+    warning: '#FF8800', // Orange warning
+    error: '#FF4444', // Clear red error
+    info: '#0066FF' // Information blue
   },
   
-  // Gradient colors
+  // Gradient colors - Premium gradients
   gradient: {
-    start: '#3D4AD3',
-    end: '#67A9F9'
+    primary: ['#003B95', '#0066FF'], // Primary blue gradient
+    secondary: ['#667EEA', '#764BA2'], // Purple-blue gradient
+    accent: ['#FF6B6B', '#FF8E53'], // Warm accent gradient
+    surface: ['#FFFFFF', '#F8F9FA'] // Subtle surface gradient
   },
   
   // Utility colors
   utility: {
-    divider: '#B1B5C9',
-    overlay: 'rgba(16, 23, 37, 0.8)'
+    divider: 'rgba(184, 197, 209, 0.2)', // Subtle dividers
+    shadow: 'rgba(0, 0, 0, 0.15)', // Soft shadows
+    border: 'rgba(184, 197, 209, 0.3)', // Border color
+    backdrop: 'rgba(0, 0, 0, 0.6)' // Modal backdrop
+  },
+
+  // Premium accent colors
+  premium: {
+    gold: '#FFD700', // Premium gold
+    silver: '#C0C0C0', // Silver accent
+    bronze: '#CD7F32' // Bronze accent
   }
 };

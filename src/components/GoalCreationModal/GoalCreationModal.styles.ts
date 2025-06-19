@@ -3,93 +3,129 @@ import { colors } from '../../constants/colors';
 import { fonts } from '../../constants/fonts';
 
 export const styles = StyleSheet.create({
-  // Modal overlay
+  // Enhanced modal overlay with backdrop blur
   overlay: {
     height: '100%',
     width: '100%',
-    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    backgroundColor: colors.utility.backdrop,
     justifyContent: 'center',
     alignItems: 'center',
+    backdropFilter: 'blur(10px)', // Glass effect (web only)
   },
 
-  // Modal container
+  // Premium modal container with enhanced shadows
   modalContainer: {
     backgroundColor: colors.background.card,
     borderRadius: 24,
-    padding: 12,
+    padding: 24, // Increased padding
     width: '90%',
-    shadowColor: '#000',
+    maxWidth: 400,
+    borderWidth: 1,
+    borderColor: colors.utility.border,
+    // Enhanced shadow system
+    shadowColor: colors.utility.shadow,
     shadowOffset: {
       width: 0,
-      height: 10,
+      height: 16,
     },
-    shadowOpacity: 0.3,
-    shadowRadius: 20,
-    elevation: 10,
+    shadowOpacity: 0.25,
+    shadowRadius: 32,
+    elevation: 16,
   },
 
-  // Header
+  // Enhanced header styling
   header: {
     alignItems: 'center',
-    marginBottom: 24,
+    marginBottom: 32, // Increased spacing
   },
 
   title: {
-    fontSize: fonts.sizes.xl,
+    fontSize: fonts.sizes.xxl,
     fontWeight: fonts.weights.bold,
     color: colors.text.primary,
-    marginBottom: 8,
+    marginBottom: 12, // Increased spacing
+    textAlign: 'center',
   },
 
   subtitle: {
     fontSize: fonts.sizes.md,
     color: colors.text.secondary,
     textAlign: 'center',
-    lineHeight: 22,
+    lineHeight: 24, // Improved line height
+    opacity: 0.9,
   },
 
-  // Options container
+  // Enhanced options container
   optionsContainer: {
     flexDirection: 'row',
-    gap: 16,
-    marginBottom: 20,
+    gap: 20, // Increased gap
+    marginBottom: 32, // Increased spacing
   },
 
-  // Option button
+  // Premium option button styling
   optionButton: {
     flex: 1,
     backgroundColor: colors.background.container,
-    borderRadius: 16,
-    padding: 20,
+    borderRadius: 20, // Increased border radius
+    padding: 24, // Increased padding
     alignItems: 'center',
     borderWidth: 2,
     borderColor: 'transparent',
+    // Subtle shadow
+    shadowColor: colors.utility.shadow,
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
   },
 
   optionButtonActive: {
     backgroundColor: colors.button.primary,
     borderColor: colors.button.primary,
+    // Enhanced shadow for active state
+    shadowColor: colors.button.primary,
+    shadowOffset: {
+      width: 0,
+      height: 8,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 16,
+    elevation: 8,
   },
 
+  // Enhanced icon container
   optionIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+    width: 56, // Increased size
+    height: 56,
+    borderRadius: 28,
     backgroundColor: colors.background.primary,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 12,
+    marginBottom: 16, // Increased spacing
+    // Subtle inner shadow effect
+    shadowColor: colors.utility.shadow,
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
   },
 
   optionIconActive: {
     backgroundColor: 'rgba(255, 255, 255, 0.2)',
   },
 
+  // Enhanced typography
   optionTitle: {
-    fontSize: fonts.sizes.md,
+    fontSize: fonts.sizes.lg, // Increased font size
     fontWeight: fonts.weights.bold,
     color: colors.text.primary,
-    marginBottom: 4,
+    marginBottom: 8, // Increased spacing
     textAlign: 'center',
   },
 
@@ -97,25 +133,29 @@ export const styles = StyleSheet.create({
     fontSize: fonts.sizes.sm,
     color: colors.text.secondary,
     textAlign: 'center',
-    lineHeight: 18,
+    lineHeight: 20, // Improved line height
+    opacity: 0.8,
   },
 
   optionDescriptionActive: {
     color: colors.text.primary,
+    opacity: 1,
   },
 
-  // Action buttons
+  // Enhanced action buttons
   actionButtons: {
     flexDirection: 'row',
-    gap: 12,
+    gap: 16, // Increased gap
   },
 
   cancelButton: {
     flex: 1,
     backgroundColor: colors.background.container,
-    borderRadius: 12,
-    paddingVertical: 14,
+    borderRadius: 16, // Increased border radius
+    paddingVertical: 16, // Increased padding
     alignItems: 'center',
+    borderWidth: 1,
+    borderColor: colors.utility.border,
   },
 
   cancelButtonText: {
@@ -127,14 +167,25 @@ export const styles = StyleSheet.create({
   continueButton: {
     flex: 1,
     backgroundColor: colors.button.primary,
-    borderRadius: 12,
-    paddingVertical: 14,
+    borderRadius: 16,
+    paddingVertical: 16,
     alignItems: 'center',
+    // Enhanced shadow
+    shadowColor: colors.button.primary,
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 6,
   },
 
   continueButtonDisabled: {
     backgroundColor: colors.background.container,
-    opacity: 0.5,
+    opacity: 0.6,
+    shadowOpacity: 0,
+    elevation: 0,
   },
 
   continueButtonText: {

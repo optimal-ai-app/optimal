@@ -8,17 +8,18 @@ import {
 } from 'react-native';
 import Animated, { 
   useAnimatedStyle, 
-  useSharedValue, 
+  useSharedValue,
   withSpring,
-  withTiming 
+  withTiming,
+  interpolate
 } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
 
 import { styles } from './Button.styles';
 import { colors } from '../../constants/colors';
 
-// Button variants for styling
-export type ButtonVariant = 'primary' | 'secondary' | 'ghost';
+// Enhanced button variants
+export type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'large';
 
 interface ButtonProps extends TouchableOpacityProps {
   title: string;
@@ -27,6 +28,7 @@ interface ButtonProps extends TouchableOpacityProps {
   icon?: React.ReactNode;
   disabled?: boolean;
   fullWidth?: boolean;
+  gradient?: boolean;
 }
 
 export const Button: React.FC<ButtonProps> = ({
@@ -36,28 +38,44 @@ export const Button: React.FC<ButtonProps> = ({
   icon,
   disabled = false,
   fullWidth = false,
+  gradient = false,
   style,
   ...rest
 }) => {
-  // Animation values
+  // Enhanced animation values
   const scale = useSharedValue(1);
+  const shadowOpacity = useSharedValue(0.15);
+  const elevation = useSharedValue(6);
   
-  // Handle press animation
+  // Handle press animations with spring physics
   const handlePressIn = () => {
-    scale.value = withSpring(0.96);
+    scale.value = withSpring(0.96, {
+      damping: 15,
+      stiffness: 300
+    });
+    shadowOpacity.value = withTiming(0.25, { duration: 150 });
+    elevation.value = withTiming(12, { duration: 150 });
   };
   
   const handlePressOut = () => {
-    scale.value = withSpring(1);
+    scale.value = withSpring(1, {
+      damping: 15,
+      stiffness: 300
+    });
+    shadowOpacity.value = withTiming(0.15, { duration: 150 });
+    elevation.value = withTiming(6, { duration: 150 });
   };
   
+  // Enhanced animated styles
   const animatedStyle = useAnimatedStyle(() => {
     return {
-      transform: [{ scale: scale.value }]
+      transform: [{ scale: scale.value }],
+      shadowOpacity: shadowOpacity.value,
+      elevation: elevation.value,
     };
   });
   
-  // Determine which button style to use based on variant
+  // Determine button style based on variant
   const getButtonStyle = () => {
     switch (variant) {
       case 'primary':
@@ -66,27 +84,31 @@ export const Button: React.FC<ButtonProps> = ({
         return styles.secondaryButton;
       case 'ghost':
         return styles.ghostButton;
+      case 'large':
+        return [styles.primaryButton, styles.largeButton];
       default:
         return styles.primaryButton;
     }
   };
   
-  // Determine which text style to use based on variant
+  // Determine text style based on variant
   const getTextStyle = () => {
     switch (variant) {
       case 'primary':
-        return styles.primaryText;
+        return variant === 'large' ? [styles.primaryText, styles.largeText] : styles.primaryText;
       case 'secondary':
         return styles.secondaryText;
       case 'ghost':
         return styles.ghostText;
+      case 'large':
+        return [styles.primaryText, styles.largeText];
       default:
         return styles.primaryText;
     }
   };
   
-  // Render primary button with gradient
-  if (variant === 'primary' && !disabled) {
+  // Render primary button with optional gradient
+  if ((variant === 'primary' || variant === 'large') && !disabled) {
     return (
       <Animated.View 
         style={[
@@ -107,18 +129,20 @@ export const Button: React.FC<ButtonProps> = ({
           accessibilityState={{ disabled: disabled || isLoading }}
           {...rest}
         >
-          <LinearGradient
-            colors={[colors.gradient.start, colors.gradient.end]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
-            style={[
-              StyleSheet.absoluteFill,
-              styles.gradient
-            ]}
-          />
+          {gradient ? (
+            <LinearGradient
+              colors={colors.gradient.primary}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={[
+                StyleSheet.absoluteFill,
+                variant === 'large' ? { borderRadius: 16 } : styles.gradient
+              ]}
+            />
+          ) : null}
           
           {isLoading ? (
-            <ActivityIndicator size="small\" color={colors.text.primary} />
+            <ActivityIndicator size="small" color={colors.text.primary} />
           ) : (
             <>
               {icon && <span style={styles.iconContainer}>{icon}</span>}
