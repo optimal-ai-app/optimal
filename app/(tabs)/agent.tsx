@@ -394,9 +394,7 @@ export default function AgentScreen () {
                     {showGoalNames && (
                       <GoalNamesScroller
                         onSelect={goalName =>
-                          handleSendMessage(
-                            `I want to create tasks for Goal: "${goalName}"`
-                          )
+                          handleSendMessage(`Selected Goal: "${goalName}"`)
                         }
                       />
                     )}

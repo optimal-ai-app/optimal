@@ -42,7 +42,7 @@ interface ManualTaskFormProps {
     dueTime: string
     goalId?: string
     isRepeating: boolean
-    repeatCount?: number
+    repeatEndDate?: Date
     repeatDays?: string[]
   }) => void
 }
@@ -61,7 +61,7 @@ export const ManualTaskForm: React.FC<ManualTaskFormProps> = ({
   const [dueTime, setDueTime] = useState('')
   const [selectedGoal, setSelectedGoal] = useState<Goal | null>(null)
   const [isRepeating, setIsRepeating] = useState(false)
-  const [repeatCount, setRepeatCount] = useState('1')
+  const [repeatEndDate, setRepeatEndDate] = useState<Date | null>(null)
   const [selectedDays, setSelectedDays] = useState<string[]>([])
 
   // UI state
@@ -72,6 +72,7 @@ export const ManualTaskForm: React.FC<ManualTaskFormProps> = ({
   const [createdTask, setCreatedTask] = useState<any>(null)
   const [showDatePicker, setShowDatePicker] = useState(false)
   const [showTimePicker, setShowTimePicker] = useState(false)
+  const [showRepeatEndDatePicker, setShowRepeatEndDatePicker] = useState(false)
   const [isCreating, setIsCreating] = useState(false)
 
   const webDateInputRef = useRef<TextInput>(null)
@@ -151,6 +152,17 @@ export const ManualTaskForm: React.FC<ManualTaskFormProps> = ({
     }
   }
 
+  const handleRepeatEndDateChange = (event: any, selectedDate?: Date) => {
+    setShowRepeatEndDatePicker(false)
+    if (selectedDate) {
+      const today = new Date()
+      today.setHours(0, 0, 0, 0)
+      if (selectedDate >= today) {
+        setRepeatEndDate(selectedDate)
+      }
+    }
+  }
+
   const handleGoalSelect = (goal: Goal) => {
     setSelectedGoal(goal)
     setShowGoalDropdown(false)
@@ -199,7 +211,7 @@ export const ManualTaskForm: React.FC<ManualTaskFormProps> = ({
         dueTime,
         goalId: selectedGoal?.id,
         isRepeating,
-        repeatCount: isRepeating ? parseInt(repeatCount) : undefined,
+        repeatEndDate: isRepeating && repeatEndDate ? repeatEndDate : undefined,
         repeatDays: isRepeating ? selectedDays : undefined
       }
 
@@ -262,7 +274,11 @@ export const ManualTaskForm: React.FC<ManualTaskFormProps> = ({
             <Text style={styles.successMessage}>
               Your task "{createdTask.title}" has been added to your task list.
               {createdTask.isRepeating &&
-                ` It will repeat ${createdTask.repeatCount} times on selected days.`}
+                ` It will repeat on selected days until ${
+                  createdTask.repeatEndDate
+                    ? createdTask.repeatEndDate.toLocaleDateString()
+                    : 'goal completion'
+                }.`}
             </Text>
 
             <View style={styles.successActions}>
@@ -499,16 +515,42 @@ export const ManualTaskForm: React.FC<ManualTaskFormProps> = ({
               <View style={styles.repeatOptions}>
                 <View style={styles.repeatRow}>
                   <View style={styles.repeatField}>
-                    <Text style={styles.inputLabel}>Repeat Count</Text>
-                    <InputField
-                      label=''
-                      value={repeatCount}
-                      onChangeText={setRepeatCount}
-                      placeholder='1'
-                      keyboardType='numeric'
-                      maxLength={3}
-                      multiline
-                    />
+                    <Text style={styles.inputLabel}>Repeat Until</Text>
+                    <TouchableOpacity
+                      style={styles.pickerButton}
+                      onPress={() => setShowRepeatEndDatePicker(true)}
+                      activeOpacity={0.8}
+                    >
+                      {showRepeatEndDatePicker ? (
+                        <>
+                          {Platform.OS !== 'web' && (
+                            <DateTimePicker
+                              value={repeatEndDate || new Date()}
+                              mode='date'
+                              display='default'
+                              onChange={handleRepeatEndDateChange}
+                              minimumDate={new Date()}
+                            />
+                          )}
+                        </>
+                      ) : (
+                        <>
+                          <Text
+                            style={[
+                              styles.pickerText,
+                              !repeatEndDate && styles.pickerPlaceholder
+                            ]}
+                          >
+                            {repeatEndDate
+                              ? formatDate(repeatEndDate)
+                              : selectedGoal
+                              ? 'Goal completion date'
+                              : 'Select end date'}
+                          </Text>
+                          <Calendar size={20} color={colors.text.muted} />
+                        </>
+                      )}
+                    </TouchableOpacity>
                   </View>
                 </View>
 

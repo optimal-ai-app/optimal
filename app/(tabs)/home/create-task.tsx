@@ -9,7 +9,7 @@ export default function CreateTaskScreen () {
     dueTime: string
     goalId?: string
     isRepeating: boolean
-    repeatCount?: number
+    repeatEndDate?: Date
     repeatDays?: string[]
   }) => {
     // In a real app, this would save the task to your data store
