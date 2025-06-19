@@ -56,7 +56,6 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
                 tasks: tasks
             }))
             setError(null)
-
         } finally {
             setLoading(false)
         }
