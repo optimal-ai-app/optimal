@@ -26,6 +26,7 @@ import Animated, {
   useAnimatedStyle,
   useSharedValue
 } from 'react-native-reanimated'
+import DateTimePicker from '@react-native-community/datetimepicker'
 
 import { Header } from '@/src/components/Header'
 import { ChatInput } from '@/src/components/ChatInput'
@@ -202,6 +203,201 @@ const ConfirmationButtons = ({
   )
 }
 
+// Component: Date Picker for DATE_PICKER_TAG
+const DatePickerComponent = ({
+  onConfirm
+}: {
+  onConfirm: (date: string) => void
+}) => {
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date())
+  const [showPicker, setShowPicker] = useState(false)
+
+  const handleDateChange = (event: any, date?: Date) => {
+    setShowPicker(Platform.OS === 'ios')
+    if (date) {
+      setSelectedDate(date)
+    }
+  }
+
+  const formatDate = (date: Date) => {
+    return date.toLocaleDateString(undefined, {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    })
+  }
+
+  const handleConfirm = () => {
+    onConfirm(formatDate(selectedDate))
+  }
+
+  return (
+    <View style={styles.datePickerContainer}>
+      <TouchableOpacity
+        style={styles.datePickerButton}
+        onPress={() => setShowPicker(true)}
+      >
+        <Text style={styles.datePickerText}>
+          {formatDate(selectedDate)}
+        </Text>
+      </TouchableOpacity>
+      
+      {showPicker && (
+        <DateTimePicker
+          value={selectedDate}
+          mode="date"
+          display="default"
+          onChange={handleDateChange}
+          minimumDate={new Date()}
+        />
+      )}
+      
+      <TouchableOpacity
+        style={[styles.confirmButton, styles.proceedButton, { marginTop: 12 }]}
+        onPress={handleConfirm}
+      >
+        <Text style={styles.confirmButtonText}>Confirm Date</Text>
+      </TouchableOpacity>
+    </View>
+  )
+}
+
+// Component: Time Picker for TIME_PICKER_TAG
+const TimePickerComponent = ({
+  onConfirm
+}: {
+  onConfirm: (time: string) => void
+}) => {
+  const [selectedTime, setSelectedTime] = useState<Date>(new Date())
+  const [showPicker, setShowPicker] = useState(false)
+
+  const handleTimeChange = (event: any, time?: Date) => {
+    setShowPicker(Platform.OS === 'ios')
+    if (time) {
+      setSelectedTime(time)
+    }
+  }
+
+  const formatTime = (time: Date) => {
+    return time.toLocaleTimeString(undefined, {
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true
+    })
+  }
+
+  const handleConfirm = () => {
+    onConfirm(formatTime(selectedTime))
+  }
+
+  return (
+    <View style={styles.timePickerContainer}>
+      <TouchableOpacity
+        style={styles.timePickerButton}
+        onPress={() => setShowPicker(true)}
+      >
+        <Text style={styles.timePickerText}>
+          {formatTime(selectedTime)}
+        </Text>
+      </TouchableOpacity>
+      
+      {showPicker && (
+        <DateTimePicker
+          value={selectedTime}
+          mode="time"
+          display="default"
+          onChange={handleTimeChange}
+        />
+      )}
+      
+      <TouchableOpacity
+        style={[styles.confirmButton, styles.proceedButton, { marginTop: 12 }]}
+        onPress={handleConfirm}
+      >
+        <Text style={styles.confirmButtonText}>Confirm Time</Text>
+      </TouchableOpacity>
+    </View>
+  )
+}
+
+// Component: Day Selector for DAY_SELECTOR_TAG
+const DaySelectorComponent = ({
+  onConfirm
+}: {
+  onConfirm: (days: string) => void
+}) => {
+  const [selectedDays, setSelectedDays] = useState<string[]>([])
+
+  const daysOfWeek = [
+    { key: 'mon', label: 'M', full: 'Monday' },
+    { key: 'tue', label: 'T', full: 'Tuesday' },
+    { key: 'wed', label: 'W', full: 'Wednesday' },
+    { key: 'thu', label: 'T', full: 'Thursday' },
+    { key: 'fri', label: 'F', full: 'Friday' },
+    { key: 'sat', label: 'S', full: 'Saturday' },
+    { key: 'sun', label: 'S', full: 'Sunday' }
+  ]
+
+  const toggleDay = (dayKey: string) => {
+    setSelectedDays(prev =>
+      prev.includes(dayKey) 
+        ? prev.filter(d => d !== dayKey) 
+        : [...prev, dayKey]
+    )
+  }
+
+  const handleConfirm = () => {
+    const selectedDayNames = selectedDays.map(dayKey => 
+      daysOfWeek.find(day => day.key === dayKey)?.full
+    ).filter(Boolean)
+    
+    onConfirm(selectedDayNames.join(', '))
+  }
+
+  return (
+    <View style={styles.daySelectorContainer}>
+      <Text style={styles.daySelectorTitle}>Select Days</Text>
+      
+      <View style={styles.daysGrid}>
+        {daysOfWeek.map(day => (
+          <TouchableOpacity
+            key={day.key}
+            style={[
+              styles.dayButton,
+              selectedDays.includes(day.key) && styles.dayButtonSelected
+            ]}
+            onPress={() => toggleDay(day.key)}
+          >
+            <Text
+              style={[
+                styles.dayButtonText,
+                selectedDays.includes(day.key) && styles.dayButtonTextSelected
+              ]}
+            >
+              {day.label}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+      
+      <TouchableOpacity
+        style={[
+          styles.confirmButton, 
+          styles.proceedButton, 
+          { marginTop: 16, opacity: selectedDays.length > 0 ? 1 : 0.5 }
+        ]}
+        onPress={handleConfirm}
+        disabled={selectedDays.length === 0}
+      >
+        <Text style={styles.confirmButtonText}>
+          Confirm Days ({selectedDays.length})
+        </Text>
+      </TouchableOpacity>
+    </View>
+  )
+}
+
 export default function AgentScreen () {
   // Get params from navigation
   const params = useLocalSearchParams()
@@ -373,6 +569,13 @@ export default function AgentScreen () {
                 isLatestAgentMessage && tags.includes('SHOW_USER_GOAL_NAMES')
               const showConfirmation =
                 isLatestAgentMessage && tags.includes('CONFIRM_TAG')
+              const showDatePicker =
+                isLatestAgentMessage && tags.includes('DATE_PICKER_TAG')
+              const showTimePicker =
+                isLatestAgentMessage && tags.includes('TIME_PICKER_TAG')
+              const showDaySelector =
+                isLatestAgentMessage && tags.includes('DAY_SELECTOR_TAG')
+              
               return (
                 <Animated.View
                   key={msg.id}
@@ -401,6 +604,21 @@ export default function AgentScreen () {
                     {showConfirmation && (
                       <ConfirmationButtons
                         onConfirm={action => handleSendMessage(action)}
+                      />
+                    )}
+                    {showDatePicker && (
+                      <DatePickerComponent
+                        onConfirm={date => handleSendMessage(`Selected Date: ${date}`)}
+                      />
+                    )}
+                    {showTimePicker && (
+                      <TimePickerComponent
+                        onConfirm={time => handleSendMessage(`Selected Time: ${time}`)}
+                      />
+                    )}
+                    {showDaySelector && (
+                      <DaySelectorComponent
+                        onConfirm={days => handleSendMessage(`Selected Days: ${days}`)}
                       />
                     )}
                     <Text style={styles.timestamp}>
@@ -611,5 +829,97 @@ const styles = StyleSheet.create({
     color: colors.text.primary,
     fontSize: fonts.sizes.sm,
     fontWeight: '600'
+  } as TextStyle,
+
+  // Date Picker Styles
+  datePickerContainer: {
+    marginTop: 12,
+    marginBottom: 8
+  } as ViewStyle,
+
+  datePickerButton: {
+    backgroundColor: colors.background.primary,
+    borderRadius: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderWidth: 1,
+    borderColor: colors.utility.divider
+  } as ViewStyle,
+
+  datePickerText: {
+    color: colors.text.primary,
+    fontSize: fonts.sizes.md,
+    fontWeight: '500',
+    textAlign: 'center'
+  } as TextStyle,
+
+  // Time Picker Styles
+  timePickerContainer: {
+    marginTop: 12,
+    marginBottom: 8
+  } as ViewStyle,
+
+  timePickerButton: {
+    backgroundColor: colors.background.primary,
+    borderRadius: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderWidth: 1,
+    borderColor: colors.utility.divider
+  } as ViewStyle,
+
+  timePickerText: {
+    color: colors.text.primary,
+    fontSize: fonts.sizes.md,
+    fontWeight: '500',
+    textAlign: 'center'
+  } as TextStyle,
+
+  // Day Selector Styles
+  daySelectorContainer: {
+    marginTop: 12,
+    marginBottom: 8
+  } as ViewStyle,
+
+  daySelectorTitle: {
+    color: colors.text.primary,
+    fontSize: fonts.sizes.md,
+    fontWeight: '600',
+    marginBottom: 12,
+    textAlign: 'center'
+  } as TextStyle,
+
+  daysGrid: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 8,
+    marginBottom: 8
+  } as ViewStyle,
+
+  dayButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: colors.background.container,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: colors.utility.divider
+  } as ViewStyle,
+
+  dayButtonSelected: {
+    backgroundColor: colors.button.primary,
+    borderColor: colors.button.primary
+  } as ViewStyle,
+
+  dayButtonText: {
+    fontSize: fonts.sizes.sm,
+    color: colors.text.secondary,
+    fontWeight: '500'
+  } as TextStyle,
+
+  dayButtonTextSelected: {
+    color: colors.text.primary,
+    fontWeight: '700'
   } as TextStyle
 })
