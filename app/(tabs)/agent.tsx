@@ -6,30 +6,18 @@ import {
   StyleSheet,
   KeyboardAvoidingView,
   Platform,
-  Keyboard,
   ViewStyle,
-  TextStyle,
-  Animated as RNAnimated,
-  Easing,
-  TouchableOpacity,
-  FlatList
+  TextStyle
 } from 'react-native'
 import { useLocalSearchParams } from 'expo-router'
 import { LinearGradient } from 'expo-linear-gradient'
-import Animated, {
-  FadeInUp,
-  FadeInRight,
-  FadeInLeft,
-  withRepeat,
-  withSequence,
-  withTiming,
-  useAnimatedStyle,
-  useSharedValue
-} from 'react-native-reanimated'
-import DateTimePicker from '@react-native-community/datetimepicker'
+import Animated, { FadeInUp, FadeInLeft } from 'react-native-reanimated'
 
 import { Header } from '@/src/components/Header'
 import { ChatInput } from '@/src/components/ChatInput'
+import { AgentMessage } from '@/src/components/AgentMessage'
+import { UserMessage } from '@/src/components/UserMessage'
+import { LoadingDots } from '@/src/components/LoadingDots'
 import { colors } from '@/src/constants/colors'
 import { fonts } from '@/src/constants/fonts'
 import {
@@ -42,8 +30,6 @@ import {
   useFetchUserGoals,
   useUserId
 } from '@/src/stores'
-
-// Use ChatMessage type from store
 
 // Carousel options
 const carouselOptions = [
@@ -79,340 +65,33 @@ const carouselOptions = [
   }
 ]
 
-const LoadingDots = () => {
-  const dots = [useSharedValue(0.3), useSharedValue(0.3), useSharedValue(0.3)]
-
-  useEffect(() => {
-    dots.forEach((dot, index) => {
-      const delay = index * 200 // Reduced delay for smoother flow
-
-      setTimeout(() => {
-        dot.value = withRepeat(
-          withSequence(
-            withTiming(1, {
-              duration: 600,
-              easing: Easing.out(Easing.cubic)
-            }),
-            withTiming(0.2, {
-              duration: 600,
-              easing: Easing.in(Easing.cubic)
-            })
-          ),
-          -1,
-          false
-        )
-      }, delay)
-    })
-  }, [])
-
-  const dotStyles = dots.map(dot =>
-    useAnimatedStyle(() => ({
-      opacity: dot.value,
-      transform: [
-        {
-          scale: 0.7 + dot.value * 0.3 // Subtle scale animation
-        }
-      ]
-    }))
-  )
-
-  return (
-    <View style={styles.loadingContainer}>
-      {dotStyles.map((style, index) => (
-        <Animated.View key={index} style={[styles.dot, style]} />
-      ))}
-    </View>
-  )
-}
-
 // Helper to extract tags and content from agent message
-function extractTagsAndContent (content: { summary: string; tags: string[] }): {
+function extractTagsAndContent(content: { summary: string; tags: string[] }): {
   text: string
   tags: string[]
 } {
   try {
-    // If content is already an object (not a string), use it directly
     const obj = typeof content === 'string' ? JSON.parse(content) : content
     return {
       text: obj.summary || '',
       tags: Array.isArray(obj.tags) ? obj.tags : []
     }
   } catch {
-    // fallback for legacy/plaintext messages
     return { text: typeof content === 'string' ? content : '', tags: [] }
   }
 }
 
-// Component: Scrollable list of goal names
-const GoalNamesScroller = ({
-  onSelect
-}: {
-  onSelect: (goalName: string) => void
-}) => {
-  const goals = useGoals()
-  if (!goals.length) return null
-  return (
-    <FlatList
-      data={goals}
-      horizontal
-      keyExtractor={item => item.id}
-      style={{ marginTop: 8, marginBottom: 4 }}
-      contentContainerStyle={{ gap: 8, paddingHorizontal: 4 }}
-      showsHorizontalScrollIndicator={false}
-      renderItem={({ item }) => (
-        <TouchableOpacity
-          style={{
-            backgroundColor: colors.button.primary,
-            borderRadius: 16,
-            paddingVertical: 8,
-            paddingHorizontal: 16,
-            marginRight: 4
-          }}
-          onPress={() => onSelect(item.title)}
-        >
-          <Text style={{ color: colors.text.primary, fontWeight: '600' }}>
-            {item.title}
-          </Text>
-        </TouchableOpacity>
-      )}
-    />
-  )
-}
-
-// Component: Confirmation buttons for CONFIRM_TAG
-const ConfirmationButtons = ({
-  onConfirm
-}: {
-  onConfirm: (action: string) => void
-}) => {
-  return (
-    <View style={styles.confirmationContainer}>
-      <TouchableOpacity
-        style={[styles.confirmButton, styles.proceedButton]}
-        onPress={() => onConfirm('Yes')}
-      >
-        <Text style={styles.confirmButtonText}>Yes</Text>
-      </TouchableOpacity>
-      <TouchableOpacity
-        style={[styles.confirmButton, styles.tryElseButton]}
-        onPress={() => onConfirm('Something Else')}
-      >
-        <Text style={styles.confirmButtonText}>Something Else</Text>
-      </TouchableOpacity>
-    </View>
-  )
-}
-
-// Component: Date Picker for DATE_PICKER_TAG
-const DatePickerComponent = ({
-  onConfirm
-}: {
-  onConfirm: (date: string) => void
-}) => {
-  const [selectedDate, setSelectedDate] = useState<Date>(new Date())
-  const [showPicker, setShowPicker] = useState(false)
-
-  const handleDateChange = (event: any, date?: Date) => {
-    setShowPicker(Platform.OS === 'ios')
-    if (date) {
-      setSelectedDate(date)
-    }
-  }
-
-  const formatDate = (date: Date) => {
-    return date.toLocaleDateString(undefined, {
-      weekday: 'long',
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    })
-  }
-
-  const handleConfirm = () => {
-    onConfirm(formatDate(selectedDate))
-  }
-
-  return (
-    <View style={styles.datePickerContainer}>
-      <TouchableOpacity
-        style={styles.datePickerButton}
-        onPress={() => setShowPicker(true)}
-      >
-        <Text style={styles.datePickerText}>
-          {formatDate(selectedDate)}
-        </Text>
-      </TouchableOpacity>
-      
-      {showPicker && (
-        <DateTimePicker
-          value={selectedDate}
-          mode="date"
-          display="default"
-          onChange={handleDateChange}
-          minimumDate={new Date()}
-        />
-      )}
-      
-      <TouchableOpacity
-        style={[styles.confirmButton, styles.proceedButton, { marginTop: 12 }]}
-        onPress={handleConfirm}
-      >
-        <Text style={styles.confirmButtonText}>Confirm Date</Text>
-      </TouchableOpacity>
-    </View>
-  )
-}
-
-// Component: Time Picker for TIME_PICKER_TAG
-const TimePickerComponent = ({
-  onConfirm
-}: {
-  onConfirm: (time: string) => void
-}) => {
-  const [selectedTime, setSelectedTime] = useState<Date>(new Date())
-  const [showPicker, setShowPicker] = useState(false)
-
-  const handleTimeChange = (event: any, time?: Date) => {
-    setShowPicker(Platform.OS === 'ios')
-    if (time) {
-      setSelectedTime(time)
-    }
-  }
-
-  const formatTime = (time: Date) => {
-    return time.toLocaleTimeString(undefined, {
-      hour: 'numeric',
-      minute: '2-digit',
-      hour12: true
-    })
-  }
-
-  const handleConfirm = () => {
-    onConfirm(formatTime(selectedTime))
-  }
-
-  return (
-    <View style={styles.timePickerContainer}>
-      <TouchableOpacity
-        style={styles.timePickerButton}
-        onPress={() => setShowPicker(true)}
-      >
-        <Text style={styles.timePickerText}>
-          {formatTime(selectedTime)}
-        </Text>
-      </TouchableOpacity>
-      
-      {showPicker && (
-        <DateTimePicker
-          value={selectedTime}
-          mode="time"
-          display="default"
-          onChange={handleTimeChange}
-        />
-      )}
-      
-      <TouchableOpacity
-        style={[styles.confirmButton, styles.proceedButton, { marginTop: 12 }]}
-        onPress={handleConfirm}
-      >
-        <Text style={styles.confirmButtonText}>Confirm Time</Text>
-      </TouchableOpacity>
-    </View>
-  )
-}
-
-// Component: Day Selector for DAY_SELECTOR_TAG
-const DaySelectorComponent = ({
-  onConfirm
-}: {
-  onConfirm: (days: string) => void
-}) => {
-  const [selectedDays, setSelectedDays] = useState<string[]>([])
-
-  const daysOfWeek = [
-    { key: 'mon', label: 'M', full: 'Monday' },
-    { key: 'tue', label: 'T', full: 'Tuesday' },
-    { key: 'wed', label: 'W', full: 'Wednesday' },
-    { key: 'thu', label: 'T', full: 'Thursday' },
-    { key: 'fri', label: 'F', full: 'Friday' },
-    { key: 'sat', label: 'S', full: 'Saturday' },
-    { key: 'sun', label: 'S', full: 'Sunday' }
-  ]
-
-  const toggleDay = (dayKey: string) => {
-    setSelectedDays(prev =>
-      prev.includes(dayKey) 
-        ? prev.filter(d => d !== dayKey) 
-        : [...prev, dayKey]
-    )
-  }
-
-  const handleConfirm = () => {
-    const selectedDayNames = selectedDays.map(dayKey => 
-      daysOfWeek.find(day => day.key === dayKey)?.full
-    ).filter(Boolean)
-    
-    onConfirm(selectedDayNames.join(', '))
-  }
-
-  return (
-    <View style={styles.daySelectorContainer}>
-      <Text style={styles.daySelectorTitle}>Select Days</Text>
-      
-      <View style={styles.daysGrid}>
-        {daysOfWeek.map(day => (
-          <TouchableOpacity
-            key={day.key}
-            style={[
-              styles.dayButton,
-              selectedDays.includes(day.key) && styles.dayButtonSelected
-            ]}
-            onPress={() => toggleDay(day.key)}
-          >
-            <Text
-              style={[
-                styles.dayButtonText,
-                selectedDays.includes(day.key) && styles.dayButtonTextSelected
-              ]}
-            >
-              {day.label}
-            </Text>
-          </TouchableOpacity>
-        ))}
-      </View>
-      
-      <TouchableOpacity
-        style={[
-          styles.confirmButton, 
-          styles.proceedButton, 
-          { marginTop: 16, opacity: selectedDays.length > 0 ? 1 : 0.5 }
-        ]}
-        onPress={handleConfirm}
-        disabled={selectedDays.length === 0}
-      >
-        <Text style={styles.confirmButtonText}>
-          Confirm Days ({selectedDays.length})
-        </Text>
-      </TouchableOpacity>
-    </View>
-  )
-}
-
-export default function AgentScreen () {
-  // Get params from navigation
+export default function AgentScreen() {
   const params = useLocalSearchParams()
   const action = params.action as string | undefined
   const prompt = params.prompt as string | undefined
 
-  // Refs
   const scrollViewRef = useRef<ScrollView>(null)
 
-  // Store
   const sendMessage = useSendMessage()
   const addMessage = useAddMessage()
   const isLoading = useChatLoading()
 
-  // State
   const [message, setMessage] = useState('')
   const [isRecording, setIsRecording] = useState(false)
   const [promptSent, setPromptSent] = useState(false)
@@ -425,7 +104,6 @@ export default function AgentScreen () {
     if (messages.length === 0) {
       let welcomeMessage = 'Welcome!'
 
-      // Set welcome message based on action
       if (action === 'create-goal') {
         welcomeMessage =
           "I'd love to help you create a meaningful goal! What would you like to achieve?"
@@ -445,7 +123,6 @@ export default function AgentScreen () {
       })
     }
 
-    // Auto-send prompt if provided, but only once
     if (prompt && !promptSent && messages.length <= 1) {
       setMessage(prompt)
       setPromptSent(true)
@@ -454,7 +131,6 @@ export default function AgentScreen () {
       }, 500)
     }
 
-    // Check if any agent message has the SHOW_USER_GOAL_NAMES tag
     const shouldShowGoalNames = messages.some(msg => {
       if (msg.role !== 'agent') return false
       try {
@@ -468,14 +144,12 @@ export default function AgentScreen () {
     }
   }, [action, prompt, messages, userId, promptSent])
 
-  // Handle send message
   const handleSendMessage = async (messageText?: string) => {
     const textToSend = messageText || message
     if (!textToSend.trim()) return
 
     setMessage('')
 
-    // Determine context based on action
     let context: ChatMessage['context'] | undefined
     if (action === 'create-goal') {
       context = { type: 'goal_setting' }
@@ -483,25 +157,16 @@ export default function AgentScreen () {
       context = { type: 'goal_response' }
     }
 
-    // Send message via store
     await sendMessage(textToSend, context, userId)
     scrollToBottom()
   }
 
-  // Handle help request - this doesn't add to messages, just shows help
   const handleHelpRequest = () => {
-    // For now, we'll just log the help request
-    // You could show a modal or navigate to a help screen instead
     console.log('Help requested')
-
-    // Optional: Could send a help message to get AI response
-    // sendMessage('I need help', { type: 'help_request' })
   }
 
-  // Handle voice recording
   const handleVoiceRecord = () => {
     if (Platform.OS === 'web') {
-      // For web, we'll show a message via the store
       addMessage({
         id: Date.now().toString(),
         content: {
@@ -518,7 +183,6 @@ export default function AgentScreen () {
     setIsRecording(!isRecording)
 
     if (!isRecording) {
-      // Starting recording
       setTimeout(() => {
         setIsRecording(false)
         const transcribedText = 'I finished my workout today and feel great!'
@@ -527,16 +191,10 @@ export default function AgentScreen () {
     }
   }
 
-  // Scroll to bottom helper
   const scrollToBottom = () => {
     setTimeout(() => {
       scrollViewRef.current?.scrollToEnd({ animated: true })
     }, 100)
-  }
-
-  // Format timestamp
-  const formatTime = (date: Date) => {
-    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
   }
 
   return (
@@ -561,86 +219,30 @@ export default function AgentScreen () {
           {messages.map((msg, index) => {
             if (msg.role === 'agent') {
               const { text, tags } = extractTagsAndContent(msg.content)
-              // Only show tags on the latest agent message
               const isLatestAgentMessage =
                 index === messages.length - 1 ||
                 (index === messages.length - 2 && isLoading)
-              const showGoalNames =
-                isLatestAgentMessage && tags.includes('SHOW_USER_GOAL_NAMES')
-              const showConfirmation =
-                isLatestAgentMessage && tags.includes('CONFIRM_TAG')
-              const showDatePicker =
-                isLatestAgentMessage && tags.includes('DATE_PICKER_TAG')
-              const showTimePicker =
-                isLatestAgentMessage && tags.includes('TIME_PICKER_TAG')
-              const showDaySelector =
-                isLatestAgentMessage && tags.includes('DAY_SELECTOR_TAG')
-              
+
               return (
-                <Animated.View
+                <AgentMessage
                   key={msg.id}
-                  entering={FadeInLeft.duration(300).delay(100)}
-                  style={[styles.messageWrapper, styles.agentMessageWrapper]}
-                >
-                  <View style={styles.agentAvatar}>
-                    <LinearGradient
-                      colors={[colors.gradient.start, colors.gradient.end]}
-                      style={styles.avatarGradient}
-                    >
-                      <Text style={styles.avatarText}>AI</Text>
-                    </LinearGradient>
-                  </View>
-                  <View
-                    style={[styles.messageBubble, styles.agentMessageBubble]}
-                  >
-                    <Text style={styles.messageText}>{text}</Text>
-                    {showGoalNames && (
-                      <GoalNamesScroller
-                        onSelect={goalName =>
-                          handleSendMessage(`Selected Goal: "${goalName}"`)
-                        }
-                      />
-                    )}
-                    {showConfirmation && (
-                      <ConfirmationButtons
-                        onConfirm={action => handleSendMessage(action)}
-                      />
-                    )}
-                    {showDatePicker && (
-                      <DatePickerComponent
-                        onConfirm={date => handleSendMessage(`Selected Date: ${date}`)}
-                      />
-                    )}
-                    {showTimePicker && (
-                      <TimePickerComponent
-                        onConfirm={time => handleSendMessage(`Selected Time: ${time}`)}
-                      />
-                    )}
-                    {showDaySelector && (
-                      <DaySelectorComponent
-                        onConfirm={days => handleSendMessage(`Selected Days: ${days}`)}
-                      />
-                    )}
-                    <Text style={styles.timestamp}>
-                      {formatTime(msg.timestamp)}
-                    </Text>
-                  </View>
-                </Animated.View>
+                  id={msg.id}
+                  text={text}
+                  tags={tags}
+                  timestamp={msg.timestamp}
+                  isLatest={isLatestAgentMessage}
+                  onSendMessage={handleSendMessage}
+                />
               )
             }
+            
             return (
-              <Animated.View
+              <UserMessage
                 key={msg.id}
-                entering={FadeInRight.duration(300).delay(100)}
-                style={[styles.messageWrapper, styles.userMessageWrapper]}
-              >
-                <View style={[styles.messageBubble, styles.userMessageBubble]}>
-                  <Text style={styles.messageText}>{msg.content.summary}</Text>
-                  <Text style={styles.timestamp}>
-                    {formatTime(msg.timestamp)}
-                  </Text>
-                </View>
-              </Animated.View>
+                id={msg.id}
+                text={msg.content.summary}
+                timestamp={msg.timestamp}
+              />
             )
           })}
 
@@ -720,10 +322,6 @@ const styles = StyleSheet.create({
     maxWidth: '80%'
   } as ViewStyle,
 
-  userMessageWrapper: {
-    alignSelf: 'flex-end'
-  } as ViewStyle,
-
   agentMessageWrapper: {
     alignSelf: 'flex-start'
   } as ViewStyle,
@@ -753,173 +351,13 @@ const styles = StyleSheet.create({
     maxWidth: '100%'
   } as ViewStyle,
 
-  userMessageBubble: {
-    backgroundColor: colors.button.primary,
-    borderBottomRightRadius: 4
-  } as ViewStyle,
-
   agentMessageBubble: {
     backgroundColor: colors.background.container,
     borderBottomLeftRadius: 4
   } as ViewStyle,
 
-  messageText: {
-    color: colors.text.primary,
-    fontSize: fonts.sizes.md,
-    lineHeight: 20
-  } as TextStyle,
-
-  timestamp: {
-    fontSize: fonts.sizes.xs,
-    color: colors.text.muted,
-    alignSelf: 'flex-end',
-    marginTop: 4
-  } as TextStyle,
-
   inputContainer: {
     backgroundColor: colors.background.primary,
     paddingBottom: 0
-  } as ViewStyle,
-
-  loadingContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    height: 24,
-    gap: 4
-  } as ViewStyle,
-
-  dot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: colors.text.primary,
-    margin: 2
-  } as ViewStyle,
-
-  confirmationContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginTop: 12,
-    marginBottom: 8,
-    gap: 12
-  } as ViewStyle,
-
-  confirmButton: {
-    flex: 1,
-    paddingVertical: 10,
-    paddingHorizontal: 16,
-    borderRadius: 20,
-    alignItems: 'center',
-    justifyContent: 'center'
-  } as ViewStyle,
-
-  proceedButton: {
-    backgroundColor: colors.button.primary
-  } as ViewStyle,
-
-  tryElseButton: {
-    backgroundColor: colors.background.container,
-    borderWidth: 1,
-    borderColor: colors.text.muted
-  } as ViewStyle,
-
-  confirmButtonText: {
-    color: colors.text.primary,
-    fontSize: fonts.sizes.sm,
-    fontWeight: '600'
-  } as TextStyle,
-
-  // Date Picker Styles
-  datePickerContainer: {
-    marginTop: 12,
-    marginBottom: 8
-  } as ViewStyle,
-
-  datePickerButton: {
-    backgroundColor: colors.background.primary,
-    borderRadius: 12,
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    borderWidth: 1,
-    borderColor: colors.utility.divider
-  } as ViewStyle,
-
-  datePickerText: {
-    color: colors.text.primary,
-    fontSize: fonts.sizes.md,
-    fontWeight: '500',
-    textAlign: 'center'
-  } as TextStyle,
-
-  // Time Picker Styles
-  timePickerContainer: {
-    marginTop: 12,
-    marginBottom: 8
-  } as ViewStyle,
-
-  timePickerButton: {
-    backgroundColor: colors.background.primary,
-    borderRadius: 12,
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    borderWidth: 1,
-    borderColor: colors.utility.divider
-  } as ViewStyle,
-
-  timePickerText: {
-    color: colors.text.primary,
-    fontSize: fonts.sizes.md,
-    fontWeight: '500',
-    textAlign: 'center'
-  } as TextStyle,
-
-  // Day Selector Styles
-  daySelectorContainer: {
-    marginTop: 12,
-    marginBottom: 8
-  } as ViewStyle,
-
-  daySelectorTitle: {
-    color: colors.text.primary,
-    fontSize: fonts.sizes.md,
-    fontWeight: '600',
-    marginBottom: 12,
-    textAlign: 'center'
-  } as TextStyle,
-
-  daysGrid: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    gap: 8,
-    marginBottom: 8
-  } as ViewStyle,
-
-  dayButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: colors.background.container,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: colors.utility.divider
-  } as ViewStyle,
-
-  dayButtonSelected: {
-    backgroundColor: colors.button.primary,
-    borderColor: colors.button.primary
-  } as ViewStyle,
-
-  dayButtonText: {
-    fontSize: fonts.sizes.sm,
-    color: colors.text.secondary,
-    fontWeight: '500'
-  } as TextStyle,
-
-  dayButtonTextSelected: {
-    color: colors.text.primary,
-    fontWeight: '700'
-  } as TextStyle
+  } as ViewStyle
 })
