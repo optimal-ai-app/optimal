@@ -6,7 +6,9 @@ interface ConfirmationTagProps {
   onConfirm: (action: string) => void
 }
 
-export const ConfirmationTag: React.FC<ConfirmationTagProps> = ({ onConfirm }) => {
+export const ConfirmationTag: React.FC<ConfirmationTagProps> = ({
+  onConfirm
+}) => {
   return (
     <View style={styles.confirmationContainer}>
       <TouchableOpacity

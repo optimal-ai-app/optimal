@@ -8,12 +8,13 @@ import {
   Pressable,
   ViewStyle,
   TextStyle,
-  Image
+  Image,
+  RefreshControl
 } from 'react-native'
 import { Link, useRouter } from 'expo-router'
 import { LinearGradient } from 'expo-linear-gradient'
-import Animated, { 
-  FadeInDown, 
+import Animated, {
+  FadeInDown,
   FadeInUp,
   useAnimatedStyle,
   useSharedValue,
@@ -37,7 +38,11 @@ import { Card } from '@/src/components/Card'
 import { Button } from '@/src/components/Button'
 import { GoalCreationModal } from '@/src/components/GoalCreationModal'
 import { TaskCreationModal } from '@/src/components/TaskCreationModal'
-import { FloatingActionButton, GlassCard, PulseAnimation } from '@/src/components/PremiumFeatures'
+import {
+  FloatingActionButton,
+  GlassCard,
+  PulseAnimation
+} from '@/src/components/PremiumFeatures'
 import { colors } from '@/src/constants/colors'
 import { fonts } from '@/src/constants/fonts'
 import { useAuthContext } from '@/src/context/AuthContext'
@@ -60,6 +65,7 @@ import {
   TaskFilterType,
   TaskSortType
 } from '@/src/components/TaskFilter'
+import { globalStyles } from '@/src/constants/styles'
 
 export default function HomeScreen () {
   const router = useRouter()
@@ -79,6 +85,7 @@ export default function HomeScreen () {
   const [showTaskModal, setShowTaskModal] = useState(false)
   const [activeFilters, setActiveFilters] = useState<TaskFilterType[]>(['all'])
   const [activeSort, setActiveSort] = useState<TaskSortType>('dueDate')
+  const [refreshing, setRefreshing] = useState(false)
 
   // Animation values for premium effects
   const headerOpacity = useSharedValue(0)
@@ -138,13 +145,12 @@ export default function HomeScreen () {
 
   const hasUser = !!userId
   const displayedTasks = todaysTasks.length > 0 ? todaysTasks : upcomingTasks
-  const sectionTitle =
-    todaysTasks.length > 0 ? "Today's Tasks" : 'Upcoming Tasks'
+  const sectionTitle = "Today's Tasks"
 
   // Animated styles
   const headerAnimatedStyle = useAnimatedStyle(() => {
     return {
-      opacity: headerOpacity.value,
+      opacity: headerOpacity.value
     }
   })
 
@@ -158,7 +164,7 @@ export default function HomeScreen () {
   // Show loading state if tasks are being fetched
   if (isLoading) {
     return (
-      <View style={styles.container}>
+      <View style={globalStyles.container}>
         <Animated.View style={headerAnimatedStyle}>
           <Header title='Home' />
         </Animated.View>
@@ -166,7 +172,9 @@ export default function HomeScreen () {
           <PulseAnimation>
             <Sparkles size={48} color={colors.button.primary} />
           </PulseAnimation>
-          <Text style={styles.loadingText}>Loading your productivity dashboard...</Text>
+          <Text style={styles.loadingText}>
+            Loading your productivity dashboard...
+          </Text>
         </View>
       </View>
     )
@@ -175,7 +183,7 @@ export default function HomeScreen () {
   // Show error state if there's an error
   if (error) {
     return (
-      <View style={styles.container}>
+      <View style={globalStyles.container}>
         <Header title='Home' />
         <View style={styles.errorContainer}>
           <Text style={styles.errorText}>Error loading tasks: {error}</Text>
@@ -187,7 +195,7 @@ export default function HomeScreen () {
   // Show login prompt if no user
   if (!hasUser) {
     return (
-      <View style={styles.container}>
+      <View style={globalStyles.container}>
         <Header title='Home' />
         <View style={styles.loginContainer}>
           <Text style={styles.loginText}>Please log in to view your tasks</Text>
@@ -241,8 +249,25 @@ export default function HomeScreen () {
     router.push('/home/create-task')
   }
 
+  // Handle pull-to-refresh
+  const onRefresh = async () => {
+    if (!userId) return
+
+    setRefreshing(true)
+    try {
+      await Promise.all([fetchUserTasks(userId), fetchUserGoals(userId)])
+    } catch (error) {
+      console.error('Error refreshing data:', error)
+    } finally {
+      setRefreshing(false)
+    }
+  }
+
   return (
-    <View style={styles.container}>
+    <Animated.View
+      entering={FadeInDown.duration(400).springify()}
+      style={globalStyles.container}
+    >
       <Animated.View style={headerAnimatedStyle}>
         <Header title='Home' />
       </Animated.View>
@@ -251,9 +276,17 @@ export default function HomeScreen () {
         style={styles.scrollView}
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor={colors.button.primary}
+            colors={[colors.button.primary]}
+          />
+        }
       >
         {/* Hero Section with Premium Styling */}
-        <Animated.View 
+        <Animated.View
           entering={FadeInDown.duration(800).delay(200)}
           style={styles.heroSection}
         >
@@ -275,8 +308,10 @@ export default function HomeScreen () {
                 </View>
                 <View style={styles.statDivider} />
                 <View style={styles.statItem}>
-                  <Text style={styles.statNumber}>{tasks.filter(t => t.status === 'completed').length}</Text>
-                  <Text style={styles.statLabel}>Completed</Text>
+                  <Text style={styles.statNumber}>
+                    {tasks.filter(t => t.status === 'completed').length}
+                  </Text>
+                  <Text style={styles.statLabel}>Tasks Completed</Text>
                 </View>
                 <View style={styles.statDivider} />
                 <View style={styles.statItem}>
@@ -303,10 +338,16 @@ export default function HomeScreen () {
                   colors={colors.gradient.primary}
                   style={styles.quickActionGradient}
                 >
-                  <Target size={28} color={colors.text.primary} strokeWidth={2.5} />
+                  <Target
+                    size={28}
+                    color={colors.text.primary}
+                    strokeWidth={2.5}
+                  />
                 </LinearGradient>
                 <Text style={styles.quickActionText}>Set New Goal</Text>
-                <Text style={styles.quickActionSubtext}>Define your next achievement</Text>
+                <Text style={styles.quickActionSubtext}>
+                  Define your next achievement
+                </Text>
               </TouchableOpacity>
 
               <Link
@@ -325,10 +366,16 @@ export default function HomeScreen () {
                     colors={colors.gradient.secondary}
                     style={styles.quickActionGradient}
                   >
-                    <MessageSquare size={28} color={colors.text.primary} strokeWidth={2.5} />
+                    <MessageSquare
+                      size={28}
+                      color={colors.text.primary}
+                      strokeWidth={2.5}
+                    />
                   </LinearGradient>
                   <Text style={styles.quickActionText}>Log Progress</Text>
-                  <Text style={styles.quickActionSubtext}>Share your achievements</Text>
+                  <Text style={styles.quickActionSubtext}>
+                    Share your achievements
+                  </Text>
                 </TouchableOpacity>
               </Link>
             </View>
@@ -341,7 +388,7 @@ export default function HomeScreen () {
             <View style={styles.sectionHeader}>
               <View style={styles.sectionTitleContainer}>
                 <View style={styles.sectionIconContainer}>
-                  <Calendar size={24} color={colors.button.primary} />
+                  <Calendar size={24} color={colors.button.secondary} />
                 </View>
                 <View>
                   <Text style={styles.sectionTitle}>{sectionTitle}</Text>
@@ -364,19 +411,24 @@ export default function HomeScreen () {
                 </TouchableOpacity>
                 <FloatingActionButton
                   onPress={() => setShowTaskModal(true)}
-                  size="small"
+                  size='small'
                 />
               </View>
             </View>
-
-            {displayedTasks.map((task, index, filteredTasks) => (
-              <TaskCard
-                key={task.id}
-                task={task}
-                isLast={index === filteredTasks.length - 1}
-              />
-            ))}
-
+            <ScrollView
+              showsVerticalScrollIndicator={true}
+              style={styles.tasksGrid}
+              contentContainerStyle={styles.tasksContent}
+            >
+              {displayedTasks.map((task, index, filteredTasks) => (
+                <TaskCard
+                  key={task.id}
+                  task={task}
+                  isLast={index === filteredTasks.length - 1}
+                  index={index}
+                />
+              ))}
+            </ScrollView>
             {displayedTasks.length === 0 && (
               <View style={styles.emptyStateContainer}>
                 <TrendingUp size={48} color={colors.text.muted} />
@@ -386,9 +438,9 @@ export default function HomeScreen () {
                     : 'No tasks for today or upcoming.'}
                 </Text>
                 <Button
-                  title="Create Task"
+                  title='Create Task'
                   onPress={() => setShowTaskModal(true)}
-                  variant="secondary"
+                  variant='secondary'
                   style={styles.emptyActionButton}
                 />
               </View>
@@ -417,14 +469,21 @@ export default function HomeScreen () {
                 </TouchableOpacity>
               </Link>
             </View>
-
-            {goals
-              .filter(goal => goal.status === 'active')
-              .sort(() => Math.random() - 0.5)
-              .slice(0, 2)
-              .map(goal => (
-                <GoalCard key={goal.id} goal={goal} />
-              ))}
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              style={styles.goalsGrid}
+            >
+              {goals
+                .filter(goal => goal.status === 'active')
+                .sort(() => Math.random() - 0.5)
+                .slice(0, 5)
+                .map((goal, index) => (
+                  <View key={index} style={styles.goalsGridItem}>
+                    <GoalCard goal={goal} />
+                  </View>
+                ))}
+            </ScrollView>
 
             {goals.length === 0 && (
               <View style={styles.emptyGoalsContainer}>
@@ -459,16 +518,11 @@ export default function HomeScreen () {
         onCreateWithAgent={handleNewTaskWithAgent}
         onCreateManually={handleNewTaskManually}
       />
-    </View>
+    </Animated.View>
   )
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background.primary
-  } as ViewStyle,
-
   scrollView: {
     flex: 1
   } as ViewStyle,
@@ -487,19 +541,19 @@ const styles = StyleSheet.create({
     shadowColor: colors.button.primary,
     shadowOffset: {
       width: 0,
-      height: 8,
+      height: 8
     },
     shadowOpacity: 0.3,
     shadowRadius: 16,
-    elevation: 12,
+    elevation: 12
   } as ViewStyle,
 
   heroGradient: {
-    padding: 24,
+    padding: 24
   } as ViewStyle,
 
   heroContent: {
-    alignItems: 'center',
+    alignItems: 'center'
   } as ViewStyle,
 
   heroTitle: {
@@ -507,7 +561,7 @@ const styles = StyleSheet.create({
     fontWeight: fonts.weights.bold,
     color: colors.text.primary,
     marginBottom: 8,
-    textAlign: 'center',
+    textAlign: 'center'
   } as TextStyle,
 
   heroSubtitle: {
@@ -515,59 +569,60 @@ const styles = StyleSheet.create({
     color: colors.text.secondary,
     textAlign: 'center',
     marginBottom: 24,
-    opacity: 0.9,
+    opacity: 0.9
   } as TextStyle,
 
   heroStats: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
+    justifyContent: 'center'
   } as ViewStyle,
 
   statItem: {
     alignItems: 'center',
-    paddingHorizontal: 16,
+    paddingHorizontal: 16
   } as ViewStyle,
 
   statNumber: {
     fontSize: fonts.sizes.xxl,
     fontWeight: fonts.weights.bold,
-    color: colors.text.primary,
+    color: colors.text.primary
   } as TextStyle,
 
   statLabel: {
     fontSize: fonts.sizes.sm,
     color: colors.text.secondary,
     marginTop: 4,
-    opacity: 0.8,
+    opacity: 0.8
   } as TextStyle,
 
   statDivider: {
     width: 1,
     height: 32,
-    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+    backgroundColor: 'rgba(255, 255, 255, 0.3)'
   } as ViewStyle,
 
   // Quick Actions Enhanced Styles
   quickActionsCard: {
-    margin: 16,
-    padding: 24,
+    padding: 16
   } as ViewStyle,
 
   quickActionsGrid: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     gap: 16,
+    marginTop: 8
   } as ViewStyle,
 
   quickActionButton: {
     flex: 1,
     alignItems: 'center',
-    padding: 20,
+    paddingVertical: 20,
+    paddingHorizontal: 10,
     borderRadius: 16,
     backgroundColor: 'rgba(255, 255, 255, 0.05)',
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
+    borderColor: 'rgba(255, 255, 255, 0.1)'
   } as ViewStyle,
 
   quickActionGradient: {
@@ -580,11 +635,11 @@ const styles = StyleSheet.create({
     shadowColor: colors.utility.shadow,
     shadowOffset: {
       width: 0,
-      height: 4,
+      height: 4
     },
     shadowOpacity: 0.3,
     shadowRadius: 8,
-    elevation: 6,
+    elevation: 6
   } as ViewStyle,
 
   quickActionText: {
@@ -592,33 +647,42 @@ const styles = StyleSheet.create({
     color: colors.text.primary,
     fontWeight: fonts.weights.semibold,
     textAlign: 'center',
-    marginBottom: 4,
+    marginBottom: 4
   } as TextStyle,
 
   quickActionSubtext: {
     fontSize: fonts.sizes.sm,
     color: colors.text.secondary,
     textAlign: 'center',
-    opacity: 0.8,
+    opacity: 0.8
   } as TextStyle,
 
   // Section Styles
   sectionCard: {
-    margin: 16,
-    padding: 20,
+    padding: 16
+  } as ViewStyle,
+
+  tasksGrid: {
+    marginTop: 8,
+    maxHeight: 500
+  } as ViewStyle,
+
+  tasksContent: {
+    paddingBottom: 16,
+    paddingHorizontal: 4
   } as ViewStyle,
 
   sectionHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 20,
+    marginBottom: 8
   } as ViewStyle,
 
   sectionTitleContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    flex: 1,
+    flex: 1
   } as ViewStyle,
 
   sectionIconContainer: {
@@ -628,25 +692,37 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255, 255, 255, 0.1)',
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 12,
+    marginRight: 12
   } as ViewStyle,
 
   sectionTitle: {
     fontSize: fonts.sizes.xl,
     fontWeight: fonts.weights.bold,
-    color: colors.text.primary,
+    color: colors.text.primary
   } as TextStyle,
 
   sectionSubtitle: {
     fontSize: fonts.sizes.sm,
     color: colors.text.muted,
-    marginTop: 2,
+    marginTop: 2
   } as TextStyle,
+
+  goalsGrid: {
+    flexDirection: 'row',
+    gap: 16,
+    marginTop: 8
+  } as ViewStyle,
+
+  goalsGridItem: {
+    flex: 1,
+    minWidth: 200,
+    marginRight: 16
+  } as ViewStyle,
 
   sectionActions: {
     flexDirection: 'row',
     gap: 12,
-    alignItems: 'center',
+    alignItems: 'center'
   } as ViewStyle,
 
   viewAllButton: {
@@ -655,20 +731,20 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     paddingHorizontal: 12,
     borderRadius: 20,
-    backgroundColor: 'rgba(0, 59, 149, 0.1)',
+    backgroundColor: 'rgba(1, 48, 117, 0.1)'
   } as ViewStyle,
 
   viewAllText: {
     fontSize: fonts.sizes.sm,
     color: colors.button.primary,
     marginRight: 4,
-    fontWeight: fonts.weights.medium,
+    fontWeight: fonts.weights.medium
   } as TextStyle,
 
   // Empty States
   emptyStateContainer: {
     alignItems: 'center',
-    paddingVertical: 32,
+    paddingVertical: 32
   } as ViewStyle,
 
   emptyText: {
@@ -677,25 +753,24 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: 16,
     marginBottom: 20,
-    lineHeight: 24,
+    lineHeight: 24
   } as TextStyle,
 
   emptyActionButton: {
-    marginTop: 8,
+    marginTop: 8
   } as ViewStyle,
 
   goalsCard: {
-    margin: 16,
-    padding: 20,
+    padding: 16
   } as ViewStyle,
 
   emptyGoalsContainer: {
     alignItems: 'center',
-    paddingVertical: 32,
+    paddingVertical: 32
   } as ViewStyle,
 
   emptyGoalsButton: {
-    marginTop: 16,
+    marginTop: 16
   } as ViewStyle,
 
   // Loading and Error States
@@ -703,39 +778,39 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 32,
+    padding: 32
   } as ViewStyle,
 
   loadingText: {
     fontSize: fonts.sizes.lg,
     color: colors.text.secondary,
     textAlign: 'center',
-    marginTop: 24,
+    marginTop: 24
   } as TextStyle,
 
   errorContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 32,
+    padding: 32
   } as ViewStyle,
 
   errorText: {
     fontSize: fonts.sizes.lg,
     color: colors.status.error,
-    textAlign: 'center',
+    textAlign: 'center'
   } as TextStyle,
 
   loginContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 32,
+    padding: 32
   } as ViewStyle,
 
   loginText: {
     fontSize: fonts.sizes.lg,
     color: colors.text.muted,
-    textAlign: 'center',
-  } as TextStyle,
+    textAlign: 'center'
+  } as TextStyle
 })

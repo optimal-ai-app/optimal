@@ -16,14 +16,14 @@ const DAYS_OF_WEEK = [
   { key: 'sun', label: 'S', full: 'Sunday' }
 ]
 
-export const DaySelectorTag: React.FC<DaySelectorTagProps> = ({ onConfirm }) => {
+export const DaySelectorTag: React.FC<DaySelectorTagProps> = ({
+  onConfirm
+}) => {
   const [selectedDays, setSelectedDays] = useState<string[]>([])
 
   const toggleDay = (dayKey: string) => {
     setSelectedDays(prev =>
-      prev.includes(dayKey) 
-        ? prev.filter(d => d !== dayKey) 
-        : [...prev, dayKey]
+      prev.includes(dayKey) ? prev.filter(d => d !== dayKey) : [...prev, dayKey]
     )
   }
 
@@ -31,14 +31,14 @@ export const DaySelectorTag: React.FC<DaySelectorTagProps> = ({ onConfirm }) => 
     const selectedDayNames = selectedDays
       .map(dayKey => DAYS_OF_WEEK.find(day => day.key === dayKey)?.full)
       .filter(Boolean)
-    
+
     onConfirm(selectedDayNames.join(', '))
   }
 
   return (
     <View style={styles.daySelectorContainer}>
       <Text style={styles.daySelectorTitle}>Select Days</Text>
-      
+
       <View style={styles.daysGrid}>
         {DAYS_OF_WEEK.map(day => (
           <TouchableOpacity
@@ -60,18 +60,16 @@ export const DaySelectorTag: React.FC<DaySelectorTagProps> = ({ onConfirm }) => 
           </TouchableOpacity>
         ))}
       </View>
-      
+
       <TouchableOpacity
         style={[
-          styles.confirmButton, 
-          styles.proceedButton, 
-          { 
-            marginTop: 16, 
-            opacity: selectedDays.length > 0 ? 1 : 0.5 
+          styles.confirmButton,
+          styles.proceedButton,
+          {
+            marginTop: 16
           }
         ]}
         onPress={handleConfirm}
-        disabled={selectedDays.length === 0}
       >
         <Text style={styles.confirmButtonText}>
           Confirm Days ({selectedDays.length})

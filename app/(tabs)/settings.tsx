@@ -1,88 +1,88 @@
-import React, { useState } from 'react';
-import { 
-  View, 
-  Text, 
-  StyleSheet, 
-  Switch, 
+import React, { useState } from 'react'
+import {
+  View,
+  Text,
+  StyleSheet,
+  Switch,
   TouchableOpacity,
   ScrollView,
   Alert,
   Platform
-} from 'react-native';
-import { Link, useRouter } from 'expo-router';
-import Animated, { FadeInDown } from 'react-native-reanimated';
-import { 
-  Calendar, 
-  FileText, 
-  Bell, 
-  LogOut, 
-  Crown, 
+} from 'react-native'
+import { Link, useRouter } from 'expo-router'
+import Animated, { FadeInDown } from 'react-native-reanimated'
+import {
+  Calendar,
+  FileText,
+  Bell,
+  LogOut,
+  Crown,
   ChevronRight,
   Cog,
   Lock
-} from 'lucide-react-native';
+} from 'lucide-react-native'
 
-import { Card } from '@/src/components/Card';
-import { Header } from '@/src/components/Header';
-import { Slider } from '@/src/components/Slider';
-import { Button } from '@/src/components/Button';
-import { useAuthContext } from '@/src/context/AuthContext';
-import { colors } from '@/src/constants/colors';
-import { fonts } from '@/src/constants/fonts';
+import { Card } from '@/src/components/Card'
+import { Header } from '@/src/components/Header'
+import { Slider } from '@/src/components/Slider'
+import { Button } from '@/src/components/Button'
+import { useAuthContext } from '@/src/context/AuthContext'
+import { colors } from '@/src/constants/colors'
+import { fonts } from '@/src/constants/fonts'
+import { globalStyles } from '@/src/constants/styles'
 
-export default function SettingsScreen() {
+export default function SettingsScreen () {
   // Router for navigation
-  const router = useRouter();
-  
+  const router = useRouter()
+
   // Get auth context for sign out
-  const { signOut } = useAuthContext();
-  
+  const { signOut } = useAuthContext()
+
   // State for switches and selections
-  const [calendarSync, setCalendarSync] = useState(true);
-  const [notesSync, setNotesSync] = useState(false);
-  const [remindersSync, setRemindersSync] = useState(true);
-  const [coachType, setCoachType] = useState<'neutral' | 'grit'>('neutral');
-  const [empathyValue, setEmpathyValue] = useState(70);
-  const [logicValue, setLogicValue] = useState(60);
-  
+  const [calendarSync, setCalendarSync] = useState(true)
+  const [notesSync, setNotesSync] = useState(false)
+  const [remindersSync, setRemindersSync] = useState(true)
+  const [coachType, setCoachType] = useState<'neutral' | 'grit'>('neutral')
+  const [empathyValue, setEmpathyValue] = useState(70)
+  const [logicValue, setLogicValue] = useState(60)
+
   // Handle sign out
   const handleSignOut = async () => {
     if (Platform.OS === 'web') {
       // Web doesn't have Alert.alert, use window.confirm
       if (window.confirm('Are you sure you want to sign out?')) {
-        await signOut();
+        await signOut()
       }
     } else {
-      Alert.alert(
-        'Sign Out',
-        'Are you sure you want to sign out?',
-        [
-          {
-            text: 'Cancel',
-            style: 'cancel',
+      Alert.alert('Sign Out', 'Are you sure you want to sign out?', [
+        {
+          text: 'Cancel',
+          style: 'cancel'
+        },
+        {
+          text: 'Sign Out',
+          onPress: async () => {
+            await signOut()
           },
-          {
-            text: 'Sign Out',
-            onPress: async () => {
-              await signOut();
-            },
-            style: 'destructive',
-          },
-        ]
-      );
+          style: 'destructive'
+        }
+      ])
     }
-  };
-  
+  }
+
   // Handle calendar connection
   const handleConnectCalendar = () => {
     // In a real app, this would show OAuth flow for calendar
-    alert('Calendar connection initiated');
-  };
-  
+    alert('Calendar connection initiated')
+  }
+
   return (
-    <View style={styles.container}>
-      <Header title="Settings" />
-      
+    <Animated.View
+      entering={FadeInDown.duration(400).springify()}
+      style={globalStyles.container}
+    >
+      <Header title='Settings' />
+
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.content}
@@ -102,16 +102,16 @@ export default function SettingsScreen() {
                 </Text>
               </View>
             </View>
-            
+
             <Button
-              title="Manage Subscription"
-              variant="secondary"
+              title='Manage Subscription'
+              variant='secondary'
               fullWidth
               style={styles.subscriptionButton}
             />
           </Card>
         </Animated.View>
-        
+
         {/* Privacy Section */}
         <Animated.View entering={FadeInDown.duration(500).delay(200)}>
           <Card style={styles.sectionCard}>
@@ -119,7 +119,7 @@ export default function SettingsScreen() {
               <Lock size={20} color={colors.text.primary} />
               <Text style={styles.sectionTitle}>Privacy</Text>
             </View>
-            
+
             <View style={styles.settingRow}>
               <View style={styles.settingInfo}>
                 <Calendar size={20} color={colors.button.primary} />
@@ -128,12 +128,15 @@ export default function SettingsScreen() {
               <Switch
                 value={calendarSync}
                 onValueChange={setCalendarSync}
-                trackColor={{ false: colors.background.container, true: colors.button.primary }}
+                trackColor={{
+                  false: colors.background.container,
+                  true: colors.button.primary
+                }}
                 thumbColor={colors.text.primary}
                 ios_backgroundColor={colors.background.container}
               />
             </View>
-            
+
             <View style={styles.settingRow}>
               <View style={styles.settingInfo}>
                 <FileText size={20} color={colors.button.accent} />
@@ -142,12 +145,15 @@ export default function SettingsScreen() {
               <Switch
                 value={notesSync}
                 onValueChange={setNotesSync}
-                trackColor={{ false: colors.background.container, true: colors.button.primary }}
+                trackColor={{
+                  false: colors.background.container,
+                  true: colors.button.primary
+                }}
                 thumbColor={colors.text.primary}
                 ios_backgroundColor={colors.background.container}
               />
             </View>
-            
+
             <View style={styles.settingRow}>
               <View style={styles.settingInfo}>
                 <Bell size={20} color={colors.status.warning} />
@@ -156,14 +162,17 @@ export default function SettingsScreen() {
               <Switch
                 value={remindersSync}
                 onValueChange={setRemindersSync}
-                trackColor={{ false: colors.background.container, true: colors.button.primary }}
+                trackColor={{
+                  false: colors.background.container,
+                  true: colors.button.primary
+                }}
                 thumbColor={colors.text.primary}
                 ios_backgroundColor={colors.background.container}
               />
             </View>
           </Card>
         </Animated.View>
-        
+
         {/* Agent Settings */}
         <Animated.View entering={FadeInDown.duration(500).delay(300)}>
           <Card style={styles.sectionCard}>
@@ -171,46 +180,46 @@ export default function SettingsScreen() {
               <Cog size={20} color={colors.text.primary} />
               <Text style={styles.sectionTitle}>Agent Settings</Text>
             </View>
-            
-            <Link href="/chatbot-settings" asChild>
+
+            <Link href='/chatbot-settings' asChild>
               <TouchableOpacity style={styles.navItem}>
                 <Text style={styles.navItemText}>Manage Bot Settings</Text>
                 <ChevronRight size={20} color={colors.text.muted} />
               </TouchableOpacity>
             </Link>
-            
+
             <View style={styles.radioContainer}>
               <Text style={styles.radioLabel}>Coach Persona</Text>
-              
+
               <View style={styles.radioOptions}>
                 <TouchableOpacity
                   style={[
                     styles.radioOption,
-                    coachType === 'neutral' && styles.radioOptionSelected,
+                    coachType === 'neutral' && styles.radioOptionSelected
                   ]}
                   onPress={() => setCoachType('neutral')}
                 >
                   <Text
                     style={[
                       styles.radioText,
-                      coachType === 'neutral' && styles.radioTextSelected,
+                      coachType === 'neutral' && styles.radioTextSelected
                     ]}
                   >
                     Neutral Coach
                   </Text>
                 </TouchableOpacity>
-                
+
                 <TouchableOpacity
                   style={[
                     styles.radioOption,
-                    coachType === 'grit' && styles.radioOptionSelected,
+                    coachType === 'grit' && styles.radioOptionSelected
                   ]}
                   onPress={() => setCoachType('grit')}
                 >
                   <Text
                     style={[
                       styles.radioText,
-                      coachType === 'grit' && styles.radioTextSelected,
+                      coachType === 'grit' && styles.radioTextSelected
                     ]}
                   >
                     Grit Coach
@@ -218,29 +227,29 @@ export default function SettingsScreen() {
                 </TouchableOpacity>
               </View>
             </View>
-            
+
             <View style={styles.sliderContainer}>
               <Slider
                 min={0}
                 max={100}
                 value={empathyValue}
                 onValueChange={setEmpathyValue}
-                leftLabel="Empathy"
-                rightLabel="Tough Love"
+                leftLabel='Empathy'
+                rightLabel='Tough Love'
                 showValue
               />
-              
+
               <Slider
                 min={0}
                 max={100}
                 value={logicValue}
                 onValueChange={setLogicValue}
-                leftLabel="Logic"
-                rightLabel="Emotion"
+                leftLabel='Logic'
+                rightLabel='Emotion'
                 showValue
               />
             </View>
-            
+
             <TouchableOpacity
               style={styles.connectButton}
               onPress={handleConnectCalendar}
@@ -250,7 +259,7 @@ export default function SettingsScreen() {
             </TouchableOpacity>
           </Card>
         </Animated.View>
-        
+
         {/* Sign Out Button */}
         <Animated.View entering={FadeInDown.duration(500).delay(400)}>
           <TouchableOpacity
@@ -262,35 +271,30 @@ export default function SettingsScreen() {
           </TouchableOpacity>
         </Animated.View>
       </ScrollView>
-    </View>
-  );
+    </Animated.View>
+  )
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background.primary,
-  },
-  
   scrollView: {
-    flex: 1,
+    flex: 1
   },
-  
+
   content: {
     padding: 16,
-    paddingBottom: 32,
+    paddingBottom: 32
   },
-  
+
   subscriptionCard: {
-    padding: 16,
+    padding: 16
   },
-  
+
   subscriptionHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: 16
   },
-  
+
   crownContainer: {
     width: 48,
     height: 48,
@@ -298,94 +302,94 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(249, 168, 38, 0.2)',
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 16,
+    marginRight: 16
   },
-  
+
   subscriptionInfo: {
-    flex: 1,
+    flex: 1
   },
-  
+
   subscriptionTitle: {
     fontSize: fonts.sizes.lg,
     fontWeight: fonts.weights.bold,
     color: colors.text.primary,
-    marginBottom: 4,
+    marginBottom: 4
   },
-  
+
   subscriptionDetail: {
     fontSize: fonts.sizes.sm,
-    color: colors.text.secondary,
+    color: colors.text.secondary
   },
-  
+
   subscriptionButton: {
-    marginTop: 8,
+    marginTop: 8
   },
-  
+
   sectionCard: {
     padding: 16,
-    marginTop: 16,
+    marginTop: 16
   },
-  
+
   sectionHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: 16
   },
-  
+
   sectionTitle: {
     fontSize: fonts.sizes.lg,
     fontWeight: fonts.weights.bold,
     color: colors.text.primary,
-    marginLeft: 8,
+    marginLeft: 8
   },
-  
+
   settingRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 16,
+    marginBottom: 16
   },
-  
+
   settingInfo: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'center'
   },
-  
+
   settingText: {
     fontSize: fonts.sizes.md,
     color: colors.text.primary,
-    marginLeft: 12,
+    marginLeft: 12
   },
-  
+
   navItem: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(177, 181, 201, 0.2)',
+    borderBottomColor: 'rgba(177, 181, 201, 0.2)'
   },
-  
+
   navItemText: {
     fontSize: fonts.sizes.md,
-    color: colors.text.primary,
+    color: colors.text.primary
   },
-  
+
   radioContainer: {
-    marginVertical: 16,
+    marginVertical: 16
   },
-  
+
   radioLabel: {
     fontSize: fonts.sizes.md,
     color: colors.text.secondary,
-    marginBottom: 8,
+    marginBottom: 8
   },
-  
+
   radioOptions: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'center'
   },
-  
+
   radioOption: {
     flex: 1,
     paddingVertical: 8,
@@ -394,28 +398,28 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.background.container,
     alignItems: 'center',
-    marginRight: 8,
+    marginRight: 8
   },
-  
+
   radioOptionSelected: {
     backgroundColor: colors.button.primary,
-    borderColor: colors.button.primary,
+    borderColor: colors.button.primary
   },
-  
+
   radioText: {
     fontSize: fonts.sizes.sm,
-    color: colors.text.secondary,
+    color: colors.text.secondary
   },
-  
+
   radioTextSelected: {
     color: colors.text.primary,
-    fontWeight: fonts.weights.medium,
+    fontWeight: fonts.weights.medium
   },
-  
+
   sliderContainer: {
-    marginVertical: 16,
+    marginVertical: 16
   },
-  
+
   connectButton: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -423,25 +427,25 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     paddingHorizontal: 16,
     borderRadius: 8,
-    marginTop: 8,
+    marginTop: 8
   },
-  
+
   connectButtonText: {
     fontSize: fonts.sizes.md,
     color: colors.button.primary,
-    marginLeft: 8,
+    marginLeft: 8
   },
-  
+
   signOutButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: 24,
+    marginTop: 24
   },
-  
+
   signOutText: {
     fontSize: fonts.sizes.sm,
     color: colors.text.muted,
-    marginLeft: 8,
-  },
-});
+    marginLeft: 8
+  }
+})

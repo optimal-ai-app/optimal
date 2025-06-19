@@ -20,6 +20,7 @@ import { useUserTasks } from '@/src/hooks/useUserTasks'
 import { useState, useMemo } from 'react'
 import { TaskFilterType, TaskSortType } from '@/src/components/TaskFilter'
 import { TaskCreationModal } from '@/src/components/TaskCreationModal'
+import { globalStyles } from '@/src/constants/styles'
 
 export default function TasksScreen () {
   const router = useRouter()
@@ -96,7 +97,7 @@ export default function TasksScreen () {
   }
 
   return (
-    <View style={styles.container}>
+    <View style={globalStyles.container}>
       <Header title='Tasks' />
 
       <ScrollView
@@ -142,6 +143,7 @@ export default function TasksScreen () {
                 key={task.id}
                 task={task}
                 isLast={index === filteredTasks.length - 1}
+                index={index}
               />
             ))}
 

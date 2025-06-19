@@ -7,11 +7,13 @@ interface GoalNamesScrollerProps {
   onSelect: (goalName: string) => void
 }
 
-export const GoalNamesScroller: React.FC<GoalNamesScrollerProps> = ({ onSelect }) => {
+export const GoalNamesScroller: React.FC<GoalNamesScrollerProps> = ({
+  onSelect
+}) => {
   const goals = useGoals()
-  
+
   if (!goals.length) return null
-  
+
   return (
     <FlatList
       data={goals}
@@ -20,8 +22,9 @@ export const GoalNamesScroller: React.FC<GoalNamesScrollerProps> = ({ onSelect }
       style={{ marginTop: 8, marginBottom: 4 }}
       contentContainerStyle={{ gap: 8, paddingHorizontal: 4 }}
       showsHorizontalScrollIndicator={false}
-      renderItem={({ item }) => (
+      renderItem={({ item, index }) => (
         <TouchableOpacity
+          key={index}
           style={{
             backgroundColor: colors.button.primary,
             borderRadius: 16,

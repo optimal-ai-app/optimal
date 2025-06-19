@@ -12,7 +12,7 @@ export const colors = {
     surface: '#FFFFFF', // Pure white for contrast
     overlay: 'rgba(10, 22, 40, 0.95)' // Dark overlay with transparency
   },
-  
+
   // Button colors - Vibrant blues for action
   button: {
     primary: '#003B95', // Deep Expedia-like blue
@@ -22,7 +22,7 @@ export const colors = {
     secondary: '#F8F9FA', // Light secondary
     secondaryHover: '#E9ECEF' // Secondary hover
   },
-  
+
   // Text colors - High contrast for readability
   text: {
     primary: '#FFFFFF', // Pure white for dark backgrounds
@@ -31,7 +31,7 @@ export const colors = {
     inverse: '#1A2332', // Dark text for light backgrounds
     accent: '#003B95' // Accent text color
   },
-  
+
   // Status colors - Clear feedback states
   status: {
     success: '#00C851', // Vibrant green
@@ -39,15 +39,18 @@ export const colors = {
     error: '#FF4444', // Clear red error
     info: '#0066FF' // Information blue
   },
-  
+
   // Gradient colors - Premium gradients
   gradient: {
-    primary: ['#003B95', '#0066FF'], // Primary blue gradient
-    secondary: ['#667EEA', '#764BA2'], // Purple-blue gradient
-    accent: ['#FF6B6B', '#FF8E53'], // Warm accent gradient
-    surface: ['#FFFFFF', '#F8F9FA'] // Subtle surface gradient
+    primary: ['#003B95', '#0066FF'] as const, // Primary blue gradient
+    secondary: ['#667EEA', '#764BA2'] as const, // Purple-blue gradient
+    accent: ['#FF6B6B', '#FF8E53'] as const, // Warm accent gradient
+    surface: ['#FFFFFF', '#F8F9FA'] as const, // Subtle surface gradient
+    // Legacy support for components expecting start/end properties
+    start: '#003B95',
+    end: '#0066FF'
   },
-  
+
   // Utility colors
   utility: {
     divider: 'rgba(184, 197, 209, 0.2)', // Subtle dividers

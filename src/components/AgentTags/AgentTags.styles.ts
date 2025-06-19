@@ -5,7 +5,6 @@ import { fonts } from '@/src/constants/fonts'
 export const styles = StyleSheet.create({
   // Confirmation Styles
   confirmationContainer: {
-    flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     marginTop: 12,
@@ -19,7 +18,8 @@ export const styles = StyleSheet.create({
     paddingHorizontal: 16,
     borderRadius: 20,
     alignItems: 'center',
-    justifyContent: 'center'
+    justifyContent: 'center',
+    width: '100%'
   } as ViewStyle,
 
   proceedButton: {
@@ -45,12 +45,8 @@ export const styles = StyleSheet.create({
   } as ViewStyle,
 
   datePickerButton: {
-    backgroundColor: colors.background.primary,
-    borderRadius: 12,
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    borderWidth: 1,
-    borderColor: colors.utility.divider
+    width: '100%',
+    alignItems: 'center'
   } as ViewStyle,
 
   datePickerText: {
@@ -63,16 +59,15 @@ export const styles = StyleSheet.create({
   // Time Picker Styles
   timePickerContainer: {
     marginTop: 12,
-    marginBottom: 8
+    marginBottom: 8,
+    justifyContent: 'center',
+
+
   } as ViewStyle,
 
   timePickerButton: {
-    backgroundColor: colors.background.primary,
-    borderRadius: 12,
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    borderWidth: 1,
-    borderColor: colors.utility.divider
+    width: '100%',
+    alignItems: 'center'
   } as ViewStyle,
 
   timePickerText: {

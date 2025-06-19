@@ -63,8 +63,8 @@ export default function GoalsScreen () {
         <Animated.View entering={FadeInDown.duration(500).delay(100)}>
           <Text style={styles.sectionTitle}>Active Goals</Text>
 
-          {goals.map(goal => (
-            <GoalCard key={goal.id} goal={goal} />
+          {goals.map((goal, index) => (
+            <GoalCard key={index} goal={goal} />
           ))}
         </Animated.View>
       </ScrollView>

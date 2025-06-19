@@ -36,20 +36,14 @@ export const TimePickerTag: React.FC<TimePickerTagProps> = ({ onConfirm }) => {
         style={styles.timePickerButton}
         onPress={() => setShowPicker(true)}
       >
-        <Text style={styles.timePickerText}>
-          {formatTime(selectedTime)}
-        </Text>
-      </TouchableOpacity>
-      
-      {showPicker && (
         <DateTimePicker
           value={selectedTime}
-          mode="time"
-          display="default"
+          mode='time'
+          display='default'
           onChange={handleTimeChange}
         />
-      )}
-      
+      </TouchableOpacity>
+
       <TouchableOpacity
         style={[styles.confirmButton, styles.proceedButton, { marginTop: 12 }]}
         onPress={handleConfirm}

@@ -5,6 +5,7 @@ import { ViewStyle, TextStyle, StyleSheet, Platform } from "react-native";
 export const styles = StyleSheet.create({
     goalPreview: {
         flexDirection: 'row',
+        flex: 1,
         alignItems: 'center',
         backgroundColor: '#1F2937',
         borderRadius: 16,

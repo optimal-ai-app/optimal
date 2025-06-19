@@ -11,7 +11,18 @@ import {
 } from 'react-native'
 import { useLocalSearchParams } from 'expo-router'
 import { LinearGradient } from 'expo-linear-gradient'
-import Animated, { FadeInUp, FadeInLeft } from 'react-native-reanimated'
+import Animated, {
+  FadeInUp,
+  FadeInLeft,
+  FadeInRight,
+  SlideInUp,
+  useSharedValue,
+  useAnimatedStyle,
+  withTiming,
+  withSpring,
+  runOnJS,
+  interpolate
+} from 'react-native-reanimated'
 
 import { Header } from '@/src/components/Header'
 import { ChatInput } from '@/src/components/ChatInput'
@@ -30,6 +41,7 @@ import {
   useFetchUserGoals,
   useUserId
 } from '@/src/stores'
+import { globalStyles } from '@/src/constants/styles'
 
 // Carousel options
 const carouselOptions = [
@@ -66,7 +78,7 @@ const carouselOptions = [
 ]
 
 // Helper to extract tags and content from agent message
-function extractTagsAndContent(content: { summary: string; tags: string[] }): {
+function extractTagsAndContent (content: { summary: string; tags: string[] }): {
   text: string
   tags: string[]
 } {
@@ -81,12 +93,13 @@ function extractTagsAndContent(content: { summary: string; tags: string[] }): {
   }
 }
 
-export default function AgentScreen() {
+export default function AgentScreen () {
   const params = useLocalSearchParams()
   const action = params.action as string | undefined
   const prompt = params.prompt as string | undefined
 
   const scrollViewRef = useRef<ScrollView>(null)
+  const messagesLength = useSharedValue(0)
 
   const sendMessage = useSendMessage()
   const addMessage = useAddMessage()
@@ -99,6 +112,25 @@ export default function AgentScreen() {
   const messages = useChatMessages()
   const fetchUserGoals = useFetchUserGoals()
   const userId = useUserId()
+
+  // Smooth scroll to bottom when new messages arrive
+  const scrollToBottom = (animated: boolean = true) => {
+    setTimeout(() => {
+      scrollViewRef.current?.scrollToEnd({ animated })
+    }, 100)
+  }
+
+  // Enhanced auto-scroll when messages change
+  useEffect(() => {
+    if (messages.length > messagesLength.value) {
+      messagesLength.value = withSpring(messages.length, {
+        damping: 20,
+        stiffness: 100
+      })
+      scrollToBottom(true)
+    }
+    messagesLength.value = messages.length
+  }, [messages.length])
 
   useEffect(() => {
     if (messages.length === 0) {
@@ -157,8 +189,13 @@ export default function AgentScreen() {
       context = { type: 'goal_response' }
     }
 
+    // Smooth scroll before sending
+    scrollToBottom(true)
+
     await sendMessage(textToSend, context, userId)
-    scrollToBottom()
+
+    // Scroll again after message is added
+    setTimeout(() => scrollToBottom(true), 200)
   }
 
   const handleHelpRequest = () => {
@@ -191,14 +228,11 @@ export default function AgentScreen() {
     }
   }
 
-  const scrollToBottom = () => {
-    setTimeout(() => {
-      scrollViewRef.current?.scrollToEnd({ animated: true })
-    }, 100)
-  }
-
   return (
-    <View style={styles.container}>
+    <Animated.View
+      entering={FadeInRight.duration(400).springify()}
+      style={styles.container}
+    >
       <Header title='AI Agent' />
 
       <KeyboardAvoidingView
@@ -215,6 +249,8 @@ export default function AgentScreen() {
           contentContainerStyle={styles.messagesContent}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps='handled'
+          onContentSizeChange={() => scrollToBottom(true)}
+          onLayout={() => scrollToBottom(false)}
         >
           {messages.map((msg, index) => {
             if (msg.role === 'agent') {
@@ -235,7 +271,7 @@ export default function AgentScreen() {
                 />
               )
             }
-            
+
             return (
               <UserMessage
                 key={msg.id}
@@ -248,12 +284,18 @@ export default function AgentScreen() {
 
           {isLoading && (
             <Animated.View
-              entering={FadeInLeft.duration(300)}
+              entering={FadeInLeft.duration(500).springify()}
               style={[styles.messageWrapper, styles.agentMessageWrapper]}
             >
               <View style={styles.agentAvatar}>
                 <LinearGradient
-                  colors={[colors.gradient.start, colors.gradient.end]}
+                  colors={
+                    colors.gradient.primary as readonly [
+                      string,
+                      string,
+                      ...string[]
+                    ]
+                  }
                   style={styles.avatarGradient}
                 >
                   <Text style={styles.avatarText}>AI</Text>
@@ -266,9 +308,10 @@ export default function AgentScreen() {
           )}
         </ScrollView>
 
+        {/* Enhanced Input Section */}
         <Animated.View
-          entering={FadeInUp.duration(500)}
-          style={styles.inputContainer}
+          entering={SlideInUp.duration(600).springify()}
+          style={styles.inputSection}
         >
           <ChatInput
             message={message}
@@ -278,24 +321,17 @@ export default function AgentScreen() {
             onHelpRequest={handleHelpRequest}
             isRecording={isRecording}
             carouselOptions={carouselOptions}
-            placeholder={
-              action === 'create-goal'
-                ? 'Describe your goal...'
-                : action === 'generate-tasks'
-                ? 'Tell me about your goal...'
-                : 'Type your message...'
-            }
           />
         </Animated.View>
       </KeyboardAvoidingView>
-    </View>
+    </Animated.View>
   )
 }
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-    backgroundColor: colors.background.primary
+    ...globalStyles.container,
+    paddingBottom: '20%'
   } as ViewStyle,
 
   keyboardAvoidingView: {
@@ -356,7 +392,7 @@ const styles = StyleSheet.create({
     borderBottomLeftRadius: 4
   } as ViewStyle,
 
-  inputContainer: {
+  inputSection: {
     backgroundColor: colors.background.primary,
     paddingBottom: 0
   } as ViewStyle

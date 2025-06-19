@@ -1,59 +1,59 @@
-import React, { useState } from 'react';
+import React, { useState } from 'react'
 import {
   View,
   Text,
   Modal,
   TouchableOpacity,
-  TouchableWithoutFeedback,
-} from 'react-native';
+  TouchableWithoutFeedback
+} from 'react-native'
 import Animated, {
   FadeIn,
   FadeOut,
   SlideInDown,
-  SlideOutDown,
-} from 'react-native-reanimated';
-import { MessageSquare, CreditCard as Edit3 } from 'lucide-react-native';
+  SlideOutDown
+} from 'react-native-reanimated'
+import { MessageSquare, CreditCard as Edit3 } from 'lucide-react-native'
 
-import { styles } from './TaskCreationModal.styles';
-import { colors } from '../../constants/colors';
+import { styles } from './TaskCreationModal.styles'
+import { colors } from '../../constants/colors'
 
-type TaskCreationOption = 'agent' | 'manual' | null;
+type TaskCreationOption = 'agent' | 'manual' | null
 
 interface TaskCreationModalProps {
-  visible: boolean;
-  onClose: () => void;
-  onCreateWithAgent: () => void;
-  onCreateManually: () => void;
+  visible: boolean
+  onClose: () => void
+  onCreateWithAgent: () => void
+  onCreateManually: () => void
 }
 
 export const TaskCreationModal: React.FC<TaskCreationModalProps> = ({
   visible,
   onClose,
   onCreateWithAgent,
-  onCreateManually,
+  onCreateManually
 }) => {
-  const [selectedOption, setSelectedOption] = useState<TaskCreationOption>(null);
+  const [selectedOption, setSelectedOption] = useState<TaskCreationOption>(null)
 
   const handleContinue = () => {
     if (selectedOption === 'agent') {
-      onCreateWithAgent();
+      onCreateWithAgent()
     } else if (selectedOption === 'manual') {
-      onCreateManually();
+      onCreateManually()
     }
-    onClose();
-    setSelectedOption(null);
-  };
+    onClose()
+    setSelectedOption(null)
+  }
 
   const handleClose = () => {
-    onClose();
-    setSelectedOption(null);
-  };
+    onClose()
+    setSelectedOption(null)
+  }
 
   return (
     <Modal
       visible={visible}
       transparent
-      animationType="none"
+      animationType='none'
       statusBarTranslucent
       onRequestClose={handleClose}
     >
@@ -81,7 +81,7 @@ export const TaskCreationModal: React.FC<TaskCreationModalProps> = ({
                   <TouchableOpacity
                     style={[
                       styles.optionButton,
-                      selectedOption === 'agent' && styles.optionButtonActive,
+                      selectedOption === 'agent' && styles.optionButtonActive
                     ]}
                     onPress={() => setSelectedOption('agent')}
                     activeOpacity={0.8}
@@ -89,7 +89,7 @@ export const TaskCreationModal: React.FC<TaskCreationModalProps> = ({
                     <View
                       style={[
                         styles.optionIcon,
-                        selectedOption === 'agent' && styles.optionIconActive,
+                        selectedOption === 'agent' && styles.optionIconActive
                       ]}
                     >
                       <MessageSquare
@@ -102,20 +102,12 @@ export const TaskCreationModal: React.FC<TaskCreationModalProps> = ({
                       />
                     </View>
                     <Text style={styles.optionTitle}>With AI Agent</Text>
-                    <Text
-                      style={[
-                        styles.optionDescription,
-                        selectedOption === 'agent' && styles.optionDescriptionActive,
-                      ]}
-                    >
-                      Get AI assistance for task planning
-                    </Text>
                   </TouchableOpacity>
 
                   <TouchableOpacity
                     style={[
                       styles.optionButton,
-                      selectedOption === 'manual' && styles.optionButtonActive,
+                      selectedOption === 'manual' && styles.optionButtonActive
                     ]}
                     onPress={() => setSelectedOption('manual')}
                     activeOpacity={0.8}
@@ -123,7 +115,7 @@ export const TaskCreationModal: React.FC<TaskCreationModalProps> = ({
                     <View
                       style={[
                         styles.optionIcon,
-                        selectedOption === 'manual' && styles.optionIconActive,
+                        selectedOption === 'manual' && styles.optionIconActive
                       ]}
                     >
                       <Edit3
@@ -136,14 +128,6 @@ export const TaskCreationModal: React.FC<TaskCreationModalProps> = ({
                       />
                     </View>
                     <Text style={styles.optionTitle}>Create Myself</Text>
-                    <Text
-                      style={[
-                        styles.optionDescription,
-                        selectedOption === 'manual' && styles.optionDescriptionActive,
-                      ]}
-                    >
-                      Set up your task manually with full control
-                    </Text>
                   </TouchableOpacity>
                 </View>
 
@@ -159,7 +143,7 @@ export const TaskCreationModal: React.FC<TaskCreationModalProps> = ({
                   <TouchableOpacity
                     style={[
                       styles.continueButton,
-                      !selectedOption && styles.continueButtonDisabled,
+                      !selectedOption && styles.continueButtonDisabled
                     ]}
                     onPress={handleContinue}
                     disabled={!selectedOption}
@@ -168,7 +152,7 @@ export const TaskCreationModal: React.FC<TaskCreationModalProps> = ({
                     <Text
                       style={[
                         styles.continueButtonText,
-                        !selectedOption && styles.continueButtonTextDisabled,
+                        !selectedOption && styles.continueButtonTextDisabled
                       ]}
                     >
                       Continue
@@ -181,5 +165,5 @@ export const TaskCreationModal: React.FC<TaskCreationModalProps> = ({
         </TouchableWithoutFeedback>
       </Animated.View>
     </Modal>
-  );
-};
+  )
+}

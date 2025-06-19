@@ -1,0 +1,1 @@
+export { AnimatedTabView } from './AnimatedTabView' 

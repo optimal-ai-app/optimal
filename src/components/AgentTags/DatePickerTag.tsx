@@ -37,21 +37,15 @@ export const DatePickerTag: React.FC<DatePickerTagProps> = ({ onConfirm }) => {
         style={styles.datePickerButton}
         onPress={() => setShowPicker(true)}
       >
-        <Text style={styles.datePickerText}>
-          {formatDate(selectedDate)}
-        </Text>
-      </TouchableOpacity>
-      
-      {showPicker && (
         <DateTimePicker
           value={selectedDate}
-          mode="date"
-          display="default"
+          mode='date'
+          display='default'
           onChange={handleDateChange}
           minimumDate={new Date()}
         />
-      )}
-      
+      </TouchableOpacity>
+
       <TouchableOpacity
         style={[styles.confirmButton, styles.proceedButton, { marginTop: 12 }]}
         onPress={handleConfirm}

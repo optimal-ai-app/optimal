@@ -1,34 +1,34 @@
-import React from 'react';
-import { 
-  TouchableOpacity, 
-  Text, 
+import React from 'react'
+import {
+  TouchableOpacity,
+  Text,
   ActivityIndicator,
   TouchableOpacityProps,
-  StyleSheet 
-} from 'react-native';
-import Animated, { 
-  useAnimatedStyle, 
+  StyleSheet
+} from 'react-native'
+import Animated, {
+  useAnimatedStyle,
   useSharedValue,
   withSpring,
   withTiming,
   interpolate
-} from 'react-native-reanimated';
-import { LinearGradient } from 'expo-linear-gradient';
+} from 'react-native-reanimated'
+import { LinearGradient } from 'expo-linear-gradient'
 
-import { styles } from './Button.styles';
-import { colors } from '../../constants/colors';
+import { styles } from './Button.styles'
+import { colors } from '../../constants/colors'
 
 // Enhanced button variants
-export type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'large';
+export type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'large'
 
 interface ButtonProps extends TouchableOpacityProps {
-  title: string;
-  variant?: ButtonVariant;
-  isLoading?: boolean;
-  icon?: React.ReactNode;
-  disabled?: boolean;
-  fullWidth?: boolean;
-  gradient?: boolean;
+  title: string
+  variant?: ButtonVariant
+  isLoading?: boolean
+  icon?: React.ReactNode
+  disabled?: boolean
+  fullWidth?: boolean
+  gradient?: boolean
 }
 
 export const Button: React.FC<ButtonProps> = ({
@@ -43,76 +43,76 @@ export const Button: React.FC<ButtonProps> = ({
   ...rest
 }) => {
   // Enhanced animation values
-  const scale = useSharedValue(1);
-  const shadowOpacity = useSharedValue(0.15);
-  const elevation = useSharedValue(6);
-  
+  const scale = useSharedValue(1)
+  const shadowOpacity = useSharedValue(0.15)
+  const elevation = useSharedValue(6)
+
   // Handle press animations with spring physics
   const handlePressIn = () => {
     scale.value = withSpring(0.96, {
       damping: 15,
       stiffness: 300
-    });
-    shadowOpacity.value = withTiming(0.25, { duration: 150 });
-    elevation.value = withTiming(12, { duration: 150 });
-  };
-  
+    })
+    shadowOpacity.value = withTiming(0.25, { duration: 150 })
+    elevation.value = withTiming(12, { duration: 150 })
+  }
+
   const handlePressOut = () => {
     scale.value = withSpring(1, {
       damping: 15,
       stiffness: 300
-    });
-    shadowOpacity.value = withTiming(0.15, { duration: 150 });
-    elevation.value = withTiming(6, { duration: 150 });
-  };
-  
+    })
+    shadowOpacity.value = withTiming(0.15, { duration: 150 })
+    elevation.value = withTiming(6, { duration: 150 })
+  }
+
   // Enhanced animated styles
   const animatedStyle = useAnimatedStyle(() => {
     return {
       transform: [{ scale: scale.value }],
       shadowOpacity: shadowOpacity.value,
-      elevation: elevation.value,
-    };
-  });
-  
+      elevation: elevation.value
+    }
+  })
+
   // Determine button style based on variant
   const getButtonStyle = () => {
     switch (variant) {
       case 'primary':
-        return styles.primaryButton;
+        return styles.primaryButton
       case 'secondary':
-        return styles.secondaryButton;
+        return styles.secondaryButton
       case 'ghost':
-        return styles.ghostButton;
+        return styles.ghostButton
       case 'large':
-        return [styles.primaryButton, styles.largeButton];
+        return [styles.primaryButton, styles.largeButton]
       default:
-        return styles.primaryButton;
+        return styles.primaryButton
     }
-  };
-  
+  }
+
   // Determine text style based on variant
   const getTextStyle = () => {
     switch (variant) {
       case 'primary':
-        return variant === 'large' ? [styles.primaryText, styles.largeText] : styles.primaryText;
+        return styles.primaryText
       case 'secondary':
-        return styles.secondaryText;
+        return styles.secondaryText
       case 'ghost':
-        return styles.ghostText;
+        return styles.ghostText
       case 'large':
-        return [styles.primaryText, styles.largeText];
+        return [styles.primaryText, styles.largeText]
       default:
-        return styles.primaryText;
+        return styles.primaryText
     }
-  };
-  
+  }
+
   // Render primary button with optional gradient
   if ((variant === 'primary' || variant === 'large') && !disabled) {
     return (
-      <Animated.View 
+      <Animated.View
         style={[
-          animatedStyle, 
+          animatedStyle,
           styles.buttonContainer,
           fullWidth && styles.fullWidth,
           style
@@ -124,7 +124,7 @@ export const Button: React.FC<ButtonProps> = ({
           onPressOut={handlePressOut}
           disabled={disabled || isLoading}
           style={[styles.button, getButtonStyle()]}
-          accessibilityRole="button"
+          accessibilityRole='button'
           accessibilityLabel={title}
           accessibilityState={{ disabled: disabled || isLoading }}
           {...rest}
@@ -140,9 +140,9 @@ export const Button: React.FC<ButtonProps> = ({
               ]}
             />
           ) : null}
-          
+
           {isLoading ? (
-            <ActivityIndicator size="small" color={colors.text.primary} />
+            <ActivityIndicator size='small' color={colors.text.primary} />
           ) : (
             <>
               {icon && <span style={styles.iconContainer}>{icon}</span>}
@@ -151,14 +151,14 @@ export const Button: React.FC<ButtonProps> = ({
           )}
         </TouchableOpacity>
       </Animated.View>
-    );
+    )
   }
-  
+
   // Render other button variants
   return (
-    <Animated.View 
+    <Animated.View
       style={[
-        animatedStyle, 
+        animatedStyle,
         styles.buttonContainer,
         fullWidth && styles.fullWidth,
         style
@@ -170,32 +170,31 @@ export const Button: React.FC<ButtonProps> = ({
         onPressOut={handlePressOut}
         disabled={disabled || isLoading}
         style={[
-          styles.button, 
+          styles.button,
           getButtonStyle(),
           disabled && styles.disabledButton
         ]}
-        accessibilityRole="button"
+        accessibilityRole='button'
         accessibilityLabel={title}
         accessibilityState={{ disabled: disabled || isLoading }}
         {...rest}
       >
         {isLoading ? (
-          <ActivityIndicator 
-            size="small" 
-            color={variant === 'ghost' ? colors.button.primary : colors.text.primary} 
+          <ActivityIndicator
+            size='small'
+            color={
+              variant === 'ghost' ? colors.button.primary : colors.text.primary
+            }
           />
         ) : (
           <>
             {icon && <span style={styles.iconContainer}>{icon}</span>}
-            <Text style={[
-              getTextStyle(),
-              disabled && styles.disabledText
-            ]}>
+            <Text style={[getTextStyle(), disabled && styles.disabledText]}>
               {title}
             </Text>
           </>
         )}
       </TouchableOpacity>
     </Animated.View>
-  );
-};
+  )
+}
