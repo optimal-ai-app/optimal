@@ -50,12 +50,7 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
             })
             console.log(response)
         } catch (error) {
-            console.error('Failed to fetch user tasks:', error)
-            setError(error instanceof Error ? error.message : 'Failed to fetch tasks')
-            set(state => ({
-                tasks: tasks
-            }))
-            setError(null)
+            setError(error instanceof Error ? error.message : 'Failed to add task')
         } finally {
             setLoading(false)
         }
@@ -112,6 +107,10 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
         } catch (error) {
             console.error('Failed to fetch user tasks:', error)
             setError(error instanceof Error ? error.message : 'Failed to fetch tasks')
+            set(state => ({
+                tasks: tasks
+            }))
+            setError(null)
         } finally {
             setLoading(false)
         }
