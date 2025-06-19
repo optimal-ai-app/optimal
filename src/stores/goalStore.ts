@@ -96,6 +96,7 @@ export const useGoalStore = create<GoalStore>((set, get) => ({
             set({ goals: transformedGoals })
         } catch (error) {
             setError(error instanceof Error ? error.message : 'Failed to fetch goals')
+            set({goals: goals})
         } finally {
             setLoading(false)
         }
