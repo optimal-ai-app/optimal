@@ -51,6 +51,8 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
             console.log(response)
         } catch (error) {
             setError(error instanceof Error ? error.message : 'Failed to add task')
+                      set({goals: goals})
+
         } finally {
             setLoading(false)
         }
