@@ -20,7 +20,8 @@ import Animated, {
   useSharedValue,
   withTiming,
   withSpring,
-  interpolate
+  interpolate,
+  SlideInRight
 } from 'react-native-reanimated'
 import {
   Target,
@@ -38,6 +39,7 @@ import { Card } from '@/src/components/Card'
 import { Button } from '@/src/components/Button'
 import { GoalCreationModal } from '@/src/components/GoalCreationModal'
 import { TaskCreationModal } from '@/src/components/TaskCreationModal'
+import { DailyLog } from '@/src/components/DailyLog'
 import {
   FloatingActionButton,
   GlassCard,
@@ -263,6 +265,18 @@ export default function HomeScreen () {
     }
   }
 
+  // Handle voice input from Daily Log
+  const handleVoiceInput = (transcript: string) => {
+    // Navigate to agent with the voice transcript
+    router.push({
+      pathname: '/(tabs)/agent',
+      params: {
+        action: 'voice-log',
+        prompt: transcript
+      }
+    })
+  }
+
   return (
     <Animated.View
       entering={FadeInDown.duration(400).springify()}
@@ -323,8 +337,15 @@ export default function HomeScreen () {
           </LinearGradient>
         </Animated.View>
 
+        {/* Daily Log Section - New prominent position */}
+        <DailyLog 
+          onVoiceInput={handleVoiceInput}
+          onRecordingStart={() => console.log('Recording started')}
+          onRecordingEnd={() => console.log('Recording ended')}
+        />
+
         {/* Quick Actions with Enhanced Styling */}
-        <Animated.View entering={FadeInDown.duration(600).delay(400)}>
+        <Animated.View entering={FadeInDown.duration(600).delay(600)}>
           <GlassCard style={styles.quickActionsCard}>
             <Text style={styles.sectionTitle}>Quick Actions</Text>
             <View style={styles.quickActionsGrid}>
@@ -383,7 +404,7 @@ export default function HomeScreen () {
         </Animated.View>
 
         {/* Tasks Section with Premium Design */}
-        <Animated.View entering={FadeInDown.duration(600).delay(600)}>
+        <Animated.View entering={FadeInDown.duration(600).delay(800)}>
           <GlassCard style={styles.sectionCard}>
             <View style={styles.sectionHeader}>
               <View style={styles.sectionTitleContainer}>
@@ -449,7 +470,7 @@ export default function HomeScreen () {
         </Animated.View>
 
         {/* Goals Preview with Enhanced Design */}
-        <Animated.View entering={FadeInDown.duration(600).delay(800)}>
+        <Animated.View entering={FadeInDown.duration(600).delay(1000)}>
           <GlassCard style={styles.goalsCard}>
             <View style={styles.sectionHeader}>
               <View style={styles.sectionTitleContainer}>
@@ -479,9 +500,13 @@ export default function HomeScreen () {
                 .sort(() => Math.random() - 0.5)
                 .slice(0, 5)
                 .map((goal, index) => (
-                  <View key={index} style={styles.goalsGridItem}>
+                  <Animated.View 
+                    key={index} 
+                    entering={SlideInRight.duration(400).delay(index * 100)}
+                    style={styles.goalsGridItem}
+                  >
                     <GoalCard goal={goal} />
-                  </View>
+                  </Animated.View>
                 ))}
             </ScrollView>
 
