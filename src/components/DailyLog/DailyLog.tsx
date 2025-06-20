@@ -19,7 +19,7 @@ import Animated, {
   runOnJS,
   Easing
 } from 'react-native-reanimated'
-import { Mic, MicOff, Lock, Unlock } from 'lucide-react-native'
+import { Mic, MicOff, Lock, Clock as Unlock } from 'lucide-react-native'
 import { styles } from './DailyLog.styles'
 import { colors } from '@/src/constants/colors'
 
