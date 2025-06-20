@@ -31,6 +31,7 @@ interface AgentMessageProps {
   tags: string[]
   timestamp: Date
   isLatest: boolean
+  isLoading?: boolean // Add loading prop to control tag visibility
   onSendMessage: (message: string) => void
 }
 
@@ -40,6 +41,7 @@ export const AgentMessage: React.FC<AgentMessageProps> = ({
   tags,
   timestamp,
   isLatest,
+  isLoading = false, // Default to false
   onSendMessage
 }) => {
   const [displayedText, setDisplayedText] = useState('')
@@ -57,7 +59,7 @@ export const AgentMessage: React.FC<AgentMessageProps> = ({
 
   // Typewriter effect for latest message
   useEffect(() => {
-    if (isLatest && text) {
+    if (isLatest && text && !isLoading) {
       let currentIndex = 0
       const typeInterval = setInterval(() => {
         if (currentIndex <= text.length) {
@@ -72,9 +74,18 @@ export const AgentMessage: React.FC<AgentMessageProps> = ({
       return () => clearInterval(typeInterval)
     } else {
       setDisplayedText(text)
-      setShowTags(true)
+      // Only show tags if not loading
+      setShowTags(!isLoading)
     }
-  }, [text, isLatest])
+  }, [text, isLatest, isLoading])
+
+  // Hide tags when loading starts
+  useEffect(() => {
+    if (isLoading) {
+      setShowTags(false)
+      tagsOpacity.value = withTiming(0, { duration: 200 })
+    }
+  }, [isLoading])
 
   // Entrance animations
   useEffect(() => {
@@ -99,13 +110,13 @@ export const AgentMessage: React.FC<AgentMessageProps> = ({
 
   // Tags animation when they become visible
   useEffect(() => {
-    if (showTags) {
+    if (showTags && !isLoading) {
       tagsOpacity.value = withDelay(
         200,
         withSpring(1, { damping: 12, stiffness: 100 })
       )
     }
-  }, [showTags])
+  }, [showTags, isLoading])
 
   // Animated styles
   const avatarAnimatedStyle = useAnimatedStyle(() => ({
@@ -124,11 +135,18 @@ export const AgentMessage: React.FC<AgentMessageProps> = ({
     opacity: tagsOpacity.value
   }))
 
-  const showGoalNames = isLatest && tags.includes('SHOW_USER_GOAL_NAMES')
-  const showConfirmation = isLatest && tags.includes('CONFIRM_TAG')
-  const showDatePicker = isLatest && tags.includes('DATE_PICKER_TAG')
-  const showTimePicker = isLatest && tags.includes('TIME_PICKER_TAG')
-  const showDaySelector = isLatest && tags.includes('DAY_SELECTOR_TAG')
+  // Only show tags if not loading and showTags is true
+  const shouldShowTags = showTags && !isLoading
+  const showGoalNames =
+    shouldShowTags && isLatest && tags.includes('SHOW_USER_GOAL_NAMES')
+  const showConfirmation =
+    shouldShowTags && isLatest && tags.includes('CONFIRM_TAG')
+  const showDatePicker =
+    shouldShowTags && isLatest && tags.includes('DATE_PICKER_TAG')
+  const showTimePicker =
+    shouldShowTags && isLatest && tags.includes('TIME_PICKER_TAG')
+  const showDaySelector =
+    shouldShowTags && isLatest && tags.includes('DAY_SELECTOR_TAG')
 
   return (
     <Animated.View
@@ -161,7 +179,7 @@ export const AgentMessage: React.FC<AgentMessageProps> = ({
           </Text>
         </Animated.View>
 
-        {showTags && (
+        {shouldShowTags && (
           <Animated.View style={tagsAnimatedStyle}>
             {showGoalNames && (
               <GoalNamesScroller

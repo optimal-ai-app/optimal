@@ -8,7 +8,12 @@ export {
     useClearMessages,
     useSetError,
     useSetLoading,
-    type ChatMessage
+    useChatSessions,
+    useCreateNewChat,
+    useLoadChatSession,
+    useSaveChatSession,
+    type ChatMessage,
+    type ChatSession
 } from './chatStore'
 
 export {

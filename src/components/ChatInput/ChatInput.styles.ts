@@ -7,9 +7,13 @@ export const styles = StyleSheet.create({
         position: 'relative',
     },
 
+    containerDisabled: {
+        opacity: 0.6,
+    },
+
     carouselContainer: {
         position: 'absolute',
-        bottom: 85, // Increased from 80 to 85 for slightly more spacing
+        bottom: 85,
         left: 0,
         right: 0,
         zIndex: 10,
@@ -18,24 +22,52 @@ export const styles = StyleSheet.create({
 
     helpButtonContainer: {
         position: 'absolute',
-        bottom: 95, // Base position above input
+        bottom: 95,
         right: 16,
         zIndex: 20,
     },
 
     helpButtonContainerWithCarousel: {
-        bottom: 160, // Reduced from 175 to 160 for less spacing
+        bottom: 160,
+    },
+
+    helpButton: {
+        width: 42,
+        height: 42,
+        borderRadius: 21,
+        backgroundColor: '#F9A826',
+        justifyContent: 'center',
+        alignItems: 'center',
+        shadowColor: '#F9A826',
+        shadowOffset: {
+            width: 0,
+            height: 4,
+        },
+        shadowOpacity: 0.4,
+        shadowRadius: 8,
+        elevation: 8,
+    },
+
+    helpButtonDisabled: {
+        backgroundColor: colors.background.container,
+        shadowOpacity: 0,
+        elevation: 0,
     },
 
     inputContainer: {
         flexDirection: 'row',
         alignItems: 'flex-end',
-        paddingHorizontal: 12, // Reduced from 16 to 12
-        paddingVertical: 8, // Reduced from 12 to 8
-        paddingBottom: 12, // Reduced from 16 to 12
+        paddingHorizontal: 12,
+        paddingVertical: 8,
+        paddingBottom: 12,
         backgroundColor: colors.background.container,
         borderTopWidth: 1,
         borderTopColor: 'rgba(177, 181, 201, 0.1)',
+    },
+
+    inputContainerDisabled: {
+        backgroundColor: colors.background.primary,
+        borderTopColor: 'rgba(177, 181, 201, 0.05)',
     },
 
     toggleButton: {
@@ -54,22 +86,9 @@ export const styles = StyleSheet.create({
         backgroundColor: colors.button.primary,
     },
 
-    helpButton: {
-        width: 42, // Reduced from 48 to 42
-        height: 42, // Reduced from 48 to 42
-        borderRadius: 21, // Adjusted for new size
-        backgroundColor: '#F9A826', // Gold color
-        justifyContent: 'center',
-        alignItems: 'center',
-        // Add prominent shadow for floating effect
-        shadowColor: '#F9A826',
-        shadowOffset: {
-            width: 0,
-            height: 4,
-        },
-        shadowOpacity: 0.4,
-        shadowRadius: 8,
-        elevation: 8,
+    toggleButtonDisabled: {
+        backgroundColor: colors.background.container,
+        opacity: 0.5,
     },
 
     inputWrapper: {
@@ -84,11 +103,19 @@ export const styles = StyleSheet.create({
         justifyContent: 'center',
     },
 
+    inputWrapperDisabled: {
+        backgroundColor: colors.background.container,
+    },
+
     textInput: {
         color: colors.text.primary,
         fontSize: fonts.sizes.md,
         lineHeight: 20,
         textAlignVertical: 'center',
+    },
+
+    textInputDisabled: {
+        color: colors.text.muted,
     },
 
     sendButton: {
@@ -103,7 +130,8 @@ export const styles = StyleSheet.create({
     },
 
     sendButtonDisabled: {
-        backgroundColor: colors.background.card,
+        backgroundColor: colors.background.container,
+        opacity: 0.5,
     },
 
     micButton: {

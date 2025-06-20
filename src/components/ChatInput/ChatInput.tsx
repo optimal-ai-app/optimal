@@ -33,6 +33,7 @@ interface ChatInputProps {
   isRecording?: boolean
   carouselOptions?: CarouselOption[]
   placeholder?: string
+  disabled?: boolean // Add disabled prop
 }
 
 export const ChatInput: React.FC<ChatInputProps> = ({
@@ -43,7 +44,8 @@ export const ChatInput: React.FC<ChatInputProps> = ({
   onHelpRequest,
   isRecording = false,
   carouselOptions = [],
-  placeholder = 'Type your message...'
+  placeholder = 'Type your message...',
+  disabled = false // Default to false
 }) => {
   const [showCarousel, setShowCarousel] = useState(true)
   const inputRef = useRef<TextInput>(null)
@@ -53,10 +55,12 @@ export const ChatInput: React.FC<ChatInputProps> = ({
   const carouselOpacity = useSharedValue(showCarousel ? 1 : 0)
   const micScale = useSharedValue(1)
   const helpScale = useSharedValue(1)
-  const helpButtonBottom = useSharedValue(showCarousel ? 160 : 95) // Updated to use new spacing
+  const helpButtonBottom = useSharedValue(showCarousel ? 160 : 95)
 
   // Toggle carousel visibility
   const toggleCarousel = () => {
+    if (disabled) return // Don't allow toggling when disabled
+
     const newShowCarousel = !showCarousel
     setShowCarousel(newShowCarousel)
 
@@ -68,11 +72,13 @@ export const ChatInput: React.FC<ChatInputProps> = ({
     })
     helpButtonBottom.value = withTiming(newShowCarousel ? 160 : 95, {
       duration: 300
-    }) // Updated spacing
+    })
   }
 
   // Handle help button press
   const handleHelpPress = () => {
+    if (disabled) return // Don't allow help when disabled
+
     // Add subtle animation
     helpScale.value = withSpring(0.9, { duration: 150 }, () => {
       helpScale.value = withSpring(1, { duration: 150 })
@@ -84,10 +90,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
 
   // Handle voice recording
   const handleVoiceRecord = () => {
-    if (Platform.OS === 'web') {
-      // Web fallback - could implement Web Speech API here
-      return
-    }
+    if (disabled || Platform.OS === 'web') return // Don't allow voice when disabled
 
     micScale.value = withSpring(isRecording ? 1 : 1.2, { duration: 300 })
     onVoiceRecord?.()
@@ -95,15 +98,24 @@ export const ChatInput: React.FC<ChatInputProps> = ({
 
   // Handle carousel option selection
   const handleCarouselOption = (option: CarouselOption) => {
+    if (disabled) return // Don't allow selection when disabled
+
     onMessageChange(option.text)
     inputRef.current?.focus()
   }
 
   // Handle send message
   const handleSend = () => {
-    if (message.trim()) {
-      onSendMessage()
-    }
+    if (disabled || !message.trim()) return // Don't allow sending when disabled or empty
+
+    onSendMessage()
+  }
+
+  // Handle text input change
+  const handleTextChange = (text: string) => {
+    if (disabled) return // Don't allow text change when disabled
+
+    onMessageChange(text)
   }
 
   // Animated styles
@@ -132,12 +144,12 @@ export const ChatInput: React.FC<ChatInputProps> = ({
     }
   })
 
-  const canSend = message.trim().length > 0
+  const canSend = message.trim().length > 0 && !disabled
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, disabled && styles.containerDisabled]}>
       {/* Floating Carousel */}
-      {carouselOptions.length > 0 && (
+      {carouselOptions.length > 0 && !disabled && (
         <Animated.View
           style={[styles.carouselContainer, carouselAnimatedStyle]}
         >
@@ -149,26 +161,39 @@ export const ChatInput: React.FC<ChatInputProps> = ({
       )}
 
       {/* Floating Help Button */}
-      <Animated.View
-        style={[styles.helpButtonContainer, helpButtonAnimatedStyle]}
-      >
-        <TouchableOpacity style={styles.helpButton} onPress={handleHelpPress}>
-          <Animated.View style={helpAnimatedStyle}>
-            <HelpCircle size={22} color='#FFFFFF' />
-          </Animated.View>
-        </TouchableOpacity>
-      </Animated.View>
+      {!disabled && (
+        <Animated.View
+          style={[styles.helpButtonContainer, helpButtonAnimatedStyle]}
+        >
+          <TouchableOpacity
+            style={[styles.helpButton, disabled && styles.helpButtonDisabled]}
+            onPress={handleHelpPress}
+            disabled={disabled}
+          >
+            <Animated.View style={helpAnimatedStyle}>
+              <HelpCircle size={22} color='#FFFFFF' />
+            </Animated.View>
+          </TouchableOpacity>
+        </Animated.View>
+      )}
 
       {/* Input Row */}
-      <View style={styles.inputContainer}>
+      <View
+        style={[
+          styles.inputContainer,
+          disabled && styles.inputContainerDisabled
+        ]}
+      >
         {/* Toggle Carousel Button */}
-        {carouselOptions.length > 0 && (
+        {carouselOptions.length > 0 && !disabled && (
           <TouchableOpacity
             style={[
               styles.toggleButton,
-              showCarousel && styles.toggleButtonActive
+              showCarousel && styles.toggleButtonActive,
+              disabled && styles.toggleButtonDisabled
             ]}
             onPress={toggleCarousel}
+            disabled={disabled}
           >
             {showCarousel ? (
               <ChevronDown size={20} color={colors.text.primary} />
@@ -179,25 +204,34 @@ export const ChatInput: React.FC<ChatInputProps> = ({
         )}
 
         {/* Text Input */}
-        <View style={styles.inputWrapper}>
+        <View
+          style={[styles.inputWrapper, disabled && styles.inputWrapperDisabled]}
+        >
           <TextInput
             ref={inputRef}
-            style={styles.textInput}
+            style={[styles.textInput, disabled && styles.textInputDisabled]}
             value={message}
-            onChangeText={onMessageChange}
-            placeholder={placeholder}
-            placeholderTextColor={colors.text.muted}
+            onChangeText={handleTextChange}
+            placeholder={disabled ? 'Waiting for response...' : placeholder}
+            placeholderTextColor={
+              disabled ? colors.text.muted : colors.text.muted
+            }
             multiline
             maxLength={1000}
             returnKeyType='done'
             blurOnSubmit={true}
             onSubmitEditing={handleSend}
+            editable={!disabled}
           />
         </View>
 
         {/* Send/Mic Button */}
         {canSend ? (
-          <TouchableOpacity style={styles.sendButton} onPress={handleSend}>
+          <TouchableOpacity
+            style={[styles.sendButton, disabled && styles.sendButtonDisabled]}
+            onPress={handleSend}
+            disabled={disabled}
+          >
             <Send size={18} color={colors.text.primary} />
           </TouchableOpacity>
         ) : (
@@ -205,9 +239,11 @@ export const ChatInput: React.FC<ChatInputProps> = ({
             style={[
               styles.sendButton,
               styles.micButton,
-              isRecording && styles.micButtonRecording
+              isRecording && styles.micButtonRecording,
+              disabled && styles.sendButtonDisabled
             ]}
             onPress={handleVoiceRecord}
+            disabled={disabled}
           >
             <Animated.View style={micAnimatedStyle}>
               <Mic size={18} color={colors.text.primary} />

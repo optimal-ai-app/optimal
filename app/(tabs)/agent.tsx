@@ -7,7 +7,8 @@ import {
   KeyboardAvoidingView,
   Platform,
   ViewStyle,
-  TextStyle
+  TextStyle,
+  TouchableOpacity
 } from 'react-native'
 import { useLocalSearchParams } from 'expo-router'
 import { LinearGradient } from 'expo-linear-gradient'
@@ -23,12 +24,14 @@ import Animated, {
   runOnJS,
   interpolate
 } from 'react-native-reanimated'
+import { MessageSquare, History, Plus } from 'lucide-react-native'
 
 import { Header } from '@/src/components/Header'
 import { ChatInput } from '@/src/components/ChatInput'
 import { AgentMessage } from '@/src/components/AgentMessage'
 import { UserMessage } from '@/src/components/UserMessage'
 import { LoadingDots } from '@/src/components/LoadingDots'
+import { ChatHistoryModal } from '@/src/components/ChatHistoryModal'
 import { colors } from '@/src/constants/colors'
 import { fonts } from '@/src/constants/fonts'
 import {
@@ -39,7 +42,10 @@ import {
   type ChatMessage,
   useGoals,
   useFetchUserGoals,
-  useUserId
+  useUserId,
+  useChatSessions,
+  useCreateNewChat,
+  useLoadChatSession
 } from '@/src/stores'
 import { globalStyles } from '@/src/constants/styles'
 
@@ -104,12 +110,16 @@ export default function AgentScreen () {
   const sendMessage = useSendMessage()
   const addMessage = useAddMessage()
   const isLoading = useChatLoading()
+  const createNewChat = useCreateNewChat()
+  const loadChatSession = useLoadChatSession()
 
   const [message, setMessage] = useState('')
   const [isRecording, setIsRecording] = useState(false)
   const [promptSent, setPromptSent] = useState(false)
+  const [showChatHistory, setShowChatHistory] = useState(false)
 
   const messages = useChatMessages()
+  const chatSessions = useChatSessions()
   const fetchUserGoals = useFetchUserGoals()
   const userId = useUserId()
 
@@ -178,7 +188,7 @@ export default function AgentScreen () {
 
   const handleSendMessage = async (messageText?: string) => {
     const textToSend = messageText || message
-    if (!textToSend.trim()) return
+    if (!textToSend.trim() || isLoading) return // Prevent sending while loading
 
     setMessage('')
 
@@ -228,12 +238,44 @@ export default function AgentScreen () {
     }
   }
 
+  const handleNewChat = () => {
+    createNewChat()
+    setShowChatHistory(false)
+  }
+
+  const handleSelectChat = (sessionId: string) => {
+    loadChatSession(sessionId)
+    setShowChatHistory(false)
+  }
+
   return (
     <Animated.View
       entering={FadeInRight.duration(400).springify()}
       style={styles.container}
     >
-      <Header title='AI Agent' />
+      <Header
+        title='AI Agent'
+        rightAction={
+          <View style={styles.headerActions}>
+            <TouchableOpacity
+              style={styles.headerButton}
+              onPress={handleNewChat}
+              accessibilityLabel='Start new chat'
+              accessibilityRole='button'
+            >
+              <Plus size={20} color={colors.text.primary} />
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.headerButton}
+              onPress={() => setShowChatHistory(true)}
+              accessibilityLabel='View chat history'
+              accessibilityRole='button'
+            >
+              <History size={20} color={colors.text.primary} />
+            </TouchableOpacity>
+          </View>
+        }
+      />
 
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -267,6 +309,7 @@ export default function AgentScreen () {
                   tags={tags}
                   timestamp={msg.timestamp}
                   isLatest={isLatestAgentMessage}
+                  isLoading={isLoading && isLatestAgentMessage} // Pass loading state
                   onSendMessage={handleSendMessage}
                 />
               )
@@ -321,9 +364,19 @@ export default function AgentScreen () {
             onHelpRequest={handleHelpRequest}
             isRecording={isRecording}
             carouselOptions={carouselOptions}
+            disabled={isLoading} // Disable input while loading
           />
         </Animated.View>
       </KeyboardAvoidingView>
+
+      {/* Chat History Modal */}
+      <ChatHistoryModal
+        visible={showChatHistory}
+        onClose={() => setShowChatHistory(false)}
+        chatSessions={chatSessions}
+        onSelectChat={handleSelectChat}
+        onNewChat={handleNewChat}
+      />
     </Animated.View>
   )
 }
@@ -332,6 +385,20 @@ const styles = StyleSheet.create({
   container: {
     ...globalStyles.container,
     paddingBottom: '20%'
+  } as ViewStyle,
+
+  headerActions: {
+    flexDirection: 'row',
+    gap: 8
+  } as ViewStyle,
+
+  headerButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: colors.button.primary,
+    justifyContent: 'center',
+    alignItems: 'center'
   } as ViewStyle,
 
   keyboardAvoidingView: {

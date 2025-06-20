@@ -16,10 +16,20 @@ export interface ChatMessage {
     }
 }
 
+export interface ChatSession {
+    id: string
+    title: string
+    lastMessage: string
+    timestamp: Date
+    messages: ChatMessage[]
+}
+
 interface ChatState {
     messages: ChatMessage[]
     isLoading: boolean
     error: string | null
+    chatSessions: ChatSession[]
+    currentSessionId: string | null
 }
 
 interface ChatActions {
@@ -28,9 +38,21 @@ interface ChatActions {
     clearMessages: () => void
     setError: (error: string | null) => void
     setLoading: (loading: boolean) => void
+    createNewChat: () => void
+    loadChatSession: (sessionId: string) => void
+    getChatSessions: () => ChatSession[]
+    saveChatSession: () => void
 }
 
 type ChatStore = ChatState & ChatActions
+
+// Generate a chat title from the first user message
+const generateChatTitle = (firstMessage: string): string => {
+    const words = firstMessage.split(' ').slice(0, 6)
+    return words.length < firstMessage.split(' ').length
+        ? words.join(' ') + '...'
+        : words.join(' ')
+}
 
 // Zustand store
 export const useChatStore = create<ChatStore>((set, get) => ({
@@ -38,6 +60,8 @@ export const useChatStore = create<ChatStore>((set, get) => ({
     messages: [],
     isLoading: false,
     error: null,
+    chatSessions: [],
+    currentSessionId: null,
 
     // Actions
     sendMessage: async (message: string, context?: ChatMessage['context'], userId?: string) => {
@@ -56,19 +80,14 @@ export const useChatStore = create<ChatStore>((set, get) => ({
                 context
             }
 
-            console.log('userMessage', userMessage)
-            console.log('messages', get().messages)
-            console.log('context', context)
-
             set(state => ({
                 messages: [...state.messages, userMessage]
             }))
 
             // Send message to backend
-            console.log('messages', get().messages)
             const response = await httpService.post<any>('/chat', {
                 date: new Date().toISOString(),
-                userId: userId || 'user123', // Add userId to request
+                userId: userId || 'user123',
                 messages: get().messages.map(msg => ({
                     role: msg.role,
                     content: JSON.stringify(msg.content)
@@ -79,7 +98,6 @@ export const useChatStore = create<ChatStore>((set, get) => ({
             if (!response) {
                 throw new Error('Invalid response from agent')
             }
-            console.log('response', response)
 
             // Add agent response to store
             const agentMessage: ChatMessage = {
@@ -96,6 +114,9 @@ export const useChatStore = create<ChatStore>((set, get) => ({
                 messages: [...state.messages, agentMessage],
                 isLoading: false
             }))
+
+            // Auto-save chat session after successful exchange
+            get().saveChatSession()
 
         } catch (error: any) {
             set({
@@ -136,6 +157,72 @@ export const useChatStore = create<ChatStore>((set, get) => ({
 
     setLoading: (loading: boolean) => {
         set({ isLoading: loading })
+    },
+
+    createNewChat: () => {
+        // Save current chat if it has messages
+        if (get().messages.length > 0) {
+            get().saveChatSession()
+        }
+
+        // Clear current chat and create new session
+        set({
+            messages: [],
+            currentSessionId: null,
+            error: null
+        })
+    },
+
+    loadChatSession: (sessionId: string) => {
+        const session = get().chatSessions.find(s => s.id === sessionId)
+        if (session) {
+            set({
+                messages: session.messages,
+                currentSessionId: sessionId,
+                error: null
+            })
+        }
+    },
+
+    getChatSessions: () => {
+        return get().chatSessions.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime())
+    },
+
+    saveChatSession: () => {
+        const { messages, currentSessionId, chatSessions } = get()
+
+        if (messages.length === 0) return
+
+        const firstUserMessage = messages.find(m => m.role === 'user')
+        if (!firstUserMessage) return
+
+        const title = generateChatTitle(firstUserMessage.content.summary)
+        const lastMessage = messages[messages.length - 1]?.content.summary || ''
+        const timestamp = new Date()
+
+        if (currentSessionId) {
+            // Update existing session
+            const updatedSessions = chatSessions.map(session =>
+                session.id === currentSessionId
+                    ? { ...session, messages, lastMessage, timestamp }
+                    : session
+            )
+            set({ chatSessions: updatedSessions })
+        } else {
+            // Create new session
+            const newSession: ChatSession = {
+                id: Date.now().toString(),
+                title,
+                lastMessage,
+                timestamp,
+                messages: [...messages]
+            }
+
+            set({
+                chatSessions: [newSession, ...chatSessions],
+                currentSessionId: newSession.id
+            })
+        }
     }
 }))
 
@@ -143,10 +230,14 @@ export const useChatStore = create<ChatStore>((set, get) => ({
 export const useChatMessages = () => useChatStore(state => state.messages)
 export const useChatLoading = () => useChatStore(state => state.isLoading)
 export const useChatError = () => useChatStore(state => state.error)
+export const useChatSessions = () => useChatStore(state => state.getChatSessions())
 
 // Individual action hooks to prevent object recreation
 export const useSendMessage = () => useChatStore(state => state.sendMessage)
 export const useAddMessage = () => useChatStore(state => state.addMessage)
 export const useClearMessages = () => useChatStore(state => state.clearMessages)
 export const useSetError = () => useChatStore(state => state.setError)
-export const useSetLoading = () => useChatStore(state => state.setLoading) 
+export const useSetLoading = () => useChatStore(state => state.setLoading)
+export const useCreateNewChat = () => useChatStore(state => state.createNewChat)
+export const useLoadChatSession = () => useChatStore(state => state.loadChatSession)
+export const useSaveChatSession = () => useChatStore(state => state.saveChatSession)
