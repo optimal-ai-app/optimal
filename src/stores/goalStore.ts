@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import { Goal } from './types'
 import { goals } from './data'
 import httpService from '@/services/httpService'
+import { useUserId } from './userStore'
 
 interface GoalState {
     goals: Goal[]
@@ -42,7 +43,13 @@ export const useGoalStore = create<GoalStore>((set, get) => ({
             set(state => ({
                 goals: [...state.goals, goal]
             }))
-            const response = await httpService.post('/api/goals/create', goal)
+            const response = await httpService.post('/api/goals/create', {
+                userId: useUserId(),
+                title: goal.title,
+                description: goal.description,
+                dueDate: goal.dueDate,
+                tags: goal.tags
+            })
             console.log(response)
         } catch (error) {
             setError(error instanceof Error ? error.message : 'Failed to add goal')
@@ -96,7 +103,7 @@ export const useGoalStore = create<GoalStore>((set, get) => ({
             set({ goals: transformedGoals })
         } catch (error) {
             setError(error instanceof Error ? error.message : 'Failed to fetch goals')
-            set({goals: goals})
+            set({ goals: goals })
             setError(null)
         } finally {
             setLoading(false)

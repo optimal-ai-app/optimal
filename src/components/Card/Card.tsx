@@ -1,5 +1,5 @@
 import React from 'react'
-import { TouchableOpacity, ViewStyle, StyleProp } from 'react-native'
+import { TouchableOpacity, ViewStyle, StyleProp, View } from 'react-native'
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
@@ -22,24 +22,8 @@ export const Card: React.FC<CardProps> = ({
   onPress,
   testID
 }) => {
-  // Animation values
-  const opacity = useSharedValue(animateOnMount ? 0 : 1)
-  const translateY = useSharedValue(animateOnMount ? 20 : 0)
-
-  React.useEffect(() => {
-    if (animateOnMount) {
-      opacity.value = withTiming(1, { duration: 500 })
-      translateY.value = withTiming(0, { duration: 600 })
-    }
-  }, [animateOnMount, opacity, translateY])
-
-  const animatedStyle = useAnimatedStyle(() => ({
-    opacity: opacity.value,
-    transform: [{ translateY: translateY.value }]
-  }))
-
   // Build style array more carefully
-  const cardStyles = [styles.card, animatedStyle, style].filter(Boolean) // Remove undefined values
+  const cardStyles = [styles.card, style].filter(Boolean) // Remove undefined values
 
   if (onPress) {
     return (
@@ -50,8 +34,8 @@ export const Card: React.FC<CardProps> = ({
   }
 
   return (
-    <Animated.View style={cardStyles} testID={testID}>
+    <View style={cardStyles} testID={testID}>
       {children}
-    </Animated.View>
+    </View>
   )
 }

@@ -16,6 +16,7 @@ import { MessageSquare, CreditCard as Edit3 } from 'lucide-react-native'
 
 import { styles } from './TaskCreationModal.styles'
 import { colors } from '../../constants/colors'
+import { router } from 'expo-router'
 
 type TaskCreationOption = 'agent' | 'manual' | null
 
@@ -23,14 +24,12 @@ interface TaskCreationModalProps {
   visible: boolean
   onClose: () => void
   onCreateWithAgent: () => void
-  onCreateManually: () => void
 }
 
 export const TaskCreationModal: React.FC<TaskCreationModalProps> = ({
   visible,
   onClose,
-  onCreateWithAgent,
-  onCreateManually
+  onCreateWithAgent
 }) => {
   const [selectedOption, setSelectedOption] = useState<TaskCreationOption>(null)
 
@@ -38,7 +37,15 @@ export const TaskCreationModal: React.FC<TaskCreationModalProps> = ({
     if (selectedOption === 'agent') {
       onCreateWithAgent()
     } else if (selectedOption === 'manual') {
-      onCreateManually()
+      console.log('Navigating to create-task screen')
+      // Close modal first, then navigate
+      onClose()
+      setSelectedOption(null)
+      // Use setTimeout to ensure modal is closed before navigation
+      setTimeout(() => {
+        router.replace('/(tabs)/home/create-task')
+      }, 100)
+      return
     }
     onClose()
     setSelectedOption(null)

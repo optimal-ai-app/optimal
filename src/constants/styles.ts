@@ -5,7 +5,7 @@ export const globalStyles = {
     container: {
         flex: 1,
         backgroundColor: colors.background.primary,
-        paddingTop: 48,
-        paddingBottom: '20%'
+        // paddingTop: 48,
+        // paddingBottom: '20%'
     } as ViewStyle
 }

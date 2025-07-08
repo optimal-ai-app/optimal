@@ -8,7 +8,7 @@ import { Platform } from "react-native";
 
 // Use environment variable for API URL if available, fallback to localhost
 const API_URL = process.env.REACT_APP_API_URL ||
-    'https://4739-2601-646-8f80-94e0-6d10-c8b1-d11d-b215.ngrok-free.app';
+    'https://f48d-35-132-116-29.ngrok-free.app';
 
 class HttpService {
     private axiosInstance: AxiosInstance;
@@ -60,7 +60,7 @@ class HttpService {
                 data,
                 config
             );
-            console.log('response', response)
+
             return response.data;
         } catch (error) {
             console.log('error', error)
@@ -81,5 +81,5 @@ class HttpService {
     }
 }
 
-const httpService = new HttpService("https://05c6-2601-646-8f80-94e0-74bd-ec96-ea70-b962.ngrok-free.app");
+const httpService = new HttpService("https://47f1-2601-646-8f80-94e0-5c28-2e05-448c-5b0d.ngrok-free.app");
 export default httpService;

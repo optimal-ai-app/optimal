@@ -5,7 +5,8 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  ActivityIndicator
+  ActivityIndicator,
+  SafeAreaView
 } from 'react-native'
 import { useRouter } from 'expo-router'
 import { Plus } from 'lucide-react-native'
@@ -15,7 +16,11 @@ import { TaskCard } from '@/src/components/TaskCard.tsx/TaskCard'
 import { TaskFilter } from '@/src/components/TaskFilter'
 import { colors } from '@/src/constants/colors'
 import { fonts } from '@/src/constants/fonts'
-import { useTasks } from '@/src/stores'
+import {
+  useTasks,
+  useSendMessageAndCreateNewChat,
+  useUserId
+} from '@/src/stores'
 import { useUserTasks } from '@/src/hooks/useUserTasks'
 import { useState, useMemo } from 'react'
 import { TaskFilterType, TaskSortType } from '@/src/components/TaskFilter'
@@ -25,6 +30,8 @@ import { globalStyles } from '@/src/constants/styles'
 export default function TasksScreen () {
   const router = useRouter()
   const { isLoading, error, hasUser, tasks } = useUserTasks()
+  const sendMessageAndCreateNewChat = useSendMessageAndCreateNewChat()
+  const userId = useUserId()
   const [showTaskModal, setShowTaskModal] = useState(false)
   const [activeFilters, setActiveFilters] = useState<TaskFilterType[]>(['all'])
   const [activeSort, setActiveSort] = useState<TaskSortType>('dueDate')
@@ -82,32 +89,34 @@ export default function TasksScreen () {
     })
   }, [tasks, activeFilters, activeSort])
 
-  const handleNewTaskWithAgent = () => {
-    router.push({
-      pathname: '/(tabs)/agent',
-      params: {
-        action: 'create-task',
-        prompt: 'Help me create a task'
-      }
-    })
+  const handleNewTaskWithAgent = async () => {
+    // Send message and create new chat directly through store
+    await sendMessageAndCreateNewChat(
+      'Help me create a task',
+      { type: 'help_request' },
+      userId
+    )
+
+    // Navigate to agent page (no params needed since store is updated)
+    router.replace('/(tabs)/agent')
   }
 
   const handleNewTaskManually = () => {
-    router.push('/home/create-task')
+    router.replace('/home/create-task')
   }
 
   return (
-    <View style={globalStyles.container}>
-      <Header title='Tasks' />
+    <SafeAreaView style={globalStyles.container}>
+      <Header title='Tasks' showBackButton />
 
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
       >
-        <Card style={styles.tasksCard}>
+        <View style={styles.tasksCard}>
           <View style={styles.sectionHeader}>
-            <View style={styles.sectionTitleContainer}>
+            <View>
               <Text style={styles.sectionTitle}>All Tasks</Text>
             </View>
             <View style={styles.sectionActions}>
@@ -154,23 +163,21 @@ export default function TasksScreen () {
                 : 'No tasks match the current filters.'}
             </Text>
           )}
-        </Card>
+        </View>
       </ScrollView>
 
       <TaskCreationModal
         visible={showTaskModal}
         onClose={() => setShowTaskModal(false)}
         onCreateWithAgent={handleNewTaskWithAgent}
-        onCreateManually={handleNewTaskManually}
       />
-    </View>
+    </SafeAreaView>
   )
 }
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-    backgroundColor: colors.background.primary
+    flex: 1
   },
   scrollView: {
     flex: 1

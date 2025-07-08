@@ -3,16 +3,9 @@ import { colors } from '../../constants/colors';
 import { fonts } from '../../constants/fonts';
 
 export const styles = StyleSheet.create({
-  // Premium header with glass morphism effect
-  header: {
-    height: 64, // Increased height for premium feel
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 20, // Increased padding
+  // SafeAreaView container styles
+  safeArea: {
     backgroundColor: colors.background.primary,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.utility.divider,
     zIndex: 10,
     // Premium shadow
     shadowColor: colors.utility.shadow,
@@ -24,25 +17,40 @@ export const styles = StyleSheet.create({
     shadowRadius: 12,
     elevation: 8,
   },
-  
+
+  // Transparent SafeAreaView for glass morphism
+  safeAreaTransparent: {
+    backgroundColor: 'rgba(10, 22, 40, 0.85)',
+  },
+
+  // Premium header with glass morphism effect
+  header: {
+    height: 64, // Increased height for premium feel
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 20, // Increased padding
+    borderBottomWidth: 1,
+    borderBottomColor: colors.utility.divider,
+  },
+
   // Glass morphism transparent header
   headerTransparent: {
-    backgroundColor: 'rgba(10, 22, 40, 0.85)',
     borderBottomWidth: 0,
     backdropFilter: 'blur(20px)', // Glass effect (web only)
   },
-  
+
   // Enhanced containers
   leftContainer: {
     width: 48,
     alignItems: 'flex-start',
   },
-  
+
   rightContainer: {
     width: 48,
     alignItems: 'flex-end',
   },
-  
+
   // Premium back button with hover effect
   backButton: {
     width: 40,
@@ -61,7 +69,7 @@ export const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 2,
   },
-  
+
   // Enhanced title typography
   title: {
     flex: 1,
@@ -71,7 +79,7 @@ export const styles = StyleSheet.create({
     color: colors.text.primary,
     letterSpacing: fonts.letterSpacing.wide,
   },
-  
+
   // Placeholder for proper centering
   placeholder: {
     width: 40,

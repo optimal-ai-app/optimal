@@ -22,23 +22,13 @@ export default function TabsLayout () {
       screenOptions={{
         headerShown: false,
         tabBarStyle: {
-          backgroundColor:
-            Platform.OS === 'ios' ? 'transparent' : colors.background.container,
-          borderTopColor: 'rgba(177, 181, 201, 0.1)',
-          borderTopWidth: 1,
-          height: Platform.OS === 'ios' ? 90 : 65,
+          backgroundColor: colors.background.container,
+          height: Platform.OS === 'ios' ? 100 : 65,
           paddingTop: 8,
-          position: 'absolute',
+          position: 'relative',
           bottom: 0,
           left: 0,
-          right: 0,
-          shadowColor: colors.utility.shadow,
-          shadowOffset: {
-            width: 0,
-            height: -2
-          },
-          shadowOpacity: 0.1,
-          shadowRadius: 8
+          right: 0
         },
         tabBarBackground: () =>
           Platform.OS === 'ios' ? (
@@ -46,7 +36,7 @@ export default function TabsLayout () {
               intensity={95}
               style={{
                 flex: 1,
-                backgroundColor: colors.background.container + '95'
+                backgroundColor: colors.background.container
               }}
             />
           ) : (
@@ -149,6 +139,30 @@ export default function TabsLayout () {
       />
       <Tabs.Screen
         name='tasks'
+        options={{
+          href: null // Hide this tab from the tab bar
+        }}
+      />
+      <Tabs.Screen
+        name='goals'
+        options={{
+          href: null // Hide this tab from the tab bar
+        }}
+      />
+      <Tabs.Screen
+        name='home/goal-details'
+        options={{
+          href: null // Hide this tab from the tab bar
+        }}
+      />
+      <Tabs.Screen
+        name='home/create-task'
+        options={{
+          href: null // Hide this tab from the tab bar
+        }}
+      />
+      <Tabs.Screen
+        name='home/create-goal'
         options={{
           href: null // Hide this tab from the tab bar
         }}

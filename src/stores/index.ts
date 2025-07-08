@@ -4,6 +4,7 @@ export {
     useChatLoading,
     useChatError,
     useSendMessage,
+    useSendMessageAndCreateNewChat,
     useAddMessage,
     useClearMessages,
     useSetError,

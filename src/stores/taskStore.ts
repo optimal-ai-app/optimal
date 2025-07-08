@@ -11,7 +11,7 @@ interface TaskState {
 
 interface TaskActions {
     //add get userTasks later (connects to backend)
-    addTask: (task: Task, userId: string) => void
+    addTask: (task: Task, userId: string, repeatEndDate?: Date, repeatDays?: string[]) => void
     updateTask: (task: Task) => void
     deleteTask: (task: Task) => void
     getTasks: () => Task[]
@@ -32,7 +32,7 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
     error: null,
 
     // Actions
-    addTask: async (task: Task, userId: string) => {
+    addTask: async (task: Task, userId: string, repeatEndDate?: Date, repeatDays?: string[]) => {
         const { setLoading, setError } = get()
         try {
             setLoading(true)
@@ -40,14 +40,26 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
             set(state => ({
                 tasks: [...state.tasks, task]
             }))
-            const response = await httpService.post('/api/tasks/create', {
+
+            const requestData: any = {
                 title: task.title,
                 description: task.description,
-                dueDate: task.dueDate,
+                dueDate: task.dueDate.toISOString(),
                 priority: task.priority,
-                goalId: task.goalId,
+                goalId: task.goalId || null,
                 userId: userId,
-            })
+            }
+
+            // Add repeat fields if provided
+            if (repeatEndDate && repeatDays && repeatDays.length > 0) {
+                // Convert repeatEndDate to end of day timestamp
+                const endDate = new Date(repeatEndDate)
+                endDate.setHours(23, 59, 59, 999)
+                requestData.repeatEndDate = endDate.toISOString()
+                requestData.repeatDays = repeatDays
+            }
+
+            const response = await httpService.post('/api/tasks/create', requestData)
             console.log(response)
         } catch (error) {
             setError(error instanceof Error ? error.message : 'Failed to add task')
@@ -56,10 +68,23 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
         }
     },
 
-    updateTask: (task: Task) => {
-        set(state => ({
-            tasks: state.tasks.map(t => t.id === task.id ? task : t)
-        }))
+    updateTask: async (task: Task) => {
+        const { setLoading, setError } = get()
+        try {
+            setLoading(true)
+            const response = await httpService.post(`/api/tasks/update`, {
+                taskId: task.id,
+                status: task.status
+            })
+            console.log(response)
+            set(state => ({
+                tasks: state.tasks.map(t => t.id === task.id ? task : t)
+            }))
+        } catch (error) {
+            setError(error instanceof Error ? error.message : 'Failed to update task')
+        } finally {
+            setLoading(false)
+        }
     },
 
     deleteTask: (task: Task) => {

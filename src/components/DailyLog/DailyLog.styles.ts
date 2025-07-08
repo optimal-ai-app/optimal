@@ -1,6 +1,7 @@
 import { StyleSheet, ViewStyle, TextStyle } from 'react-native'
 import { colors } from '@/src/constants/colors'
 import { fonts } from '@/src/constants/fonts'
+import { LinearGradient } from 'react-native-svg'
 
 export const styles = StyleSheet.create({
   container: {
@@ -9,7 +10,7 @@ export const styles = StyleSheet.create({
   } as ViewStyle,
 
   card: {
-    backgroundColor: colors.background.card,
+    backgroundColor: 'transparent',
     borderRadius: 20,
     padding: 24,
     position: 'relative',
@@ -23,21 +24,18 @@ export const styles = StyleSheet.create({
     shadowRadius: 24,
     elevation: 12,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.05)'
+    borderColor: 'rgba(255, 255, 255, 0.25)'
   } as ViewStyle,
 
   gradientBackground: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    zIndex: 0
+    position: 'relative',
+
   } as ViewStyle,
 
   gradient: {
     flex: 1,
-    opacity: 0.1
+    opacity: 1,
+    borderRadius: 20,
   } as ViewStyle,
 
   header: {
@@ -55,8 +53,9 @@ export const styles = StyleSheet.create({
   } as TextStyle,
 
   subtitle: {
+    fontWeight: fonts.weights.bold,
     fontSize: fonts.sizes.md,
-    color: colors.text.secondary,
+    color: colors.background.card,
     textAlign: 'center',
     lineHeight: 22,
     opacity: 0.9
@@ -72,53 +71,40 @@ export const styles = StyleSheet.create({
 
   pulseRing: {
     position: 'absolute',
-    borderRadius: 100,
+    borderRadius: 300,
     borderWidth: 2,
-    borderColor: colors.button.primary
+    borderColor: 'rgba(255, 255, 255, 0.6)'
   } as ViewStyle,
 
   pulseRing1: {
-    width: 120,
-    height: 120
+    width: 150,
+    height: 150
   } as ViewStyle,
 
   pulseRing2: {
-    width: 160,
-    height: 160,
+    width: 170,
+    height: 170,
     borderWidth: 1
+
+  } as ViewStyle,
+
+  pulseRing3: {
+    width: 200,
+    height: 200,
+    borderWidth: 3
   } as ViewStyle,
 
   ripple: {
     position: 'absolute',
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: colors.button.primary
+    width: 130,
+    height: 130,
+    borderRadius: 200,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)'
   } as ViewStyle,
-
-  lockIndicator: {
-    position: 'absolute',
-    left: -80,
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.8)',
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 20,
-    gap: 6
-  } as ViewStyle,
-
-  lockText: {
-    color: colors.text.primary,
-    fontSize: fonts.sizes.sm,
-    fontWeight: fonts.weights.medium
-  } as TextStyle,
 
   micButton: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    shadowColor: colors.button.primary,
+    borderRadius: 100,
+    shadowColor: 'rgba(0, 0, 0, 0.3)',
     shadowOffset: {
       width: 0,
       height: 8
@@ -131,13 +117,14 @@ export const styles = StyleSheet.create({
   micButtonInner: {
     width: '100%',
     height: '100%',
-    borderRadius: 40
+    borderRadius: 100
   } as ViewStyle,
 
   micButtonGradient: {
-    width: '100%',
-    height: '100%',
-    borderRadius: 40,
+    height: 120,
+    width: 120,
+
+    borderRadius: 100,
     justifyContent: 'center',
     alignItems: 'center'
   } as ViewStyle,
@@ -146,7 +133,7 @@ export const styles = StyleSheet.create({
     marginTop: 24,
     padding: 16,
     backgroundColor: 'rgba(255, 255, 255, 0.05)',
-    borderRadius: 12,
+    borderRadius: 100,
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.1)',
     zIndex: 1
@@ -182,13 +169,89 @@ export const styles = StyleSheet.create({
     width: 6,
     height: 6,
     borderRadius: 3,
-    backgroundColor: colors.button.primary,
+    backgroundColor: 'rgba(255, 255, 255, 0.8)',
     opacity: 0.7
   } as ViewStyle,
 
   instructionText: {
     fontSize: fonts.sizes.sm,
-    color: colors.text.secondary,
+    color: colors.background.card,
     opacity: 0.8
-  } as TextStyle
+  } as TextStyle,
+
+  // New animation styles
+  floatingParticle: {
+    position: 'absolute',
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: 'rgba(255, 255, 255, 0.6)'
+  } as ViewStyle,
+
+  waveRing: {
+    position: 'absolute',
+    borderRadius: 100,
+    borderWidth: 2,
+    borderColor: 'rgba(255, 255, 255, 0.4)'
+  } as ViewStyle,
+
+  wave1: {
+    width: 140,
+    height: 140
+  } as ViewStyle,
+
+  wave2: {
+    width: 180,
+    height: 180,
+    borderWidth: 1.5
+  } as ViewStyle,
+
+  wave3: {
+    width: 220,
+    height: 220,
+    borderWidth: 1
+  } as ViewStyle,
+
+  breathingBackground: {
+    position: 'absolute',
+    top: -20,
+    left: -20,
+    right: -20,
+    bottom: -20,
+    borderRadius: 40,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    opacity: 0.05
+  } as ViewStyle,
+
+  micGlow: {
+    position: 'absolute',
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+    opacity: 0.2,
+    shadowColor: 'rgba(255, 255, 255, 0.5)',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.8,
+    shadowRadius: 20,
+    elevation: 20
+  } as ViewStyle,
+
+  recordingIndicator: {
+    position: 'absolute',
+    top: -10,
+    right: -10,
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: colors.status.error,
+    borderWidth: 2,
+    borderColor: colors.background.card,
+    shadowColor: colors.status.error,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.6,
+    shadowRadius: 10,
+    elevation: 10
+  } as ViewStyle
 })
+

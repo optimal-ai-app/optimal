@@ -16,7 +16,7 @@ import { Header } from '../Header'
 import { InputField } from '../InputField'
 import { styles } from './ManualGoalForm.styles'
 import { colors } from '../../constants/colors'
-import { useAddGoal } from '../../stores'
+import { useAddGoal, useSendMessageAndCreateNewChat } from '../../stores'
 import { useUserId } from '../../stores/userStore'
 import { Goal } from '../../stores/types'
 
@@ -34,6 +34,7 @@ export const ManualGoalForm: React.FC<ManualGoalFormProps> = ({
   const router = useRouter()
   const addGoal = useAddGoal()
   const userId = useUserId()
+  const sendMessageAndCreateNewChat = useSendMessageAndCreateNewChat()
 
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
@@ -102,7 +103,7 @@ export const ManualGoalForm: React.FC<ManualGoalFormProps> = ({
     setIsCreating(true)
     try {
       const goalData = createGoalObject()
-      await addGoal(goalData)
+      addGoal(goalData)
       const goal = {
         title: title.trim(),
         description: description.trim(),
@@ -119,7 +120,7 @@ export const ManualGoalForm: React.FC<ManualGoalFormProps> = ({
     }
   }
 
-  const handleGenerateTasks = () => {
+  const handleGenerateTasks = async () => {
     if (!createdGoal) return
 
     const prompt = `Can you generate a comprehensive schedule of tasks for the next two weeks that can help me reach my goal? My goal is: ${
@@ -128,13 +129,11 @@ export const ManualGoalForm: React.FC<ManualGoalFormProps> = ({
       createdGoal.description
     }. I want to complete this by ${createdGoal.completionDate.toLocaleDateString()}.`
 
-    router.push({
-      pathname: '/(tabs)/agent',
-      params: {
-        action: 'generate-tasks',
-        prompt
-      }
-    })
+    // Send message and create new chat directly through store
+    await sendMessageAndCreateNewChat(prompt, { type: 'goal_response' }, userId)
+
+    // Navigate to agent page (no params needed since store is updated)
+    router.push('/(tabs)/agent')
   }
 
   const handleViewGoals = () => {
@@ -277,7 +276,11 @@ export const ManualGoalForm: React.FC<ManualGoalFormProps> = ({
               )}
               <View style={styles.datePickerButton}>
                 <Text
-                  style={dueDate ? styles.pickerText : styles.pickerPlaceholder}
+                  style={
+                    dueDate
+                      ? styles.datePickerText
+                      : styles.datePickerPlaceholder
+                  }
                 >
                   {dueDate ? formatDate(dueDate) : 'Select date'}
                 </Text>

@@ -9,7 +9,8 @@ import {
   ViewStyle,
   TextStyle,
   Image,
-  RefreshControl
+  RefreshControl,
+  SafeAreaView
 } from 'react-native'
 import { Link, useRouter } from 'expo-router'
 import { LinearGradient } from 'expo-linear-gradient'
@@ -31,7 +32,10 @@ import {
   Plus,
   Sparkles,
   TrendingUp,
-  Calendar
+  Calendar,
+  FastForward,
+  BookmarkCheckIcon,
+  BookOpenIcon
 } from 'lucide-react-native'
 
 import { Header } from '@/src/components/Header'
@@ -57,7 +61,8 @@ import {
   useFetchUserTasks,
   useFetchUserGoals,
   useGoalLoading,
-  useGoalError
+  useGoalError,
+  useSendMessageAndCreateNewChat
 } from '@/src/stores'
 import { useUserId } from '@/src/stores/userStore'
 import { TaskCard } from '@/src/components/TaskCard.tsx/TaskCard'
@@ -82,6 +87,7 @@ export default function HomeScreen () {
   const isGoalLoading = useGoalLoading()
   const goalError = useGoalError()
   const fetchUserGoals = useFetchUserGoals()
+  const sendMessageAndCreateNewChat = useSendMessageAndCreateNewChat()
 
   const [showGoalModal, setShowGoalModal] = useState(false)
   const [showTaskModal, setShowTaskModal] = useState(false)
@@ -149,27 +155,10 @@ export default function HomeScreen () {
   const displayedTasks = todaysTasks.length > 0 ? todaysTasks : upcomingTasks
   const sectionTitle = "Today's Tasks"
 
-  // Animated styles
-  const headerAnimatedStyle = useAnimatedStyle(() => {
-    return {
-      opacity: headerOpacity.value
-    }
-  })
-
-  const contentAnimatedStyle = useAnimatedStyle(() => {
-    return {
-      transform: [{ translateY: contentOffset.value }],
-      opacity: interpolate(contentOffset.value, [50, 0], [0, 1])
-    }
-  })
-
   // Show loading state if tasks are being fetched
   if (isLoading) {
     return (
       <View style={globalStyles.container}>
-        <Animated.View style={headerAnimatedStyle}>
-          <Header title='Home' />
-        </Animated.View>
         <View style={styles.loadingContainer}>
           <PulseAnimation>
             <Sparkles size={48} color={colors.button.primary} />
@@ -220,37 +209,35 @@ export default function HomeScreen () {
   }
 
   // Handle new goal via agent
-  const handleNewGoalWithAgent = () => {
-    router.push({
-      pathname: '/(tabs)/agent',
-      params: {
-        action: 'create-goal',
-        prompt: 'Help me create a goal'
-      }
-    })
+  const handleNewGoalWithAgent = async () => {
+    // Send message and create new chat directly through store
+    await sendMessageAndCreateNewChat(
+      'Help me create a goal',
+      { type: 'goal_setting' },
+      userId
+    )
+
+    // Navigate to agent page (no params needed since store is updated)
+    router.push('/(tabs)/agent')
   }
 
   // Handle manual goal creation
   const handleNewGoalManually = () => {
-    router.push('/home/create-goal')
+    router.replace('/(tabs)/home/create-goal')
   }
 
   // Handle new task via agent
-  const handleNewTaskWithAgent = () => {
-    router.push({
-      pathname: '/(tabs)/agent',
-      params: {
-        action: 'create-task',
-        prompt: 'Help me create a task'
-      }
-    })
-  }
+  const handleNewTaskWithAgent = async () => {
+    // Send message and create new chat directly through store
+    await sendMessageAndCreateNewChat(
+      'Help me create a task',
+      { type: 'help_request' },
+      userId
+    )
 
-  // Handle manual task creation
-  const handleNewTaskManually = () => {
-    router.push('/home/create-task')
+    // Navigate to agent page (no params needed since store is updated)
+    router.push('/(tabs)/agent')
   }
-
   // Handle pull-to-refresh
   const onRefresh = async () => {
     if (!userId) return
@@ -267,14 +254,14 @@ export default function HomeScreen () {
 
   // Handle voice input from Daily Log
   const handleVoiceInput = (transcript: string) => {
-    // Navigate to agent with the voice transcript
-    router.push({
-      pathname: '/(tabs)/agent',
-      params: {
-        action: 'voice-log',
-        prompt: transcript
-      }
-    })
+    // // Navigate to agent with the voice transcript
+    // router.push({
+    //   pathname: '/(tabs)/agent',
+    //   params: {
+    //     action: 'voice-log',
+    //     prompt: transcript
+    //   }
+    // })
   }
 
   return (
@@ -282,267 +269,279 @@ export default function HomeScreen () {
       entering={FadeInDown.duration(400).springify()}
       style={globalStyles.container}
     >
-      <Animated.View style={headerAnimatedStyle}>
-        <Header title='Home' />
-      </Animated.View>
-
-      <ScrollView
-        style={styles.scrollView}
-        contentContainerStyle={styles.content}
-        showsVerticalScrollIndicator={false}
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={onRefresh}
-            tintColor={colors.button.primary}
-            colors={[colors.button.primary]}
-          />
-        }
-      >
-        {/* Hero Section with Premium Styling */}
-        <Animated.View
-          entering={FadeInDown.duration(800).delay(200)}
-          style={styles.heroSection}
+      <SafeAreaView style={globalStyles.container}>
+        <ScrollView
+          style={styles.scrollView}
+          contentContainerStyle={styles.content}
+          showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              tintColor={colors.button.primary}
+              colors={[colors.button.primary]}
+            />
+          }
         >
-          <LinearGradient
-            colors={colors.gradient.primary}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={styles.heroGradient}
+          {/* Hero Section with Premium Styling */}
+          <Animated.View
+            entering={FadeInDown.duration(800).delay(200)}
+            style={styles.heroSection}
           >
-            <View style={styles.heroContent}>
-              <Text style={styles.heroTitle}>Welcome Back!</Text>
-              <Text style={styles.heroSubtitle}>
-                Ready to achieve your goals today?
-              </Text>
-              <View style={styles.heroStats}>
-                <View style={styles.statItem}>
-                  <Text style={styles.statNumber}>{goals.length}</Text>
-                  <Text style={styles.statLabel}>Active Goals</Text>
-                </View>
-                <View style={styles.statDivider} />
-                <View style={styles.statItem}>
-                  <Text style={styles.statNumber}>
-                    {tasks.filter(t => t.status === 'completed').length}
-                  </Text>
-                  <Text style={styles.statLabel}>Tasks Completed</Text>
-                </View>
-                <View style={styles.statDivider} />
-                <View style={styles.statItem}>
-                  <Text style={styles.statNumber}>{todaysTasks.length}</Text>
-                  <Text style={styles.statLabel}>Today</Text>
+            <LinearGradient
+              colors={colors.gradient.primary}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.heroGradient}
+            >
+              <View style={styles.heroContent}>
+                <Text style={styles.heroTitle}>Welcome Back!</Text>
+                <Text style={styles.heroSubtitle}>
+                  Ready to achieve your goals today?
+                </Text>
+                <View style={styles.heroStats}>
+                  <View style={styles.statItem}>
+                    <Text style={styles.statNumber}>{goals.length}</Text>
+                    <Text style={styles.statLabel}>Active Goals</Text>
+                  </View>
+                  <View style={styles.statDivider} />
+                  <View style={styles.statItem}>
+                    <Text style={styles.statNumber}>
+                      {tasks.filter(t => t.status === 'completed').length}
+                    </Text>
+                    <Text style={styles.statLabel}>Tasks Completed</Text>
+                  </View>
+                  <View style={styles.statDivider} />
+                  <View style={styles.statItem}>
+                    <Text style={styles.statNumber}>{todaysTasks.length}</Text>
+                    <Text style={styles.statLabel}>Today</Text>
+                  </View>
                 </View>
               </View>
-            </View>
-          </LinearGradient>
-        </Animated.View>
+            </LinearGradient>
+          </Animated.View>
 
-        {/* Daily Log Section - New prominent position */}
-        <DailyLog 
-          onVoiceInput={handleVoiceInput}
-          onRecordingStart={() => console.log('Recording started')}
-          onRecordingEnd={() => console.log('Recording ended')}
-        />
-
-        {/* Quick Actions with Enhanced Styling */}
-        <Animated.View entering={FadeInDown.duration(600).delay(600)}>
-          <GlassCard style={styles.quickActionsCard}>
-            <Text style={styles.sectionTitle}>Quick Actions</Text>
-            <View style={styles.quickActionsGrid}>
-              <TouchableOpacity
-                style={styles.quickActionButton}
-                onPress={() => setShowGoalModal(true)}
-                accessibilityLabel='Set New Goal'
-                accessibilityRole='button'
-              >
-                <LinearGradient
-                  colors={colors.gradient.primary}
-                  style={styles.quickActionGradient}
-                >
-                  <Target
-                    size={28}
-                    color={colors.text.primary}
-                    strokeWidth={2.5}
+          {/* Tasks Section with Premium Design */}
+          <Animated.View entering={FadeInDown.duration(600).delay(600)}>
+            <GlassCard style={styles.sectionCard}>
+              <View style={styles.sectionHeader}>
+                <View style={styles.sectionTitleContainer}>
+                  <View style={styles.sectionIconContainer}>
+                    <Calendar size={24} color={colors.button.secondary} />
+                  </View>
+                  <View>
+                    <Text style={styles.sectionTitle}>{sectionTitle}</Text>
+                    {todaysTasks.length === 0 && upcomingTasks.length > 0 && (
+                      <Text style={styles.sectionSubtitle}>
+                        Next 3 upcoming tasks
+                      </Text>
+                    )}
+                  </View>
+                </View>
+                <View style={styles.sectionActions}>
+                  <TouchableOpacity
+                    onPress={() => router.push('/(tabs)/tasks')}
+                    style={styles.viewAllButton}
+                    accessibilityLabel='View all tasks'
+                    accessibilityRole='button'
+                  >
+                    <Text style={styles.viewAllText}>View All</Text>
+                    <ChevronRight size={16} color={colors.button.primary} />
+                  </TouchableOpacity>
+                  <FloatingActionButton
+                    onPress={() => setShowTaskModal(true)}
+                    size='small'
                   />
-                </LinearGradient>
-                <Text style={styles.quickActionText}>Set New Goal</Text>
-                <Text style={styles.quickActionSubtext}>
-                  Define your next achievement
-                </Text>
-              </TouchableOpacity>
-
-              <Link
-                href={{
-                  pathname: '/(tabs)/agent',
-                  params: { action: 'log-progress' }
-                }}
-                asChild
+                </View>
+              </View>
+              <ScrollView
+                showsVerticalScrollIndicator={true}
+                style={styles.tasksGrid}
+                contentContainerStyle={styles.tasksContent}
               >
+                {displayedTasks.map((task, index, filteredTasks) => (
+                  <TaskCard
+                    key={task.id}
+                    task={task}
+                    isLast={index === filteredTasks.length - 1}
+                    index={index}
+                  />
+                ))}
+              </ScrollView>
+              {displayedTasks.length === 0 && (
+                <View style={styles.emptyStateContainer}>
+                  <TrendingUp size={48} color={colors.text.muted} />
+                  <Text style={styles.emptyText}>
+                    {tasks.length === 0
+                      ? 'No tasks yet. Create your first task to get started!'
+                      : 'No tasks for today or upcoming.'}
+                  </Text>
+                  <Button
+                    title='Create Task'
+                    onPress={() => setShowTaskModal(true)}
+                    variant='secondary'
+                    style={styles.emptyActionButton}
+                  />
+                </View>
+              )}
+            </GlassCard>
+          </Animated.View>
+          {/* Quick Actions with Enhanced Styling - Moved up for immediate access */}
+          <Animated.View entering={FadeInDown.duration(600).delay(400)}>
+            <GlassCard style={styles.quickActionsCard}>
+              <View style={styles.sectionTitleContainer}>
+                <View style={styles.sectionIconContainer}>
+                  <BookmarkCheckIcon
+                    size={24}
+                    color={colors.button.secondary}
+                  />
+                </View>
+                <Text style={styles.sectionTitle}>Quick Actions</Text>
+              </View>
+              <View style={styles.quickActionsGrid}>
                 <TouchableOpacity
                   style={styles.quickActionButton}
-                  accessibilityLabel='Log Progress'
+                  onPress={() => setShowGoalModal(true)}
+                  accessibilityLabel='Set New Goal'
                   accessibilityRole='button'
                 >
                   <LinearGradient
-                    colors={colors.gradient.secondary}
+                    colors={colors.gradient.primary}
                     style={styles.quickActionGradient}
                   >
-                    <MessageSquare
+                    <Target
                       size={28}
                       color={colors.text.primary}
                       strokeWidth={2.5}
                     />
                   </LinearGradient>
-                  <Text style={styles.quickActionText}>Log Progress</Text>
+                  <Text style={styles.quickActionText}>Set New Goal</Text>
                   <Text style={styles.quickActionSubtext}>
-                    Share your achievements
+                    Define your next achievement
                   </Text>
                 </TouchableOpacity>
-              </Link>
-            </View>
-          </GlassCard>
-        </Animated.View>
 
-        {/* Tasks Section with Premium Design */}
-        <Animated.View entering={FadeInDown.duration(600).delay(800)}>
-          <GlassCard style={styles.sectionCard}>
-            <View style={styles.sectionHeader}>
-              <View style={styles.sectionTitleContainer}>
-                <View style={styles.sectionIconContainer}>
-                  <Calendar size={24} color={colors.button.secondary} />
-                </View>
-                <View>
-                  <Text style={styles.sectionTitle}>{sectionTitle}</Text>
-                  {todaysTasks.length === 0 && upcomingTasks.length > 0 && (
-                    <Text style={styles.sectionSubtitle}>
-                      Next 3 upcoming tasks
-                    </Text>
-                  )}
-                </View>
-              </View>
-              <View style={styles.sectionActions}>
-                <TouchableOpacity
-                  onPress={() => router.push('/(tabs)/tasks')}
-                  style={styles.viewAllButton}
-                  accessibilityLabel='View all tasks'
-                  accessibilityRole='button'
+                <Link
+                  href={{
+                    pathname: '/(tabs)/agent',
+                    params: { action: 'log-progress' }
+                  }}
+                  asChild
                 >
-                  <Text style={styles.viewAllText}>View All</Text>
-                  <ChevronRight size={16} color={colors.button.primary} />
-                </TouchableOpacity>
-                <FloatingActionButton
-                  onPress={() => setShowTaskModal(true)}
-                  size='small'
-                />
-              </View>
-            </View>
-            <ScrollView
-              showsVerticalScrollIndicator={true}
-              style={styles.tasksGrid}
-              contentContainerStyle={styles.tasksContent}
-            >
-              {displayedTasks.map((task, index, filteredTasks) => (
-                <TaskCard
-                  key={task.id}
-                  task={task}
-                  isLast={index === filteredTasks.length - 1}
-                  index={index}
-                />
-              ))}
-            </ScrollView>
-            {displayedTasks.length === 0 && (
-              <View style={styles.emptyStateContainer}>
-                <TrendingUp size={48} color={colors.text.muted} />
-                <Text style={styles.emptyText}>
-                  {tasks.length === 0
-                    ? 'No tasks yet. Create your first task to get started!'
-                    : 'No tasks for today or upcoming.'}
-                </Text>
-                <Button
-                  title='Create Task'
-                  onPress={() => setShowTaskModal(true)}
-                  variant='secondary'
-                  style={styles.emptyActionButton}
-                />
-              </View>
-            )}
-          </GlassCard>
-        </Animated.View>
-
-        {/* Goals Preview with Enhanced Design */}
-        <Animated.View entering={FadeInDown.duration(600).delay(1000)}>
-          <GlassCard style={styles.goalsCard}>
-            <View style={styles.sectionHeader}>
-              <View style={styles.sectionTitleContainer}>
-                <View style={styles.sectionIconContainer}>
-                  <Flag size={24} color={colors.status.success} />
-                </View>
-                <Text style={styles.sectionTitle}>Active Goals</Text>
-              </View>
-              <Link href='/home/goals' asChild>
-                <TouchableOpacity
-                  style={styles.viewAllButton}
-                  accessibilityLabel='View all goals'
-                  accessibilityRole='button'
-                >
-                  <Text style={styles.viewAllText}>View All</Text>
-                  <ChevronRight size={16} color={colors.button.primary} />
-                </TouchableOpacity>
-              </Link>
-            </View>
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              style={styles.goalsGrid}
-            >
-              {goals
-                .filter(goal => goal.status === 'active')
-                .sort(() => Math.random() - 0.5)
-                .slice(0, 5)
-                .map((goal, index) => (
-                  <Animated.View 
-                    key={index} 
-                    entering={SlideInRight.duration(400).delay(index * 100)}
-                    style={styles.goalsGridItem}
+                  <TouchableOpacity
+                    style={styles.quickActionButton}
+                    accessibilityLabel='Log Progress'
+                    accessibilityRole='button'
                   >
-                    <GoalCard goal={goal} />
-                  </Animated.View>
-                ))}
-            </ScrollView>
-
-            {goals.length === 0 && (
-              <View style={styles.emptyGoalsContainer}>
-                <Sparkles size={48} color={colors.text.muted} />
-                <Text style={styles.emptyText}>
-                  No goals yet. Let's set your first goal!
-                </Text>
-                <Button
-                  title='Set a Goal'
-                  onPress={() => setShowGoalModal(true)}
-                  gradient
-                  style={styles.emptyGoalsButton}
-                />
+                    <LinearGradient
+                      colors={colors.gradient.secondary}
+                      style={styles.quickActionGradient}
+                    >
+                      <MessageSquare
+                        size={28}
+                        color={colors.text.primary}
+                        strokeWidth={2.5}
+                      />
+                    </LinearGradient>
+                    <Text style={styles.quickActionText}>Log Progress</Text>
+                    <Text style={styles.quickActionSubtext}>
+                      Share your achievements
+                    </Text>
+                  </TouchableOpacity>
+                </Link>
               </View>
-            )}
-          </GlassCard>
-        </Animated.View>
-      </ScrollView>
+            </GlassCard>
+          </Animated.View>
+          {/* Daily Log Section - Positioned after tasks for reflection */}
+          <Animated.View entering={FadeInDown.duration(600).delay(1000)}>
+            <GlassCard style={styles.goalsCard}>
+              <View style={styles.sectionTitleContainer}>
+                <View style={styles.sectionIconContainer}>
+                  <BookOpenIcon size={24} color={colors.button.secondary} />
+                </View>
+                <Text style={styles.sectionTitle}>Daily Log</Text>
+              </View>
+            </GlassCard>
+            <DailyLog
+              onVoiceInput={handleVoiceInput}
+              onRecordingStart={() => console.log('Recording started')}
+              onRecordingEnd={() => console.log('Recording ended')}
+            />
+          </Animated.View>
+          {/* Goals Preview with Enhanced Design */}
+          <Animated.View entering={FadeInDown.duration(600).delay(1000)}>
+            <GlassCard style={styles.goalsCard}>
+              <View style={styles.sectionHeader}>
+                <View style={styles.sectionTitleContainer}>
+                  <View style={styles.sectionIconContainer}>
+                    <Flag size={24} color={colors.status.success} />
+                  </View>
+                  <Text style={styles.sectionTitle}>Active Goals</Text>
+                </View>
+                <Link href='/goals' asChild>
+                  <TouchableOpacity
+                    style={styles.viewAllButton}
+                    accessibilityLabel='View all goals'
+                    accessibilityRole='button'
+                  >
+                    <Text style={styles.viewAllText}>View All</Text>
+                    <ChevronRight size={16} color={colors.button.primary} />
+                  </TouchableOpacity>
+                </Link>
+              </View>
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                style={styles.goalsGrid}
+              >
+                {goals
+                  .filter(goal => goal.status === 'active')
+                  .sort(() => Math.random() - 0.5)
+                  .slice(0, 5)
+                  .map((goal, index) => (
+                    <Animated.View
+                      key={index}
+                      entering={SlideInRight.duration(400).delay(index * 100)}
+                      style={styles.goalsGridItem}
+                    >
+                      <GoalCard goal={goal} />
+                    </Animated.View>
+                  ))}
+              </ScrollView>
 
-      {/* Goal Creation Modal */}
-      <GoalCreationModal
-        visible={showGoalModal}
-        onClose={() => setShowGoalModal(false)}
-        onCreateWithAgent={handleNewGoalWithAgent}
-        onCreateManually={handleNewGoalManually}
-      />
+              {goals.length === 0 && (
+                <View style={styles.emptyGoalsContainer}>
+                  <Sparkles size={48} color={colors.text.muted} />
+                  <Text style={styles.emptyText}>
+                    No goals yet. Let's set your first goal!
+                  </Text>
+                  <Button
+                    title='Set a Goal'
+                    onPress={() => setShowGoalModal(true)}
+                    gradient
+                    style={styles.emptyGoalsButton}
+                  />
+                </View>
+              )}
+            </GlassCard>
+          </Animated.View>
+        </ScrollView>
 
-      {/* Task Creation Modal */}
-      <TaskCreationModal
-        visible={showTaskModal}
-        onClose={() => setShowTaskModal(false)}
-        onCreateWithAgent={handleNewTaskWithAgent}
-        onCreateManually={handleNewTaskManually}
-      />
+        {/* Goal Creation Modal */}
+        <GoalCreationModal
+          visible={showGoalModal}
+          onClose={() => setShowGoalModal(false)}
+          onCreateWithAgent={handleNewGoalWithAgent}
+          onCreateManually={handleNewGoalManually}
+        />
+
+        {/* Task Creation Modal */}
+        <TaskCreationModal
+          visible={showTaskModal}
+          onClose={() => setShowTaskModal(false)}
+          onCreateWithAgent={handleNewTaskWithAgent}
+        />
+      </SafeAreaView>
     </Animated.View>
   )
 }

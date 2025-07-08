@@ -19,11 +19,13 @@ import {
   TimePickerTag,
   DaySelectorTag,
   ConfirmationTag,
-  GoalNamesScroller
+  GoalNamesScroller,
+  CreateTaskCardTag
 } from '../AgentTags'
 import { colors } from '@/src/constants/colors'
 import { fonts } from '@/src/constants/fonts'
 import { styles } from './AgentMessage.styles'
+import { TaskData } from '../AgentTags/CreateTaskCardTag'
 
 interface AgentMessageProps {
   id: string
@@ -32,6 +34,7 @@ interface AgentMessageProps {
   timestamp: Date
   isLatest: boolean
   isLoading?: boolean // Add loading prop to control tag visibility
+  data?: any // Optional task data from LLM
   onSendMessage: (message: string) => void
 }
 
@@ -42,6 +45,7 @@ export const AgentMessage: React.FC<AgentMessageProps> = ({
   timestamp,
   isLatest,
   isLoading = false, // Default to false
+  data,
   onSendMessage
 }) => {
   const [displayedText, setDisplayedText] = useState('')
@@ -69,7 +73,7 @@ export const AgentMessage: React.FC<AgentMessageProps> = ({
           clearInterval(typeInterval)
           setShowTags(true)
         }
-      }, 30) // Adjust speed here
+      }, 15) // Faster typewriter speed for quicker tag display
 
       return () => clearInterval(typeInterval)
     } else {
@@ -138,7 +142,7 @@ export const AgentMessage: React.FC<AgentMessageProps> = ({
   // Only show tags if not loading and showTags is true
   const shouldShowTags = showTags && !isLoading
   const showGoalNames =
-    shouldShowTags && isLatest && tags.includes('SHOW_USER_GOAL_NAMES')
+    shouldShowTags && isLatest && tags.includes('SHOW_USER_GOAL_NAMES_TAG')
   const showConfirmation =
     shouldShowTags && isLatest && tags.includes('CONFIRM_TAG')
   const showDatePicker =
@@ -147,74 +151,87 @@ export const AgentMessage: React.FC<AgentMessageProps> = ({
     shouldShowTags && isLatest && tags.includes('TIME_PICKER_TAG')
   const showDaySelector =
     shouldShowTags && isLatest && tags.includes('DAY_SELECTOR_TAG')
+  const showCreateTaskCard =
+    shouldShowTags && isLatest && tags.includes('CREATE_TASK_CARD_TAG')
 
   return (
-    <Animated.View
-      key={id}
-      entering={SlideInLeft.duration(500).springify().damping(15)}
-      style={[styles.messageWrapper, styles.agentMessageWrapper]}
-    >
-      <Animated.View style={[styles.agentAvatar, avatarAnimatedStyle]}>
-        <LinearGradient
-          colors={colors.gradient.primary}
-          style={styles.avatarGradient}
-        >
-          <Text style={styles.avatarText}>AI</Text>
-        </LinearGradient>
-      </Animated.View>
-
+    <>
       <Animated.View
-        style={[
-          styles.messageBubble,
-          styles.agentMessageBubble,
-          bubbleAnimatedStyle
-        ]}
+        key={id}
+        entering={SlideInLeft.duration(500).springify().damping(15)}
+        style={[styles.messageWrapper, styles.agentMessageWrapper]}
       >
-        <Animated.View style={textAnimatedStyle}>
-          <Text style={styles.messageText}>
-            {isLatest ? displayedText : text}
-            {isLatest && displayedText.length < text.length && (
-              <Text style={[styles.messageText, { opacity: 0.5 }]}>|</Text>
-            )}
-          </Text>
+        <Animated.View style={[styles.agentAvatar, avatarAnimatedStyle]}>
+          <LinearGradient
+            colors={colors.gradient.primary}
+            style={styles.avatarGradient}
+          >
+            <Text style={styles.avatarText}>AI</Text>
+          </LinearGradient>
         </Animated.View>
 
-        {shouldShowTags && (
-          <Animated.View style={tagsAnimatedStyle}>
-            {showGoalNames && (
-              <GoalNamesScroller
-                onSelect={goalName =>
-                  onSendMessage(`Selected Goal: "${goalName}"`)
-                }
-              />
-            )}
-
-            {showConfirmation && <ConfirmationTag onConfirm={onSendMessage} />}
-
-            {showDatePicker && (
-              <DatePickerTag
-                onConfirm={date => onSendMessage(`Selected Date: ${date}`)}
-              />
-            )}
-
-            {showTimePicker && (
-              <TimePickerTag
-                onConfirm={time => onSendMessage(`Selected Time: ${time}`)}
-              />
-            )}
-
-            {showDaySelector && (
-              <DaySelectorTag
-                onConfirm={days => onSendMessage(`Selected Days: ${days}`)}
-              />
-            )}
+        <Animated.View
+          style={[
+            styles.messageBubble,
+            styles.agentMessageBubble,
+            bubbleAnimatedStyle
+          ]}
+        >
+          <Animated.View style={textAnimatedStyle}>
+            <Text style={styles.messageText}>
+              {isLatest ? displayedText : text}
+              {isLatest && displayedText.length < text.length && (
+                <Text style={[styles.messageText, { opacity: 0.5 }]}>|</Text>
+              )}
+            </Text>
           </Animated.View>
-        )}
 
-        <Animated.View style={textAnimatedStyle}>
-          <Text style={styles.timestamp}>{formatTime(timestamp)}</Text>
+          <Animated.View style={textAnimatedStyle}>
+            <Text style={styles.timestamp}>{formatTime(timestamp)}</Text>
+          </Animated.View>
         </Animated.View>
       </Animated.View>
-    </Animated.View>
+      {shouldShowTags && (
+        <Animated.View
+          entering={FadeInLeft.delay(300).duration(400)}
+          style={[styles.tagsWrapper, tagsAnimatedStyle]}
+        >
+          {showGoalNames && (
+            <GoalNamesScroller
+              onSelect={goalName =>
+                onSendMessage(`Selected Goal: "${goalName}"`)
+              }
+            />
+          )}
+
+          {showConfirmation && <ConfirmationTag onConfirm={onSendMessage} />}
+
+          {showDatePicker && (
+            <DatePickerTag
+              onConfirm={date => onSendMessage(`Selected Date: ${date}`)}
+            />
+          )}
+
+          {showTimePicker && (
+            <TimePickerTag
+              onConfirm={time => onSendMessage(`Selected Time: ${time}`)}
+            />
+          )}
+
+          {showDaySelector && (
+            <DaySelectorTag
+              onConfirm={days => onSendMessage(`Selected Days: ${days}`)}
+            />
+          )}
+
+          {showCreateTaskCard && (
+            <CreateTaskCardTag
+              taskData={data as TaskData}
+              onConfirm={onSendMessage}
+            />
+          )}
+        </Animated.View>
+      )}
+    </>
   )
 }

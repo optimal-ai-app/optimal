@@ -7,6 +7,7 @@ export interface ChatMessage {
     content: {
         summary: string
         tags: string[]
+        data?: any
     }
     role: 'user' | 'agent'
     timestamp: Date
@@ -34,6 +35,7 @@ interface ChatState {
 
 interface ChatActions {
     sendMessage: (message: string, context?: ChatMessage['context'], userId?: string) => Promise<void>
+    sendMessageAndCreateNewChat: (message: string, context?: ChatMessage['context'], userId?: string) => Promise<void>
     addMessage: (message: ChatMessage) => void
     clearMessages: () => void
     setError: (error: string | null) => void
@@ -98,13 +100,13 @@ export const useChatStore = create<ChatStore>((set, get) => ({
             if (!response) {
                 throw new Error('Invalid response from agent')
             }
-
             // Add agent response to store
             const agentMessage: ChatMessage = {
                 id: (Date.now() + 1).toString(),
                 content: {
                     summary: response.content,
-                    tags: response.tags
+                    tags: response.tags,
+                    data: response.data
                 },
                 role: 'agent',
                 timestamp: new Date()
@@ -119,6 +121,7 @@ export const useChatStore = create<ChatStore>((set, get) => ({
             get().saveChatSession()
 
         } catch (error: any) {
+            console.log('error', error)
             set({
                 error: 'the agent is down right now',
                 isLoading: false
@@ -129,7 +132,8 @@ export const useChatStore = create<ChatStore>((set, get) => ({
                 id: (Date.now() + 2).toString(),
                 content: {
                     summary: 'the agent is down right now',
-                    tags: []
+                    tags: [],
+                    data: {}
                 },
                 role: 'agent',
                 timestamp: new Date()
@@ -139,6 +143,32 @@ export const useChatStore = create<ChatStore>((set, get) => ({
                 messages: [...state.messages, errorAgentMessage]
             }))
         }
+    },
+
+    sendMessageAndCreateNewChat: async (message: string, context?: ChatMessage['context'], userId?: string) => {
+        // Save current chat if it has messages
+        if (get().messages.length > 0) {
+            get().saveChatSession()
+        }
+
+        // Clear current chat and create new session
+        set({
+            messages: [{
+                id: Date.now().toString(),
+                content: {
+                    summary: 'Welcome!',
+                    tags: [],
+                    data: {}
+                },
+                role: 'agent',
+                timestamp: new Date()
+            }],
+            currentSessionId: null,
+            error: null
+        })
+
+        // Now send the message using the regular sendMessage method
+        await get().sendMessage(message, context, userId)
     },
 
     addMessage: (message: ChatMessage) => {
@@ -234,6 +264,7 @@ export const useChatSessions = () => useChatStore(state => state.getChatSessions
 
 // Individual action hooks to prevent object recreation
 export const useSendMessage = () => useChatStore(state => state.sendMessage)
+export const useSendMessageAndCreateNewChat = () => useChatStore(state => state.sendMessageAndCreateNewChat)
 export const useAddMessage = () => useChatStore(state => state.addMessage)
 export const useClearMessages = () => useChatStore(state => state.clearMessages)
 export const useSetError = () => useChatStore(state => state.setError)

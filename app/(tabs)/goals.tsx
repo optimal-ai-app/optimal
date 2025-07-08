@@ -17,20 +17,30 @@ import { GoalCreationModal } from '@/src/components/GoalCreationModal'
 import { colors } from '@/src/constants/colors'
 import { fonts } from '@/src/constants/fonts'
 import { GoalCard } from '@/src/components/GoalCard/GoalCard'
-import { useGoals, Goal } from '@/src/stores'
+import {
+  useGoals,
+  Goal,
+  useSendMessageAndCreateNewChat,
+  useUserId
+} from '@/src/stores'
 
 export default function GoalsScreen () {
   const router = useRouter()
   const [showGoalModal, setShowGoalModal] = useState(false)
   const goals = useGoals() as unknown as Goal[]
-  const handleCreateWithAgent = () => {
-    router.push({
-      pathname: '/(tabs)/agent',
-      params: {
-        action: 'create-goal',
-        prompt: 'Help me create a goal'
-      }
-    })
+  const sendMessageAndCreateNewChat = useSendMessageAndCreateNewChat()
+  const userId = useUserId()
+
+  const handleCreateWithAgent = async () => {
+    // Send message and create new chat directly through store
+    await sendMessageAndCreateNewChat(
+      'Help me create a goal',
+      { type: 'goal_setting' },
+      userId
+    )
+
+    // Navigate to agent page (no params needed since store is updated)
+    router.push('/(tabs)/agent')
   }
 
   const handleCreateManually = () => {

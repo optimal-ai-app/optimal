@@ -1,17 +1,9 @@
-import React, { useEffect } from 'react'
+import React, { useEffect, useState } from 'react'
 import { View, Text, TouchableOpacity, Pressable } from 'react-native'
 import Animated, {
-  SlideInRight,
-  FadeInDown,
   useSharedValue,
   useAnimatedStyle,
-  withTiming,
-  withSpring,
-  withSequence,
-  withDelay,
-  Easing,
-  interpolate,
-  runOnJS
+  withTiming
 } from 'react-native-reanimated'
 import {
   Clock,
@@ -28,48 +20,33 @@ import { Task, useUpdateTask } from '@/src/stores'
 import { colors } from '@/src/constants/colors'
 import { styles } from './TaskCard.styles'
 import { useGoalName } from '@/src/stores'
+import { TaskCompletionModal } from './TaskCompletionModal'
 
 type Props = {
   task: Task
   isLast: boolean
-  index?: number // Add index prop for staggered animation
+  index?: number
 }
 
 export const TaskCard: React.FC<Props> = ({ task, isLast, index = 0 }) => {
   const router = useRouter()
   const goalName = useGoalName(task.goalId)
   const updateTask = useUpdateTask()
+  const [showCompletionModal, setShowCompletionModal] = useState(false)
 
-  // Animation values for interactions (not entrance)
+  // Only keep minimal checkbox animation
   const checkboxScale = useSharedValue(1)
-  const priorityBadgeScale = useSharedValue(1)
 
-  // Checkbox animation on toggle
+  // Simple checkbox animation on toggle
   const animateCheckbox = () => {
-    checkboxScale.value = withSequence(
-      withTiming(0.8, { duration: 100 }),
-      withSpring(1.2, { damping: 10, stiffness: 300 }),
-      withTiming(1, { duration: 150 })
-    )
+    checkboxScale.value = withTiming(0.9, { duration: 100 }, () => {
+      checkboxScale.value = withTiming(1, { duration: 100 })
+    })
   }
 
-  // Priority badge animation on mount
-  useEffect(() => {
-    priorityBadgeScale.value = withDelay(
-      index * 100 + 300,
-      withSpring(1.1, { damping: 8, stiffness: 200 }, () => {
-        priorityBadgeScale.value = withTiming(1, { duration: 200 })
-      })
-    )
-  }, [index])
-
-  // Animated styles for interactions only
+  // Animated styles - only checkbox
   const checkboxAnimatedStyle = useAnimatedStyle(() => ({
     transform: [{ scale: checkboxScale.value }]
-  }))
-
-  const priorityAnimatedStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: priorityBadgeScale.value }]
   }))
 
   const getPriorityConfig = (priority: '!' | '!!' | '!!!') => {
@@ -131,28 +108,49 @@ export const TaskCard: React.FC<Props> = ({ task, isLast, index = 0 }) => {
   const overdue = isOverdue()
 
   const handleToggleComplete = () => {
+    // If task is completed, allow direct unchecking without modal
+    if (task.status === 'completed') {
+      animateCheckbox()
+      const updatedTask = {
+        ...task,
+        status: 'todo' as any,
+        completionDate: new Date(0),
+        updatedAt: new Date()
+      }
+
+      setTimeout(() => {
+        updateTask(updatedTask)
+      }, 100)
+      return
+    }
+
+    // If task is not completed, show confirmation modal
+    setShowCompletionModal(true)
+  }
+
+  const handleConfirmCompletion = () => {
     animateCheckbox()
 
     const updatedTask = {
       ...task,
-      status: (task.status === 'completed' ? 'todo' : 'completed') as any,
-      completionDate: task.status === 'completed' ? new Date(0) : new Date(),
+      status: 'completed' as any,
+      completionDate: new Date(),
       updatedAt: new Date()
     }
 
-    // Delay the update slightly to allow animation to start
     setTimeout(() => {
       updateTask(updatedTask)
     }, 100)
+
+    setShowCompletionModal(false)
+  }
+
+  const handleCancelCompletion = () => {
+    setShowCompletionModal(false)
   }
 
   return (
-    <Animated.View
-      entering={SlideInRight.duration(500 + index * 50)
-        .springify()
-        .damping(15)
-        .delay(index * 100)}
-    >
+    <View>
       <Pressable
         style={[
           styles.taskItem,
@@ -204,24 +202,20 @@ export const TaskCard: React.FC<Props> = ({ task, isLast, index = 0 }) => {
               {task.title}
             </Text>
             {goalName && (
-              <Animated.View
-                entering={FadeInDown.delay(index * 100 + 200).duration(400)}
-                style={styles.goalBadge}
-              >
+              <View style={styles.goalBadge}>
                 <Target size={12} color={colors.button.primary} />
                 <Text style={styles.goalText} numberOfLines={1}>
                   {goalName}
                 </Text>
-              </Animated.View>
+              </View>
             )}
           </View>
 
           <View style={styles.metaRow}>
-            <Animated.View
+            <View
               style={[
                 styles.priorityBadge,
-                { borderColor: priorityConfig.color },
-                priorityAnimatedStyle
+                { borderColor: priorityConfig.color }
               ]}
             >
               <Flag size={10} color={priorityConfig.color} />
@@ -230,12 +224,9 @@ export const TaskCard: React.FC<Props> = ({ task, isLast, index = 0 }) => {
               >
                 {priorityConfig.label}
               </Text>
-            </Animated.View>
+            </View>
 
-            <Animated.View
-              entering={FadeInDown.delay(index * 100 + 400).duration(400)}
-              style={[styles.dueDateBadge, overdue && styles.overdueBadge]}
-            >
+            <View style={[styles.dueDateBadge, overdue && styles.overdueBadge]}>
               <AlertTriangle
                 size={10}
                 color={overdue ? '#EF4444' : '#9CA3AF'}
@@ -245,31 +236,34 @@ export const TaskCard: React.FC<Props> = ({ task, isLast, index = 0 }) => {
               <Text style={[styles.dueDateText, overdue && styles.overdueText]}>
                 {formatDate(task.dueDate)}
               </Text>
-            </Animated.View>
+            </View>
           </View>
         </View>
 
-        <Animated.View
-          entering={FadeInDown.delay(index * 100 + 300).duration(300)}
+        <TouchableOpacity
+          style={styles.moreButton}
+          onPress={() =>
+            router.push({
+              pathname: '/(tabs)/agent',
+              params: {
+                action: 'task-options',
+                taskId: task.id
+              }
+            })
+          }
+          accessibilityLabel='More options'
+          accessibilityRole='button'
         >
-          <TouchableOpacity
-            style={styles.moreButton}
-            onPress={() =>
-              router.push({
-                pathname: '/(tabs)/agent',
-                params: {
-                  action: 'task-options',
-                  taskId: task.id
-                }
-              })
-            }
-            accessibilityLabel='More options'
-            accessibilityRole='button'
-          >
-            <MoreVertical size={16} color='#9CA3AF' />
-          </TouchableOpacity>
-        </Animated.View>
+          <MoreVertical size={16} color='#9CA3AF' />
+        </TouchableOpacity>
       </Pressable>
-    </Animated.View>
+
+      <TaskCompletionModal
+        visible={showCompletionModal}
+        taskTitle={task.title}
+        onConfirm={handleConfirmCompletion}
+        onCancel={handleCancelCompletion}
+      />
+    </View>
   )
 }

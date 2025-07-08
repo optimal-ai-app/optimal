@@ -10,7 +10,7 @@ import {
   TextStyle,
   TouchableOpacity
 } from 'react-native'
-import { useLocalSearchParams } from 'expo-router'
+
 import { LinearGradient } from 'expo-linear-gradient'
 import Animated, {
   FadeInUp,
@@ -84,26 +84,28 @@ const carouselOptions = [
 ]
 
 // Helper to extract tags and content from agent message
-function extractTagsAndContent (content: { summary: string; tags: string[] }): {
+function extractTagsAndContent (content: {
+  summary: string
+  tags: string[]
+  data?: any
+}): {
   text: string
   tags: string[]
+  data?: any
 } {
   try {
     const obj = typeof content === 'string' ? JSON.parse(content) : content
     return {
-      text: obj.summary || '',
-      tags: Array.isArray(obj.tags) ? obj.tags : []
+      text: obj.summary || obj.content || '',
+      tags: Array.isArray(obj.tags) ? obj.tags : [],
+      data: obj.data
     }
-  } catch {
+  } catch (error) {
     return { text: typeof content === 'string' ? content : '', tags: [] }
   }
 }
 
 export default function AgentScreen () {
-  const params = useLocalSearchParams()
-  const action = params.action as string | undefined
-  const prompt = params.prompt as string | undefined
-
   const scrollViewRef = useRef<ScrollView>(null)
   const messagesLength = useSharedValue(0)
 
@@ -115,7 +117,6 @@ export default function AgentScreen () {
 
   const [message, setMessage] = useState('')
   const [isRecording, setIsRecording] = useState(false)
-  const [promptSent, setPromptSent] = useState(false)
   const [showChatHistory, setShowChatHistory] = useState(false)
 
   const messages = useChatMessages()
@@ -143,34 +144,17 @@ export default function AgentScreen () {
   }, [messages.length])
 
   useEffect(() => {
+    // Add welcome message if chat is empty
     if (messages.length === 0) {
-      let welcomeMessage = 'Welcome!'
-
-      if (action === 'create-goal') {
-        welcomeMessage =
-          "I'd love to help you create a meaningful goal! What would you like to achieve?"
-      } else if (action === 'generate-tasks') {
-        welcomeMessage =
-          "I'll help you break down your goal into actionable tasks. Let me know the details!"
-      }
-
       addMessage({
         id: 'welcome',
         content: {
-          summary: welcomeMessage,
+          summary: 'Welcome! How can I help you today?',
           tags: []
         },
         role: 'agent',
         timestamp: new Date()
       })
-    }
-
-    if (prompt && !promptSent && messages.length <= 1) {
-      setMessage(prompt)
-      setPromptSent(true)
-      setTimeout(() => {
-        handleSendMessage(prompt)
-      }, 500)
     }
 
     const shouldShowGoalNames = messages.some(msg => {
@@ -184,7 +168,7 @@ export default function AgentScreen () {
     if (shouldShowGoalNames && userId) {
       fetchUserGoals(userId)
     }
-  }, [action, prompt, messages, userId, promptSent])
+  }, [messages, userId, addMessage, fetchUserGoals])
 
   const handleSendMessage = async (messageText?: string) => {
     const textToSend = messageText || message
@@ -192,17 +176,10 @@ export default function AgentScreen () {
 
     setMessage('')
 
-    let context: ChatMessage['context'] | undefined
-    if (action === 'create-goal') {
-      context = { type: 'goal_setting' }
-    } else if (action === 'generate-tasks') {
-      context = { type: 'goal_response' }
-    }
-
     // Smooth scroll before sending
     scrollToBottom(true)
 
-    await sendMessage(textToSend, context, userId)
+    await sendMessage(textToSend, undefined, userId)
 
     // Scroll again after message is added
     setTimeout(() => scrollToBottom(true), 200)
@@ -253,29 +230,34 @@ export default function AgentScreen () {
       entering={FadeInRight.duration(400).springify()}
       style={styles.container}
     >
-      <Header
-        title='AI Agent'
-        rightAction={
-          <View style={styles.headerActions}>
-            <TouchableOpacity
-              style={styles.headerButton}
-              onPress={handleNewChat}
-              accessibilityLabel='Start new chat'
-              accessibilityRole='button'
-            >
-              <Plus size={20} color={colors.text.primary} />
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.headerButton}
-              onPress={() => setShowChatHistory(true)}
-              accessibilityLabel='View chat history'
-              accessibilityRole='button'
-            >
-              <History size={20} color={colors.text.primary} />
-            </TouchableOpacity>
-          </View>
-        }
-      />
+      <View
+        style={[
+          {
+            position: 'absolute',
+            top: 64,
+            right: 32,
+            flexDirection: 'row',
+            zIndex: 10
+          }
+        ]}
+      >
+        <TouchableOpacity
+          style={[styles.headerButton, { marginRight: 12 }]}
+          onPress={handleNewChat}
+          accessibilityLabel='Start new chat'
+          accessibilityRole='button'
+        >
+          <Plus size={20} color={colors.text.primary} />
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.headerButton}
+          onPress={() => setShowChatHistory(true)}
+          accessibilityLabel='View chat history'
+          accessibilityRole='button'
+        >
+          <History size={20} color={colors.text.primary} />
+        </TouchableOpacity>
+      </View>
 
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -296,7 +278,7 @@ export default function AgentScreen () {
         >
           {messages.map((msg, index) => {
             if (msg.role === 'agent') {
-              const { text, tags } = extractTagsAndContent(msg.content)
+              const { text, tags, data } = extractTagsAndContent(msg.content)
               const isLatestAgentMessage =
                 index === messages.length - 1 ||
                 (index === messages.length - 2 && isLoading)
@@ -311,6 +293,7 @@ export default function AgentScreen () {
                   isLatest={isLatestAgentMessage}
                   isLoading={isLoading && isLatestAgentMessage} // Pass loading state
                   onSendMessage={handleSendMessage}
+                  data={data}
                 />
               )
             }
@@ -383,8 +366,7 @@ export default function AgentScreen () {
 
 const styles = StyleSheet.create({
   container: {
-    ...globalStyles.container,
-    paddingBottom: '20%'
+    ...globalStyles.container
   } as ViewStyle,
 
   headerActions: {
@@ -398,7 +380,15 @@ const styles = StyleSheet.create({
     borderRadius: 18,
     backgroundColor: colors.button.primary,
     justifyContent: 'center',
-    alignItems: 'center'
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 4
+    },
+    shadowOpacity: 0.4,
+    shadowRadius: 10,
+    elevation: 5
   } as ViewStyle,
 
   keyboardAvoidingView: {

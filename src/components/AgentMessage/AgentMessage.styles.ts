@@ -5,12 +5,20 @@ import { fonts } from '@/src/constants/fonts'
 export const styles = StyleSheet.create({
   messageWrapper: {
     flexDirection: 'row',
-    marginBottom: 16,
+    marginBottom: 8,
     maxWidth: '80%'
   } as ViewStyle,
 
   agentMessageWrapper: {
     alignSelf: 'flex-start'
+  } as ViewStyle,
+
+  tagsWrapper: {
+    flexDirection: 'row',
+    marginBottom: 16,
+    maxWidth: '80%',
+    alignSelf: 'flex-start',
+    marginTop: 4
   } as ViewStyle,
 
   agentAvatar: {
