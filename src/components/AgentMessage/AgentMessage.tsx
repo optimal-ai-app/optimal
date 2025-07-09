@@ -204,9 +204,11 @@ export const AgentMessage: React.FC<AgentMessageProps> = ({
             />
           )}
 
-          {showConfirmation && <ConfirmationTag onConfirm={onSendMessage} />}
+          {showConfirmation && (
+            <ConfirmationTag onConfirm={onSendMessage} data={data} />
+          )}
 
-          {showDatePicker && (
+          {/* {showDatePicker && (
             <DatePickerTag
               onConfirm={date => onSendMessage(`Selected Date: ${date}`)}
             />
@@ -222,12 +224,13 @@ export const AgentMessage: React.FC<AgentMessageProps> = ({
             <DaySelectorTag
               onConfirm={days => onSendMessage(`Selected Days: ${days}`)}
             />
-          )}
+          )} */}
 
           {showCreateTaskCard && (
             <CreateTaskCardTag
               taskData={data as TaskData}
               onConfirm={onSendMessage}
+              showHeader
             />
           )}
         </Animated.View>

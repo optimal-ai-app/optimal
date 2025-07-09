@@ -19,7 +19,11 @@ export const styles = StyleSheet.create({
     borderRadius: 20,
     alignItems: 'center',
     justifyContent: 'center',
-    width: '100%'
+    width: '100%',
+    backgroundColor: colors.background.container,
+    borderWidth: 1,
+    borderColor: colors.utility.divider,
+    textAlign: 'center',
   } as ViewStyle,
 
   proceedButton: {
@@ -159,7 +163,8 @@ export const styles = StyleSheet.create({
 
   taskField: {
     marginBottom: 12,
-    alignItems: 'center'
+    alignItems: 'center',
+    flex: 1,
   } as ViewStyle,
 
   taskFieldRow: {
@@ -172,13 +177,16 @@ export const styles = StyleSheet.create({
     fontSize: fonts.sizes.sm,
     fontWeight: '600',
     color: colors.text.secondary,
-    marginBottom: 6
+    marginBottom: 6,
+    flexDirection: 'row',
+
   } as TextStyle,
 
   taskInput: {
     backgroundColor: colors.background.card,
     borderRadius: 8,
     padding: 12,
+    width: '100%',
     fontSize: fonts.sizes.md,
     color: colors.text.primary,
     borderWidth: 1,
@@ -214,12 +222,41 @@ export const styles = StyleSheet.create({
 
   taskDateView: {
     flexDirection: 'row',
+    flex: 1,
+    justifyContent: 'center',
     alignItems: 'center',
     alignContent: 'center',
-    justifyContent: 'space-evenly',
     backgroundColor: 'transparent',
-    gap: 8
+    gap: 8, marginRight: 10
+
   } as ViewStyle,
+
+
+  dropdownOption: {
+    paddingVertical: 8,
+    paddingHorizontal: 8,
+    borderRadius: 8,
+    backgroundColor: colors.background.container,
+    borderWidth: 1,
+    borderColor: colors.utility.divider,
+    marginBottom: 8,
+    width: '100%'
+  },
+
+  dropdownOptionSelected: {
+    backgroundColor: colors.button.primary,
+  } as ViewStyle,
+
+  dropdownOptionText: {
+    fontSize: fonts.sizes.md,
+    color: colors.text.primary,
+    textAlign: 'center',
+  } as TextStyle,
+
+  dropdownOptionTextSelected: {
+    color: colors.text.primary,
+    fontWeight: fonts.weights.bold,
+  } as TextStyle,
 
   taskDateText: {
     fontSize: fonts.sizes.md,
@@ -231,7 +268,9 @@ export const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 12
+    marginBottom: 12,
+    marginTop: 12,
+    alignSelf: 'center'
   } as ViewStyle,
 
   taskRepeatToggle: {

@@ -1,9 +1,11 @@
-import React, { useState, useRef } from 'react'
+import React, { useState } from 'react'
 import {
   View,
   Text,
-  TouchableOpacity,
+  Pressable,
   Dimensions,
+  StyleSheet,
+  TextInput,
   Platform
 } from 'react-native'
 import { LinearGradient } from 'expo-linear-gradient'
@@ -18,246 +20,194 @@ import Animated, {
   Easing
 } from 'react-native-reanimated'
 import { Mic, MicOff } from 'lucide-react-native'
-import { styles } from './DailyLog.styles'
-import { colors } from '@/src/constants/colors'
-import { FadeInDown, FadeInUp } from 'react-native-reanimated'
+import { BlurView } from 'expo-blur'
 
 const { width: screenWidth } = Dimensions.get('window')
 
-interface DailyLogProps {
-  onVoiceInput?: (transcript: string) => void
-  onRecordingStart?: () => void
-  onRecordingEnd?: () => void
-}
-
-export const DailyLog: React.FC<DailyLogProps> = ({
-  onVoiceInput,
-  onRecordingStart,
-  onRecordingEnd
-}) => {
+export const DailyLog: React.FC = () => {
   const [isRecording, setIsRecording] = useState(false)
   const [transcript, setTranscript] = useState('')
 
-  // Animation values
-  const buttonScale = useSharedValue(1)
-  const pulseScale = useSharedValue(1)
-  const rippleScale = useSharedValue(0)
-  const rippleOpacity = useSharedValue(0)
-  const micRotation = useSharedValue(0)
-  const gradientOpacity = useSharedValue(0.8)
+  const scale = useSharedValue(1)
+  const pulse = useSharedValue(1)
+  const rotation = useSharedValue(0)
 
-  // Toggle recording function
-  const toggleRecording = () => {
-    // Add button press animation
-    buttonScale.value = withSequence(
-      withTiming(0.95, { duration: 100 }),
-      withSpring(1, { damping: 15, stiffness: 300 })
+  const toggle = () => {
+    scale.value = withSequence(
+      withTiming(0.9, { duration: 100 }),
+      withSpring(1, { damping: 12, stiffness: 200 })
     )
-
-    if (isRecording) {
-      stopRecording()
-    } else {
-      startRecording()
-    }
+    if (isRecording) stop()
+    else start()
   }
 
-  // Recording state management
-  const startRecording = () => {
+  const start = () => {
     setIsRecording(true)
-    onRecordingStart?.()
-
-    // Trigger ripple effect
-    rippleScale.value = 0
-    rippleOpacity.value = 0.3
-    rippleScale.value = withTiming(2, { duration: 600 })
-    rippleOpacity.value = withTiming(0, { duration: 600 })
-
-    // Simple, smooth pulse animation
-    pulseScale.value = withRepeat(
-      withTiming(1.2, {
-        duration: 1000,
-        easing: Easing.inOut(Easing.ease)
-      }),
+    pulse.value = withRepeat(
+      withTiming(1.3, { duration: 800, easing: Easing.inOut(Easing.ease) }),
       -1,
       true
     )
-
-    // Smooth microphone rotation
-    micRotation.value = withRepeat(
-      withTiming(360, {
-        duration: 2000,
-        easing: Easing.linear
-      }),
+    rotation.value = withRepeat(
+      withTiming(360, { duration: 2000, easing: Easing.linear }),
       -1,
       false
     )
-
-    // Enhanced gradient
-    gradientOpacity.value = withTiming(1, { duration: 300 })
   }
 
-  const stopRecording = () => {
+  const stop = () => {
     setIsRecording(false)
-    onRecordingEnd?.()
-
-    // Stop all animations smoothly
-    pulseScale.value = withSpring(1, { damping: 15, stiffness: 300 })
-    micRotation.value = withTiming(0, {
+    pulse.value = withSpring(1, { damping: 12, stiffness: 200 })
+    rotation.value = withTiming(0, {
       duration: 500,
-      easing: Easing.out(Easing.back(1.5))
+      easing: Easing.out(Easing.ease)
     })
-    gradientOpacity.value = withTiming(0.8, { duration: 300 })
-
-    // Mock transcript for demo
-    setTimeout(() => {
-      const mockTranscript =
-        'I completed my morning workout and feel energized for the day ahead!'
-      setTranscript(mockTranscript)
-      onVoiceInput?.(mockTranscript)
-    }, 500)
   }
 
-  // Animated styles
-  const buttonAnimatedStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: buttonScale.value }]
+  const buttonStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }]
   }))
 
-  const pulseAnimatedStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: pulseScale.value }],
-    opacity: interpolate(pulseScale.value, [1, 1.2], [0.3, 0.1])
+  const pulseStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: pulse.value }],
+    opacity: interpolate(pulse.value, [1, 1.3], [0.4, 0])
   }))
 
-  const rippleAnimatedStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: rippleScale.value }],
-    opacity: rippleOpacity.value
-  }))
-
-  const micAnimatedStyle = useAnimatedStyle(() => ({
-    transform: [{ rotate: `${micRotation.value}deg` }]
-  }))
-
-  const gradientAnimatedStyle = useAnimatedStyle(() => ({
-    opacity: gradientOpacity.value
+  const iconRotationStyle = useAnimatedStyle(() => ({
+    transform: [{ rotate: `${rotation.value}deg` }]
   }))
 
   return (
-    <Animated.View
-      entering={FadeInDown.duration(600).delay(400)}
-      style={styles.container}
-    >
-      <LinearGradient
-        colors={[
-          'rgba(255, 255, 255, .8)',
-          'rgba(161, 161, 161, 1)',
-          'rgba(255, 255, 255, .7)'
-        ]}
-        start={{ x: 0.5, y: 0.5 }}
-        end={{ x: 1, y: 1 }}
-        locations={[0, 0.5, 1]}
-        style={[
-          styles.gradient,
-          {
-            backgroundColor: 'rgba(255, 255, 255, 0.1)',
-            backdropFilter: 'blur(15px)'
-          }
-        ]}
-      >
-        <View style={styles.card}>
-          <Animated.View
-            style={[styles.gradientBackground, gradientAnimatedStyle]}
-          >
-            <LinearGradient
-              colors={[
-                'rgba(255, 255, 255, 0.1)',
-                'rgba(255, 255, 255, 0.05)',
-                'rgba(255, 255, 255, 0.02)'
-              ]}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={styles.gradient}
-            />
-          </Animated.View>
-
-          <View style={styles.header}>
-            <Text style={styles.subtitle}>
-              {isRecording ? 'Recording' : 'Press to record your thoughts'}
-            </Text>
-          </View>
-
-          <View style={styles.recordingArea}>
-            {/* Simple pulse rings */}
-            {isRecording && (
-              <>
-                <Animated.View
-                  style={[
-                    styles.pulseRing,
-                    styles.pulseRing1,
-                    pulseAnimatedStyle
-                  ]}
-                />
-                <Animated.View
-                  style={[
-                    styles.pulseRing,
-                    styles.pulseRing2,
-                    pulseAnimatedStyle
-                  ]}
-                />
-                <Animated.View
-                  style={[
-                    styles.pulseRing,
-                    styles.pulseRing3,
-                    pulseAnimatedStyle
-                  ]}
-                />
-              </>
-            )}
-            {/* Ripple effect */}
-            <Animated.View style={[styles.ripple, rippleAnimatedStyle]} />
-            {/* Main microphone button */}
-            <Animated.View style={[styles.micButton, buttonAnimatedStyle]}>
-              <TouchableOpacity
-                style={styles.micButtonInner}
-                onPress={toggleRecording}
-                activeOpacity={0.8}
-              >
-                <LinearGradient
-                  colors={
-                    isRecording
-                      ? ['#c', '#F0B67F']
-                      : [colors.background.primary, colors.background.primary]
+    <View style={styles.wrapper}>
+      <BlurView intensity={50} style={styles.background} />
+      <LinearGradient colors={['#2d7d67', '#4a9b8a']} style={styles.container}>
+        <View style={styles.buttonContainer}>
+          {isRecording && (
+            <>
+              <Animated.View style={[styles.pulseRing, pulseStyle]} />
+              <Animated.View style={[styles.pulseRingMedium, pulseStyle]} />
+              <Animated.View style={[styles.pulseRingSmall, pulseStyle]} />
+            </>
+          )}
+          <Animated.View style={[styles.buttonWrapper, buttonStyle]}>
+            <Pressable onPress={toggle} style={styles.buttonPress}>
+              <LinearGradient
+                colors={
+                  isRecording ? ['#ffffff', '#ffffff'] : ['#fff', '#f8f0ff']
+                }
+                style={[
+                  styles.buttonBg,
+                  isRecording && {
+                    shadowColor: '#000000',
+                    shadowOffset: { width: 0, height: 10 },
+                    shadowOpacity: 0.5,
+                    shadowRadius: 10,
+                    elevation: 8
                   }
-                  style={styles.micButtonGradient}
-                >
-                  <Animated.View style={micAnimatedStyle}>
-                    {isRecording ? (
-                      <MicOff
-                        size={50}
-                        color={colors.text.primary}
-                        strokeWidth={1.5}
-                      />
-                    ) : (
-                      <Mic
-                        size={50}
-                        color={colors.text.primary}
-                        strokeWidth={1.5}
-                      />
-                    )}
+                ]}
+              >
+                {isRecording ? (
+                  <Animated.View style={iconRotationStyle}>
+                    <MicOff size={40} color='#2d7d67' strokeWidth={2} />
                   </Animated.View>
-                </LinearGradient>
-              </TouchableOpacity>
-            </Animated.View>
-          </View>
-
-          {/* Instructions */}
-          <View style={styles.instructions}>
-            <View style={styles.instructionItem}>
-              <Text style={styles.instructionText}>
-                Tap to start/stop recording
-              </Text>
-            </View>
-          </View>
+                ) : (
+                  <Mic size={40} color='#4a9b8a' strokeWidth={2} />
+                )}
+              </LinearGradient>
+            </Pressable>
+          </Animated.View>
         </View>
+        <Text style={[styles.subtitle, { alignSelf: 'flex-start' }]}>
+          {isRecording ? 'Recording…' : 'Tap to record your thoughts'}
+        </Text>
       </LinearGradient>
-    </Animated.View>
+    </View>
   )
 }
+
+const styles = StyleSheet.create({
+  wrapper: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'transparent'
+  },
+  background: {
+    ...StyleSheet.absoluteFillObject
+  },
+  container: {
+    width: screenWidth * 0.9,
+    borderRadius: 24,
+    padding: 24,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOpacity: 0.2,
+    shadowRadius: 20,
+    elevation: 10
+  },
+  title: {
+    fontSize: 24,
+    color: '#fff',
+    fontWeight: '700'
+  },
+  subtitle: {
+    fontSize: 14,
+    color: '#e0e0e0',
+    marginTop: 8
+  },
+  buttonContainer: {
+    marginVertical: 32,
+    justifyContent: 'center',
+    alignItems: 'center'
+  },
+  pulseRing: {
+    position: 'absolute',
+    width: 180,
+    height: 180,
+    borderRadius: 90,
+    borderWidth: 2,
+    borderColor: 'rgba(255,255,255,0.3)'
+  },
+  pulseRingMedium: {
+    position: 'absolute',
+    width: 140,
+    height: 140,
+    borderRadius: 70,
+    borderWidth: 2,
+    borderColor: 'rgba(255,255,255,0.4)'
+  },
+  pulseRingSmall: {
+    position: 'absolute',
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    borderWidth: 2,
+    borderColor: 'rgba(255,255,255,0.5)'
+  },
+  buttonWrapper: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    overflow: 'hidden'
+  },
+  buttonPress: {
+    flex: 1
+  },
+  buttonBg: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center'
+  },
+  transcript: {
+    width: '100%',
+    minHeight: 80,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    borderRadius: 12,
+    padding: 12,
+    color: '#fff',
+    marginTop: 8,
+    ...Platform.select({
+      android: { textAlignVertical: 'top' }
+    })
+  }
+})

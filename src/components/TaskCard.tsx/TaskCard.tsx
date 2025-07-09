@@ -201,41 +201,53 @@ export const TaskCard: React.FC<Props> = ({ task, isLast, index = 0 }) => {
             >
               {task.title}
             </Text>
-            {goalName && (
-              <View style={styles.goalBadge}>
-                <Target size={12} color={colors.button.primary} />
-                <Text style={styles.goalText} numberOfLines={1}>
-                  {goalName}
+
+            <View style={styles.metaRow}>
+              <View
+                style={[
+                  styles.priorityBadge,
+                  { borderColor: priorityConfig.color }
+                ]}
+              >
+                <Flag size={10} color={priorityConfig.color} />
+                <Text
+                  style={[styles.priorityText, { color: priorityConfig.color }]}
+                >
+                  {priorityConfig.label}
                 </Text>
               </View>
-            )}
-          </View>
 
-          <View style={styles.metaRow}>
-            <View
-              style={[
-                styles.priorityBadge,
-                { borderColor: priorityConfig.color }
-              ]}
-            >
-              <Flag size={10} color={priorityConfig.color} />
-              <Text
-                style={[styles.priorityText, { color: priorityConfig.color }]}
-              >
-                {priorityConfig.label}
-              </Text>
-            </View>
-
-            <View style={[styles.dueDateBadge, overdue && styles.overdueBadge]}>
-              <AlertTriangle
-                size={10}
-                color={overdue ? '#EF4444' : '#9CA3AF'}
-                style={overdue ? {} : { display: 'none' }}
-              />
-              <Calendar size={10} color={overdue ? '#EF4444' : '#9CA3AF'} />
-              <Text style={[styles.dueDateText, overdue && styles.overdueText]}>
-                {formatDate(task.dueDate)}
-              </Text>
+              <View style={{ gap: 6 }}>
+                <View>
+                  <View
+                    style={[styles.titleContainer, { alignSelf: 'flex-end' }]}
+                  >
+                    {goalName && (
+                      <View style={[styles.goalBadge, { gap: 4 }]}>
+                        <Target size={12} color='#0066FF' />
+                        <Text style={{ color: '#0066FF' }} numberOfLines={1}>
+                          {goalName}
+                        </Text>
+                      </View>
+                    )}
+                  </View>
+                </View>
+                <View
+                  style={[styles.dueDateBadge, overdue && styles.overdueBadge]}
+                >
+                  <AlertTriangle
+                    size={10}
+                    color={overdue ? '#EF4444' : '#9CA3AF'}
+                    style={overdue ? {} : { display: 'none' }}
+                  />
+                  <Calendar size={10} color={overdue ? '#EF4444' : '#9CA3AF'} />
+                  <Text
+                    style={[styles.dueDateText, overdue && styles.overdueText]}
+                  >
+                    {formatDate(task.dueDate)}
+                  </Text>
+                </View>
+              </View>
             </View>
           </View>
         </View>

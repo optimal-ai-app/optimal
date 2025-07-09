@@ -37,9 +37,6 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
         try {
             setLoading(true)
             setError(null)
-            set(state => ({
-                tasks: [...state.tasks, task]
-            }))
 
             const requestData: any = {
                 title: task.title,
@@ -60,7 +57,7 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
             }
 
             const response = await httpService.post('/api/tasks/create', requestData)
-            console.log(response)
+            get().fetchUserTasks(userId)
         } catch (error) {
             setError(error instanceof Error ? error.message : 'Failed to add task')
         } finally {

@@ -1,20 +1,27 @@
 import React from 'react'
-import { ManualTaskForm } from '@/src/components/ManualTaskForm'
+import { CreateTaskCardTag } from '@/src/components/AgentTags/CreateTaskCardTag'
+import { router } from 'expo-router'
+import { globalStyles } from '@/src/constants/styles'
+import { SafeAreaView, View } from 'react-native'
 
 export default function CreateTaskScreen () {
-  const handleTaskCreated = (task: {
-    title: string
-    description: string
-    dueDate: Date
-    dueTime: string
-    goalId?: string
-    isRepeating: boolean
-    repeatEndDate?: Date
-    repeatDays?: string[]
-  }) => {
-    // In a real app, this would save the task to your data store
-    console.log('Task created:', task)
-  }
-
-  return <ManualTaskForm onTaskCreated={handleTaskCreated} />
+  return (
+    <SafeAreaView style={[globalStyles.container]}>
+      <View
+        style={{
+          flex: 1,
+          justifyContent: 'flex-start',
+          alignItems: 'center',
+          paddingHorizontal: 16,
+          paddingVertical: 8
+        }}
+      >
+        <CreateTaskCardTag
+          onConfirm={() => {
+            router.replace('/(tabs)/tasks')
+          }}
+        />
+      </View>
+    </SafeAreaView>
+  )
 }

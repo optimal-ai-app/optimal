@@ -90,21 +90,14 @@ export default function TasksScreen () {
   }, [tasks, activeFilters, activeSort])
 
   const handleNewTaskWithAgent = async () => {
-    // Send message and create new chat directly through store
+    router.navigate('/(tabs)/agent')
+
     await sendMessageAndCreateNewChat(
       'Help me create a task',
       { type: 'help_request' },
       userId
     )
-
-    // Navigate to agent page (no params needed since store is updated)
-    router.replace('/(tabs)/agent')
   }
-
-  const handleNewTaskManually = () => {
-    router.replace('/home/create-task')
-  }
-
   return (
     <SafeAreaView style={globalStyles.container}>
       <Header title='Tasks' showBackButton />

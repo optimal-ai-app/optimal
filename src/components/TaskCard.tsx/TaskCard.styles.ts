@@ -125,6 +125,7 @@ export const styles = StyleSheet.create({
 
     titleContainer: {
         marginBottom: 4,
+        // alignItems: 'flex-start',
     } as ViewStyle,
 
     goalBadge: {

@@ -88,7 +88,7 @@ export const useGoalStore = create<GoalStore>((set, get) => ({
             const response = await httpService.get<any[]>(`api/goals/user/${userId}`)
             // Transform backend task format to frontend format
             const transformedGoals: Goal[] = response.map(goal => ({
-                id: goal.goalId,
+                id: goal.id,
                 title: goal.title,
                 description: goal.description,
                 progress: goal.progress,
@@ -99,7 +99,9 @@ export const useGoalStore = create<GoalStore>((set, get) => ({
                 tags: goal.tags,
                 updatedAt: new Date(goal.updatedDate)
             }))
-
+            set(state => ({
+                goalMap: new Map(transformedGoals.map(goal => [goal.id, goal]))
+            }))
             set({ goals: transformedGoals })
         } catch (error) {
             setError(error instanceof Error ? error.message : 'Failed to fetch goals')

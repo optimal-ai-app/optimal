@@ -4,25 +4,26 @@ import { styles } from './AgentTags.styles'
 
 interface ConfirmationTagProps {
   onConfirm: (action: string) => void
+  data: {
+    options: string[]
+  }
 }
 
 export const ConfirmationTag: React.FC<ConfirmationTagProps> = ({
-  onConfirm
+  onConfirm,
+  data
 }) => {
   return (
     <View style={styles.confirmationContainer}>
-      <TouchableOpacity
-        style={[styles.confirmButton, styles.proceedButton]}
-        onPress={() => onConfirm('Yes')}
-      >
-        <Text style={styles.confirmButtonText}>Yes</Text>
-      </TouchableOpacity>
-      <TouchableOpacity
-        style={[styles.confirmButton, styles.tryElseButton]}
-        onPress={() => onConfirm('Something Else')}
-      >
-        <Text style={styles.confirmButtonText}>Something Else</Text>
-      </TouchableOpacity>
+      {data.options.map((option, index) => (
+        <TouchableOpacity
+          key={index}
+          style={[styles.confirmButton, styles.proceedButton]}
+          onPress={() => onConfirm(option)}
+        >
+          <Text style={styles.confirmButtonText}>{option}</Text>
+        </TouchableOpacity>
+      ))}
     </View>
   )
 }

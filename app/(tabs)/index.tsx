@@ -229,14 +229,13 @@ export default function HomeScreen () {
   // Handle new task via agent
   const handleNewTaskWithAgent = async () => {
     // Send message and create new chat directly through store
+    router.navigate('/(tabs)/agent')
+
     await sendMessageAndCreateNewChat(
       'Help me create a task',
       { type: 'help_request' },
       userId
     )
-
-    // Navigate to agent page (no params needed since store is updated)
-    router.push('/(tabs)/agent')
   }
   // Handle pull-to-refresh
   const onRefresh = async () => {
@@ -253,7 +252,7 @@ export default function HomeScreen () {
   }
 
   // Handle voice input from Daily Log
-  const handleVoiceInput = (transcript: string) => {
+  const handleVoiceInput = () => {
     // // Navigate to agent with the voice transcript
     // router.push({
     //   pathname: '/(tabs)/agent',
@@ -386,72 +385,7 @@ export default function HomeScreen () {
               )}
             </GlassCard>
           </Animated.View>
-          {/* Quick Actions with Enhanced Styling - Moved up for immediate access */}
-          <Animated.View entering={FadeInDown.duration(600).delay(400)}>
-            <GlassCard style={styles.quickActionsCard}>
-              <View style={styles.sectionTitleContainer}>
-                <View style={styles.sectionIconContainer}>
-                  <BookmarkCheckIcon
-                    size={24}
-                    color={colors.button.secondary}
-                  />
-                </View>
-                <Text style={styles.sectionTitle}>Quick Actions</Text>
-              </View>
-              <View style={styles.quickActionsGrid}>
-                <TouchableOpacity
-                  style={styles.quickActionButton}
-                  onPress={() => setShowGoalModal(true)}
-                  accessibilityLabel='Set New Goal'
-                  accessibilityRole='button'
-                >
-                  <LinearGradient
-                    colors={colors.gradient.primary}
-                    style={styles.quickActionGradient}
-                  >
-                    <Target
-                      size={28}
-                      color={colors.text.primary}
-                      strokeWidth={2.5}
-                    />
-                  </LinearGradient>
-                  <Text style={styles.quickActionText}>Set New Goal</Text>
-                  <Text style={styles.quickActionSubtext}>
-                    Define your next achievement
-                  </Text>
-                </TouchableOpacity>
 
-                <Link
-                  href={{
-                    pathname: '/(tabs)/agent',
-                    params: { action: 'log-progress' }
-                  }}
-                  asChild
-                >
-                  <TouchableOpacity
-                    style={styles.quickActionButton}
-                    accessibilityLabel='Log Progress'
-                    accessibilityRole='button'
-                  >
-                    <LinearGradient
-                      colors={colors.gradient.secondary}
-                      style={styles.quickActionGradient}
-                    >
-                      <MessageSquare
-                        size={28}
-                        color={colors.text.primary}
-                        strokeWidth={2.5}
-                      />
-                    </LinearGradient>
-                    <Text style={styles.quickActionText}>Log Progress</Text>
-                    <Text style={styles.quickActionSubtext}>
-                      Share your achievements
-                    </Text>
-                  </TouchableOpacity>
-                </Link>
-              </View>
-            </GlassCard>
-          </Animated.View>
           {/* Daily Log Section - Positioned after tasks for reflection */}
           <Animated.View entering={FadeInDown.duration(600).delay(1000)}>
             <GlassCard style={styles.goalsCard}>
@@ -463,9 +397,9 @@ export default function HomeScreen () {
               </View>
             </GlassCard>
             <DailyLog
-              onVoiceInput={handleVoiceInput}
-              onRecordingStart={() => console.log('Recording started')}
-              onRecordingEnd={() => console.log('Recording ended')}
+            // onVoiceInput={handleVoiceInput}
+            // onRecordingStart={() => console.log('Recording started')}
+            // onRecordingEnd={() => console.log('Recording ended')}
             />
           </Animated.View>
           {/* Goals Preview with Enhanced Design */}

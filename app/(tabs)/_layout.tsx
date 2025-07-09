@@ -1,6 +1,6 @@
 import React from 'react'
-import { View, Platform, SafeAreaView } from 'react-native'
-import { Tabs } from 'expo-router'
+import { View, Platform, SafeAreaView, TouchableOpacity } from 'react-native'
+import { router, Tabs } from 'expo-router'
 import { BlurView } from 'expo-blur'
 import Animated, { FadeIn } from 'react-native-reanimated'
 import {
@@ -11,10 +11,12 @@ import {
   Plus,
   HomeIcon,
   Globe,
-  Trophy
+  Trophy,
+  ArrowLeft
 } from 'lucide-react-native'
 
 import { colors } from '@/src/constants/colors'
+import { Header } from '@/src/components/Header/Header'
 
 export default function TabsLayout () {
   return (
@@ -158,7 +160,9 @@ export default function TabsLayout () {
       <Tabs.Screen
         name='home/create-task'
         options={{
-          href: null // Hide this tab from the tab bar
+          href: null,
+          headerShown: true,
+          header: () => <Header title='Create Task' showBackButton />
         }}
       />
       <Tabs.Screen

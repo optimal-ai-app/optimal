@@ -16,15 +16,16 @@ import Animated, { FadeInDown } from 'react-native-reanimated'
 import { colors } from '@/src/constants/colors'
 import { fonts } from '@/src/constants/fonts'
 import { styles } from './AgentTags.styles'
-import { useAddTask } from '../../stores'
+import { useAddTask, useGoals } from '../../stores'
 import { useUserId } from '../../stores/userStore'
-import { Task } from '../../stores/types'
+import { Goal, Task } from '../../stores/types'
 
 export interface TaskData {
   taskType?: string
   taskDescription?: string
   priority?: string // '!', '!!', '!!!'
   repeatDays?: string[] // ['M','T','W','TH','F','S','SU']
+  timeOfDay?: string
   repeatEndDate?: string // DateTime 12-hour time string
   goalId?: string // Add goalId support
 }
@@ -32,33 +33,43 @@ export interface TaskData {
 interface CreateTaskCardTagProps {
   taskData?: TaskData
   onConfirm: (message: string) => void
+  showHeader?: boolean
 }
 
 export const CreateTaskCardTag: React.FC<CreateTaskCardTagProps> = ({
   taskData,
-  onConfirm
+  onConfirm,
+  showHeader = false
 }) => {
+  console.log('taskData', taskData?.goalId)
   const addTask = useAddTask()
   const userId = useUserId()
-
+  const goals = useGoals()
   // Form state
   const [title, setTitle] = useState(taskData?.taskType || '')
   const [description, setDescription] = useState(
     taskData?.taskDescription || ''
   )
   const [priority, setPriority] = useState(taskData?.priority || '!!')
-  const [dueDate, setDueDate] = useState<Date | null>(null)
-  const [dueTime, setDueTime] = useState('')
-  const [isRepeating, setIsRepeating] = useState(false)
-  const [repeatEndDate, setRepeatEndDate] = useState<Date | null>(null)
-  const [selectedDays, setSelectedDays] = useState<string[]>([])
-  const [goalId, setGoalId] = useState<string | null>(taskData?.goalId || null)
 
-  // UI state
-  const [showDatePicker, setShowDatePicker] = useState(false)
-  const [showTimePicker, setShowTimePicker] = useState(false)
-  const [showRepeatEndDatePicker, setShowRepeatEndDatePicker] = useState(false)
+  const [dueTime, setDueTime] = useState(taskData?.timeOfDay || '12:00')
+  const [isRepeating, setIsRepeating] = useState(
+    taskData?.repeatDays?.length! > 0 ? true : false
+  )
+  const [repeatEndDate, setRepeatEndDate] = useState<Date>(
+    new Date(new Date().setDate(new Date().getDate() + 1))
+  )
+  const [selectedDays, setSelectedDays] = useState<string[]>([])
+  const [goalId, setGoalId] = useState<string | null>(
+    goals.find(g => g.title.toLowerCase() === taskData?.goalId?.toLowerCase())
+      ?.title || null
+  )
+  const [showGoalDropdown, setShowGoalDropdown] = useState(false)
   const [isCreating, setIsCreating] = useState(false)
+
+  const handleGoalSelect = (goal: string) => {
+    setGoalId(goal)
+  }
 
   // Initialize repeat data from LLM
   useEffect(() => {
@@ -113,7 +124,8 @@ export const CreateTaskCardTag: React.FC<CreateTaskCardTagProps> = ({
     title.trim() &&
     description.trim() &&
     dueTime &&
-    (isRepeating ? repeatEndDate && selectedDays.length > 0 : dueDate)
+    (isRepeating ? repeatEndDate && selectedDays.length > 0 : repeatEndDate) &&
+    goalId
 
   const formatDate = (date: Date) => {
     return date.toLocaleDateString(undefined, {
@@ -122,22 +134,13 @@ export const CreateTaskCardTag: React.FC<CreateTaskCardTagProps> = ({
     })
   }
 
-  const formatTime = (time: string) => {
-    if (!time) return ''
-    const [hours, minutes] = time.split(':')
-    const hour = parseInt(hours)
-    const ampm = hour >= 12 ? 'PM' : 'AM'
-    const displayHour = hour % 12 || 12
-    return `${displayHour}:${minutes} ${ampm}`
-  }
-
   const handleDateChange = (event: any, selectedDate?: Date) => {
     // Don't close picker on value change, only update the date
     if (selectedDate) {
       const today = new Date()
       today.setHours(0, 0, 0, 0)
       if (selectedDate >= today) {
-        setDueDate(selectedDate)
+        setRepeatEndDate(selectedDate)
       }
     }
   }
@@ -168,7 +171,7 @@ export const CreateTaskCardTag: React.FC<CreateTaskCardTagProps> = ({
     )
   }
 
-  // Convert internal day format to backend expected format
+  // Convert internal day format to backend expected format (abbreviations)
   const convertDaysToBackendFormat = (days: string[]): string[] => {
     const dayMapping: { [key: string]: string } = {
       mon: 'M',
@@ -186,8 +189,14 @@ export const CreateTaskCardTag: React.FC<CreateTaskCardTagProps> = ({
     const [hours, minutes] = dueTime.split(':')
 
     // For repeating tasks, use today's date; for one-time tasks, use the selected date
-    const dateToUse = isRepeating ? new Date() : dueDate!
+    const dateToUse = isRepeating ? new Date() : repeatEndDate!
     const combinedDate = new Date(dateToUse)
+    console.log('goalId', goalId)
+    console.log('goals', goals)
+    const goalUUID = goals.find(
+      g => g.title.toLowerCase() === goalId?.toLowerCase()
+    )?.id
+    console.log('goalUUID', goalUUID)
     combinedDate.setHours(parseInt(hours), parseInt(minutes), 0, 0)
 
     return {
@@ -199,7 +208,7 @@ export const CreateTaskCardTag: React.FC<CreateTaskCardTagProps> = ({
       priority: priority as '!!' | '!' | '!!!',
       dueDate: combinedDate,
       status: 'todo',
-      goalId: goalId || undefined
+      goalId: goalUUID || undefined
     }
   }
 
@@ -211,28 +220,20 @@ export const CreateTaskCardTag: React.FC<CreateTaskCardTagProps> = ({
       const taskData = createTaskObject()
 
       // Prepare repeat parameters if needed
-      const repeatEndDateParam =
-        isRepeating && repeatEndDate ? repeatEndDate : undefined
       const repeatDaysParam =
         isRepeating && selectedDays.length > 0
           ? convertDaysToBackendFormat(selectedDays)
           : undefined
+      console.log('--------------------------------')
+      console.log('taskData', taskData)
+      console.log('userId', userId)
+      console.log('repeatEndDate', repeatEndDate)
+      console.log('repeatDaysParam', repeatDaysParam)
+      console.log('--------------------------------')
 
-      await addTask(taskData, userId, repeatEndDateParam, repeatDaysParam)
+      await addTask(taskData, userId, repeatEndDate, repeatDaysParam)
 
-      let successMessage = `✅ Task "${title}" created successfully!`
-
-      if (isRepeating && repeatEndDate && selectedDays.length > 0) {
-        const dayNames = selectedDays
-          .map(day => {
-            const dayObj = daysOfWeek.find(d => d.key === day)
-            return dayObj?.full || day
-          })
-          .join(', ')
-        successMessage += ` (Repeating on ${dayNames} until ${formatDate(
-          repeatEndDate
-        )})`
-      }
+      let successMessage = `Looks good, lets go ahead and create the task!`
 
       onConfirm(successMessage)
     } catch (error) {
@@ -255,9 +256,11 @@ export const CreateTaskCardTag: React.FC<CreateTaskCardTagProps> = ({
       onStartShouldSetResponder={() => false}
       onMoveShouldSetResponder={() => false}
     >
-      <View style={styles.taskCardHeader}>
-        <Text style={styles.taskCardTitle}>Create Task</Text>
-      </View>
+      {showHeader && (
+        <View style={styles.taskCardHeader}>
+          <Text style={styles.taskCardTitle}>Create Task</Text>
+        </View>
+      )}
 
       <ScrollView
         style={styles.taskCardContent}
@@ -329,62 +332,51 @@ export const CreateTaskCardTag: React.FC<CreateTaskCardTagProps> = ({
             ))}
           </View>
         </View>
-
+        <View style={styles.taskRepeatHeader}>
+          <View style={styles.taskRepeatToggle}>
+            <Repeat size={16} color={colors.button.secondary} />
+            <Text style={styles.taskFieldLabel}>Repeating Task</Text>
+            <Switch
+              value={isRepeating}
+              onValueChange={setIsRepeating}
+              trackColor={{
+                false: colors.background.container,
+                true: colors.button.primary
+              }}
+              thumbColor={colors.text.primary}
+            />
+          </View>
+        </View>
         {/* Date & Time */}
         <View style={styles.taskFieldRow}>
           <View style={styles.taskField}>
             <Text style={styles.taskFieldLabel}>Schedule Time</Text>
-            <View style={[styles.taskDateView]}>
+            <View style={styles.taskDateView}>
               <DateTimePicker
                 value={dueTime ? new Date(`2000-01-01T${dueTime}`) : new Date()}
                 mode='time'
                 display='default'
                 onChange={handleTimeChange}
               />
-              <Clock size={16} color={colors.text.muted} />
             </View>
           </View>
+
           <View style={styles.taskField}>
-            {!isRepeating && (
+            {!isRepeating ? (
               <>
                 <Text style={styles.taskFieldLabel}>Due Date</Text>
                 <View style={[styles.taskDateView]}>
                   <DateTimePicker
-                    value={dueDate || new Date()}
+                    value={repeatEndDate || new Date()}
                     mode='date'
                     display='default'
                     onChange={handleDateChange}
                     minimumDate={new Date()}
                   />
-                  <Calendar size={16} color={colors.text.muted} />
                 </View>
               </>
-            )}
-          </View>
-        </View>
-
-        {/* Repeating Task Toggle */}
-        <View style={styles.taskField}>
-          <View style={styles.taskRepeatHeader}>
-            <View style={styles.taskRepeatToggle}>
-              <Repeat size={16} color={colors.button.secondary} />
-              <Text style={styles.taskFieldLabel}>Repeating Task</Text>
-              <Switch
-                value={isRepeating}
-                onValueChange={setIsRepeating}
-                trackColor={{
-                  false: colors.background.container,
-                  true: colors.button.primary
-                }}
-                thumbColor={colors.text.primary}
-              />
-            </View>
-          </View>
-
-          {/* Repeat Options */}
-          {isRepeating && (
-            <View style={styles.taskRepeatOptions}>
-              <View style={styles.taskField}>
+            ) : (
+              <>
                 <Text style={styles.taskFieldLabel}>Repeat End Date</Text>
                 <View style={[styles.taskDateView]}>
                   <DateTimePicker
@@ -394,10 +386,18 @@ export const CreateTaskCardTag: React.FC<CreateTaskCardTagProps> = ({
                     onChange={handleRepeatEndDateChange}
                     minimumDate={new Date()}
                   />
-                  <Calendar size={16} color={colors.text.muted} />
+                  {/* <Calendar size={16} color={colors.text.muted} /> */}
                 </View>
-              </View>
+              </>
+            )}
+          </View>
+        </View>
 
+        {/* Repeating Task Toggle */}
+        <View style={styles.taskField}>
+          {/* Repeat Options */}
+          {isRepeating && (
+            <View style={styles.taskRepeatOptions}>
               <View style={styles.taskField}>
                 <Text style={styles.taskFieldLabel}>Days</Text>
                 <View style={styles.daysGrid}>
@@ -424,6 +424,52 @@ export const CreateTaskCardTag: React.FC<CreateTaskCardTagProps> = ({
                   ))}
                 </View>
               </View>
+            </View>
+          )}
+        </View>
+        <View style={styles.taskField}>
+          <TouchableOpacity
+            style={[
+              styles.dropdownOption,
+              goalId && styles.dropdownOptionSelected
+            ]}
+            onPress={() => setShowGoalDropdown(!showGoalDropdown)}
+          >
+            <Text
+              style={[
+                styles.taskFieldLabel,
+                goalId && { color: colors.text.primary },
+                { textAlign: 'center', fontSize: fonts.sizes.md }
+              ]}
+            >
+              {goalId ? goalId : 'Select a Goal'}
+            </Text>
+          </TouchableOpacity>
+
+          {showGoalDropdown && (
+            <View style={{ alignItems: 'center', width: '80%' }}>
+              {goals.map((goal, index) => (
+                <TouchableOpacity
+                  key={index}
+                  style={[
+                    styles.dropdownOption,
+                    goalId === goal.title && styles.dropdownOptionSelected
+                  ]}
+                  onPress={() => {
+                    handleGoalSelect(goal.title)
+                    setShowGoalDropdown(false)
+                  }}
+                >
+                  <Text
+                    style={[
+                      styles.taskFieldLabel,
+                      goalId === goal.title && { color: colors.text.primary }
+                    ]}
+                  >
+                    {goal.title}
+                  </Text>
+                </TouchableOpacity>
+              ))}
             </View>
           )}
         </View>
