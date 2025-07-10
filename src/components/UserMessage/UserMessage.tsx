@@ -68,7 +68,7 @@ export const UserMessage: React.FC<UserMessageProps> = ({
 
   return (
     <Animated.View
-      key={id}
+      // key={id}
       entering={SlideInRight.duration(400).springify().damping(12)}
       style={[styles.messageWrapper, styles.userMessageWrapper]}
     >

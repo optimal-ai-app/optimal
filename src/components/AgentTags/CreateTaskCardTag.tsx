@@ -233,7 +233,7 @@ export const CreateTaskCardTag: React.FC<CreateTaskCardTagProps> = ({
 
       await addTask(taskData, userId, repeatEndDate, repeatDaysParam)
 
-      let successMessage = `Looks good, lets go ahead and create the task!`
+      let successMessage = `I have created the task, thank you for your help!`
 
       onConfirm(successMessage)
     } catch (error) {

@@ -285,7 +285,7 @@ export default function AgentScreen () {
 
               return (
                 <AgentMessage
-                  key={msg.id}
+                  key={index}
                   id={msg.id}
                   text={text}
                   tags={tags}
@@ -300,8 +300,8 @@ export default function AgentScreen () {
 
             return (
               <UserMessage
-                key={msg.id}
-                id={msg.id}
+                key={index}
+                id={index.toString()}
                 text={msg.content.summary}
                 timestamp={msg.timestamp}
               />

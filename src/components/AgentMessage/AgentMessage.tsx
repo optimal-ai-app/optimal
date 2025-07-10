@@ -157,7 +157,7 @@ export const AgentMessage: React.FC<AgentMessageProps> = ({
   return (
     <>
       <Animated.View
-        key={id}
+        // key={id}
         entering={SlideInLeft.duration(500).springify().damping(15)}
         style={[styles.messageWrapper, styles.agentMessageWrapper]}
       >
