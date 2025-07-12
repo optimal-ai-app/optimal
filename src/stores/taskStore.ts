@@ -13,7 +13,9 @@ interface TaskActions {
     //add get userTasks later (connects to backend)
     addTask: (task: Task, userId: string, repeatEndDate?: Date, repeatDays?: string[]) => void
     updateTask: (task: Task) => void
-    deleteTask: (task: Task) => void
+    deleteTaskInstance: (userId: string, taskId: string) => void
+    deleteAllRelatedTasks: (userId: string, sharedId: string) => void
+    deleteTaskAndAfter: (userId: string, taskId: string) => void
     getTasks: () => Task[]
     getTask: (id: string) => Task
     getTasksByGoal: (goalId: string) => Task[]
@@ -84,10 +86,46 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
         }
     },
 
-    deleteTask: (task: Task) => {
-        set(state => ({
-            tasks: state.tasks.filter(t => t.id !== task.id)
-        }))
+    deleteTaskInstance: async (userId: string, taskId: string) => {
+        const { setLoading, setError } = get()
+        try {
+            setLoading(true)
+            setError(null)
+            const response = await httpService.delete(`/api/tasks/${taskId}`)
+            get().fetchUserTasks(userId)
+        } catch (error) {
+            setError(error instanceof Error ? error.message : 'Failed to delete task')
+        } finally {
+            setLoading(false)
+        }
+    },
+
+    deleteAllRelatedTasks: async (userId: string, sharedId: string) => {
+        const { setLoading, setError } = get()
+        try {
+            setLoading(true)
+            setError(null)
+            const response = await httpService.delete(`/api/tasks/shared/${sharedId}`)
+            get().fetchUserTasks(userId)
+        } catch (error) {
+            setError(error instanceof Error ? error.message : 'Failed to delete task')
+        } finally {
+            setLoading(false)
+        }
+    },
+
+    deleteTaskAndAfter: async (userId: string, taskId: string) => {
+        const { setLoading, setError } = get()
+        try {
+            setLoading(true)
+            setError(null)
+            const response = await httpService.delete(`/api/tasks/after/${taskId}`)
+            get().fetchUserTasks(userId)
+        } catch (error) {
+            setError(error instanceof Error ? error.message : 'Failed to delete task')
+        } finally {
+            setLoading(false)
+        }
     },
 
     getTasks: () => {
@@ -113,6 +151,7 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
             const response = await httpService.get<any[]>(`api/tasks/user/${userId}`)
 
             // Transform backend task format to frontend format
+
             const transformedTasks: Task[] = response.map(task => ({
                 id: task.taskId,
                 title: task.title,
@@ -122,7 +161,8 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
                 priority: task.priority,
                 dueDate: task.dueDate ? new Date(task.dueDate) : new Date(),
                 status: task.status,
-                goalId: task.goalId
+                goalId: task.goalId,
+                sharedId: task.sharedId
             }))
 
             set({ tasks: transformedTasks })
@@ -153,8 +193,10 @@ export const useTaskLoading = () => useTaskStore(state => state.isLoading)
 export const useTaskError = () => useTaskStore(state => state.error)
 export const useAddTask = () => useTaskStore(state => state.addTask)
 export const useUpdateTask = () => useTaskStore(state => state.updateTask)
-export const useDeleteTask = () => useTaskStore(state => state.deleteTask)
 export const useGetTasks = () => useTaskStore(state => state.getTasks)
 export const useGetTask = () => useTaskStore(state => state.getTask)
 export const useGetTasksByGoal = () => useTaskStore(state => state.getTasksByGoal)
-export const useFetchUserTasks = () => useTaskStore(state => state.fetchUserTasks) 
+export const useFetchUserTasks = () => useTaskStore(state => state.fetchUserTasks)
+export const useDeleteTaskInstance = () => useTaskStore(state => state.deleteTaskInstance)
+export const useDeleteAllRelatedTasks = () => useTaskStore(state => state.deleteAllRelatedTasks)
+export const useDeleteTaskAndAfter = () => useTaskStore(state => state.deleteTaskAndAfter)

@@ -73,7 +73,7 @@ export const AgentMessage: React.FC<AgentMessageProps> = ({
           clearInterval(typeInterval)
           setShowTags(true)
         }
-      }, 15) // Faster typewriter speed for quicker tag display
+      }, 5) // Faster typewriter speed for quicker tag display
 
       return () => clearInterval(typeInterval)
     } else {

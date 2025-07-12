@@ -430,8 +430,6 @@ export default function HomeScreen () {
               >
                 {goals
                   .filter(goal => goal.status === 'active')
-                  .sort(() => Math.random() - 0.5)
-                  .slice(0, 5)
                   .map((goal, index) => (
                     <Animated.View
                       key={index}
@@ -668,13 +666,14 @@ const styles = StyleSheet.create({
   goalsGrid: {
     flexDirection: 'row',
     gap: 16,
-    marginTop: 8
+    marginTop: 15
   } as ViewStyle,
 
   goalsGridItem: {
     flex: 1,
-    minWidth: 200,
-    marginRight: 16
+    minWidth: 375,
+    maxWidth: 375,
+    marginRight: 8
   } as ViewStyle,
 
   sectionActions: {

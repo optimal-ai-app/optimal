@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { View, Text, TouchableOpacity, Pressable } from 'react-native'
+import { View, Text, TouchableOpacity, Pressable, Modal } from 'react-native'
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -13,14 +13,21 @@ import {
   Circle,
   Calendar,
   AlertTriangle,
-  Target
+  Target,
+  X,
+  Trash
 } from 'lucide-react-native'
 import { useRouter } from 'expo-router'
-import { Task, useUpdateTask } from '@/src/stores'
+import { Task, useUpdateTask, useDeleteTask, useUserId } from '@/src/stores'
 import { colors } from '@/src/constants/colors'
 import { styles } from './TaskCard.styles'
 import { useGoalName } from '@/src/stores'
 import { TaskCompletionModal } from './TaskCompletionModal'
+import {
+  useDeleteAllRelatedTasks,
+  useDeleteTaskAndAfter,
+  useDeleteTaskInstance
+} from '@/src/stores/taskStore'
 
 type Props = {
   task: Task
@@ -32,10 +39,15 @@ export const TaskCard: React.FC<Props> = ({ task, isLast, index = 0 }) => {
   const router = useRouter()
   const goalName = useGoalName(task.goalId)
   const updateTask = useUpdateTask()
+  const deleteTaskInstance = useDeleteTaskInstance()
+  const deleteAllRelatedTasks = useDeleteAllRelatedTasks()
+  const deleteTaskAndAfter = useDeleteTaskAndAfter()
   const [showCompletionModal, setShowCompletionModal] = useState(false)
-
+  const [showMoreOptions, setShowMoreOptions] = useState(false)
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
   // Only keep minimal checkbox animation
   const checkboxScale = useSharedValue(1)
+  const userId = useUserId()
 
   // Simple checkbox animation on toggle
   const animateCheckbox = () => {
@@ -145,8 +157,38 @@ export const TaskCard: React.FC<Props> = ({ task, isLast, index = 0 }) => {
     setShowCompletionModal(false)
   }
 
+  const handleShowMoreOptions = () => {
+    setShowMoreOptions(prev => !prev)
+  }
+
   const handleCancelCompletion = () => {
     setShowCompletionModal(false)
+  }
+
+  const handleDeleteOption = () => {
+    setShowMoreOptions(false)
+    setShowDeleteModal(true)
+  }
+
+  const handleDeleteModalClose = () => {
+    setShowDeleteModal(false)
+  }
+
+  const handleDeleteInstance = () => {
+    deleteTaskInstance(userId, task.id)
+    setShowDeleteModal(false)
+  }
+
+  const handleDeleteInstanceAndAfter = () => {
+    // TODO: Implement delete this instance and all after
+    deleteTaskAndAfter(userId, task.id)
+    setShowDeleteModal(false)
+  }
+
+  const handleDeleteAllInstances = () => {
+    // TODO: Implement delete all instances
+    deleteAllRelatedTasks(userId, task.sharedId)
+    setShowDeleteModal(false)
   }
 
   return (
@@ -197,7 +239,7 @@ export const TaskCard: React.FC<Props> = ({ task, isLast, index = 0 }) => {
                 styles.taskTitle,
                 task.status === 'completed' && styles.completedTitle
               ]}
-              numberOfLines={1}
+              numberOfLines={2}
             >
               {task.title}
             </Text>
@@ -225,8 +267,10 @@ export const TaskCard: React.FC<Props> = ({ task, isLast, index = 0 }) => {
                     {goalName && (
                       <View style={[styles.goalBadge, { gap: 4 }]}>
                         <Target size={12} color='#0066FF' />
-                        <Text style={{ color: '#0066FF' }} numberOfLines={1}>
-                          {goalName}
+                        <Text style={{ color: '#0066FF' }}>
+                          {goalName.length > 15
+                            ? goalName.substring(0, 15) + '..'
+                            : goalName}
                         </Text>
                       </View>
                     )}
@@ -252,22 +296,30 @@ export const TaskCard: React.FC<Props> = ({ task, isLast, index = 0 }) => {
           </View>
         </View>
 
-        <TouchableOpacity
-          style={styles.moreButton}
-          onPress={() =>
-            router.push({
-              pathname: '/(tabs)/agent',
-              params: {
-                action: 'task-options',
-                taskId: task.id
-              }
-            })
-          }
-          accessibilityLabel='More options'
-          accessibilityRole='button'
-        >
-          <MoreVertical size={16} color='#9CA3AF' />
-        </TouchableOpacity>
+        <View style={styles.moreOptionsContainer}>
+          <TouchableOpacity
+            style={styles.moreButton}
+            onPress={handleShowMoreOptions}
+            accessibilityLabel='More options'
+            accessibilityRole='button'
+          >
+            <MoreVertical size={24} strokeWidth={1.5} color='#9CA3AF' />
+          </TouchableOpacity>
+
+          {showMoreOptions && (
+            <View style={styles.dropdownMenu}>
+              <TouchableOpacity
+                style={styles.dropdownItem}
+                onPress={handleDeleteOption}
+                accessibilityLabel='Delete task'
+                accessibilityRole='button'
+              >
+                <Trash size={16} color='#EF4444' />
+                <Text style={styles.dropdownItemText}>Delete</Text>
+              </TouchableOpacity>
+            </View>
+          )}
+        </View>
       </Pressable>
 
       <TaskCompletionModal
@@ -276,6 +328,66 @@ export const TaskCard: React.FC<Props> = ({ task, isLast, index = 0 }) => {
         onConfirm={handleConfirmCompletion}
         onCancel={handleCancelCompletion}
       />
+
+      {/* Delete Confirmation Modal */}
+      <Modal
+        visible={showDeleteModal}
+        transparent={true}
+        animationType='fade'
+        onRequestClose={handleDeleteModalClose}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.deleteModalContent}>
+            <View style={styles.deleteModalHeader}>
+              <Text style={styles.deleteModalTitle}>Delete Task</Text>
+              <TouchableOpacity
+                onPress={handleDeleteModalClose}
+                style={styles.closeButton}
+              >
+                <X size={20} color='#9CA3AF' />
+              </TouchableOpacity>
+            </View>
+
+            <Text style={styles.deleteModalDescription}>
+              Are you sure you want to delete "{task.title}"?
+            </Text>
+
+            <View style={styles.deleteOptionsContainer}>
+              <TouchableOpacity
+                style={styles.deleteOption}
+                onPress={handleDeleteInstance}
+              >
+                <Text style={styles.deleteOptionText}>Just this instance</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.deleteOption}
+                onPress={handleDeleteInstanceAndAfter}
+              >
+                <Text style={styles.deleteOptionText}>
+                  This instance and all after
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.deleteOption}
+                onPress={handleDeleteAllInstances}
+              >
+                <Text style={styles.deleteOptionText}>
+                  All related instances
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[styles.deleteOption, styles.cancelOption]}
+                onPress={handleDeleteModalClose}
+              >
+                <Text style={styles.cancelOptionText}>Cancel</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   )
 }

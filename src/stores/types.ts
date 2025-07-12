@@ -28,5 +28,6 @@ export interface Task {
     priority: '!' | '!!' | '!!!',
     dueDate: Date,
     status: 'todo' | 'completed' | 'archived',
+    sharedId: string,
     goalId?: string,
 } 

@@ -41,7 +41,7 @@ export const CreateTaskCardTag: React.FC<CreateTaskCardTagProps> = ({
   onConfirm,
   showHeader = false
 }) => {
-  console.log('taskData', taskData?.goalId)
+  console.log('taskData', taskData?.repeatEndDate)
   const addTask = useAddTask()
   const userId = useUserId()
   const goals = useGoals()
@@ -56,9 +56,7 @@ export const CreateTaskCardTag: React.FC<CreateTaskCardTagProps> = ({
   const [isRepeating, setIsRepeating] = useState(
     taskData?.repeatDays?.length! > 0 ? true : false
   )
-  const [repeatEndDate, setRepeatEndDate] = useState<Date>(
-    new Date(new Date().setDate(new Date().getDate() + 1))
-  )
+  const [repeatEndDate, setRepeatEndDate] = useState<Date | null>(null)
   const [selectedDays, setSelectedDays] = useState<string[]>([])
   const [goalId, setGoalId] = useState<string | null>(
     goals.find(g => g.title.toLowerCase() === taskData?.goalId?.toLowerCase())
@@ -91,17 +89,17 @@ export const CreateTaskCardTag: React.FC<CreateTaskCardTagProps> = ({
       setSelectedDays(mappedDays)
     }
 
-    if (taskData?.repeatEndDate) {
-      // Parse the DateTime string to Date object
-      try {
-        const endDate = new Date(taskData.repeatEndDate)
-        if (!isNaN(endDate.getTime())) {
-          setRepeatEndDate(endDate)
-        }
-      } catch (error) {
-        console.warn('Failed to parse repeatEndDate:', error)
-      }
-    }
+    // if (taskData?.repeatEndDate) {
+    //   // Parse the DateTime string to Date object
+    //   try {
+    //     const endDate = new Date(taskData.repeatEndDate)
+    //     if (!isNaN(endDate.getTime())) {
+    //       setRepeatEndDate(endDate)
+    //     }
+    //   } catch (error) {
+    //     console.warn('Failed to parse repeatEndDate:', error)
+    //   }
+    // }
   }, [taskData])
 
   const daysOfWeek = [
@@ -201,6 +199,7 @@ export const CreateTaskCardTag: React.FC<CreateTaskCardTagProps> = ({
 
     return {
       id: '',
+      sharedId: '',
       title: title.trim(),
       description: description.trim(),
       createdAt: new Date(),
@@ -231,7 +230,12 @@ export const CreateTaskCardTag: React.FC<CreateTaskCardTagProps> = ({
       console.log('repeatDaysParam', repeatDaysParam)
       console.log('--------------------------------')
 
-      await addTask(taskData, userId, repeatEndDate, repeatDaysParam)
+      await addTask(
+        taskData,
+        userId,
+        repeatEndDate || new Date(),
+        repeatDaysParam
+      )
 
       let successMessage = `I have created the task, thank you for your help!`
 

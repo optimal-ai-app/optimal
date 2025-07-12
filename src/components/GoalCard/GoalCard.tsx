@@ -87,7 +87,7 @@ export const GoalCard: React.FC<Props> = ({ goal }) => {
                   style={styles.titleIcon}
                 />
               </View>
-              <Text style={styles.goalTitle} numberOfLines={1}>
+              <Text style={styles.goalTitle} numberOfLines={2}>
                 {goal.title}
               </Text>
             </View>

@@ -15,15 +15,17 @@ export const ConfirmationTag: React.FC<ConfirmationTagProps> = ({
 }) => {
   return (
     <View style={styles.confirmationContainer}>
-      {data.options.map((option, index) => (
-        <TouchableOpacity
-          key={index}
-          style={[styles.confirmButton, styles.proceedButton]}
-          onPress={() => onConfirm(option)}
-        >
-          <Text style={styles.confirmButtonText}>{option}</Text>
-        </TouchableOpacity>
-      ))}
+      {data &&
+        data.options &&
+        data.options.map((option, index) => (
+          <TouchableOpacity
+            key={index}
+            style={[styles.confirmButton, styles.proceedButton]}
+            onPress={() => onConfirm(option)}
+          >
+            <Text style={styles.confirmButtonText}>{option}</Text>
+          </TouchableOpacity>
+        ))}
     </View>
   )
 }
