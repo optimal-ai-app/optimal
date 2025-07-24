@@ -86,10 +86,15 @@ export const useChatStore = create<ChatStore>((set, get) => ({
                 messages: [...state.messages, userMessage]
             }))
 
+            // --- HARDCODED USER AND CHAT ID FOR TESTING ---
+            const hardcodedUserId = '116077eb-0a53-4ae7-96f7-a811e56ede92'; // Supabase users table UUID
+            const hardcodedChatId = '123e4567-e89b-12d3-a456-426614174000'; // Any valid UUID for chat session
+
             // Send message to backend
             const response = await httpService.post<any>('/chat', {
                 date: new Date().toISOString(),
-                userId: userId || 'user123',
+                userId: hardcodedUserId,
+                chatId: hardcodedChatId,
                 messages: get().messages.map(msg => ({
                     role: msg.role,
                     content: JSON.stringify(msg.content)

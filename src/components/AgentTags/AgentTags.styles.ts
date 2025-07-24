@@ -1,4 +1,4 @@
-import { StyleSheet, ViewStyle, TextStyle } from 'react-native'
+import { StyleSheet, ViewStyle, TextStyle, Platform } from 'react-native'
 import { colors } from '@/src/constants/colors'
 import { fonts } from '@/src/constants/fonts'
 
@@ -335,5 +335,215 @@ export const styles = StyleSheet.create({
     color: colors.text.primary,
     fontSize: fonts.sizes.sm,
     fontWeight: '600'
-  } as TextStyle
+  } as TextStyle,
+
+  // Goal Card Styles (matching GoalCard.styles.ts)
+  goalPreview: {
+    flexDirection: 'row',
+    flex: 1,
+    alignItems: 'center',
+    backgroundColor: '#1F2937',
+    borderRadius: 16,
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    marginBottom: 10,
+    position: 'relative',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.05)',
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 8,
+      },
+      android: {
+        elevation: 3,
+      },
+    }),
+  } as ViewStyle,
+
+  overdueGoal: {
+    borderColor: 'rgba(239, 68, 68, 0.3)',
+    backgroundColor: 'rgba(239, 68, 68, 0.05)',
+  } as ViewStyle,
+
+  cardContent: {
+    flex: 1,
+  } as ViewStyle,
+
+  headerRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  } as ViewStyle,
+
+  titleContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+    marginRight: 12,
+  } as ViewStyle,
+
+  titleIconContainer: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 8,
+  } as ViewStyle,
+
+  titleIcon: {
+    opacity: 0.9,
+  } as ViewStyle,
+
+  goalTitle: {
+    fontSize: fonts.sizes.lg,
+    fontWeight: '600',
+    color: colors.text.primary,
+    flex: 1,
+  } as TextStyle,
+
+  statusBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+  } as ViewStyle,
+
+  statusText: {
+    fontSize: fonts.sizes.xs,
+    fontWeight: '500',
+    color: '#FFFFFF',
+  } as TextStyle,
+
+  statsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  } as ViewStyle,
+
+  progressContainer: {
+    flex: 1,
+    marginRight: 16,
+  } as ViewStyle,
+
+  progressHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 6,
+  } as ViewStyle,
+
+  progressBar: {
+    height: 6,
+    backgroundColor: colors.utility.divider,
+    borderRadius: 3,
+    overflow: 'hidden',
+    flexDirection: 'row',
+  } as ViewStyle,
+
+  progressFill: {
+    height: '100%',
+    borderRadius: 3,
+  } as ViewStyle,
+
+  progressText: {
+    fontSize: fonts.sizes.sm,
+    color: colors.text.secondary,
+    fontWeight: '500',
+    marginLeft: 6,
+  } as TextStyle,
+
+  statsContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  } as ViewStyle,
+
+  statItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(249, 115, 22, 0.1)',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+  } as ViewStyle,
+
+  statText: {
+    fontSize: fonts.sizes.sm,
+    fontWeight: '600',
+    color: '#F97316',
+    marginLeft: 4,
+  } as TextStyle,
+
+  footerRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  } as ViewStyle,
+
+  dueDateContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  } as ViewStyle,
+
+  dueDateText: {
+    fontSize: fonts.sizes.sm,
+    color: colors.text.secondary,
+    fontWeight: '500',
+    marginLeft: 6,
+  } as TextStyle,
+
+  overdueText: {
+    color: colors.status?.error || '#EF4444',
+  } as TextStyle,
+
+  // Goal Action Button Styles
+  goalActionButtons: {
+    flexDirection: 'row',
+    gap: 12,
+  } as ViewStyle,
+
+  reevaluateButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.background.container,
+    borderRadius: 12,
+    padding: 14,
+    gap: 8,
+    borderWidth: 1,
+    borderColor: colors.utility.divider,
+    flex: 1,
+  } as ViewStyle,
+
+  reevaluateButtonText: {
+    fontSize: fonts.sizes.md,
+    fontWeight: '600',
+    color: colors.text.secondary,
+  } as TextStyle,
+
+  addGoalButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.button.primary,
+    borderRadius: 12,
+    padding: 14,
+    gap: 8,
+    flex: 1,
+  } as ViewStyle,
+
+  addGoalButtonDisabled: {
+    backgroundColor: colors.background.container,
+    opacity: 0.6,
+  } as ViewStyle,
+
+  addGoalButtonText: {
+    fontSize: fonts.sizes.md,
+    fontWeight: '600',
+    color: colors.text.primary,
+  } as TextStyle,
 })

@@ -20,12 +20,14 @@ import {
   DaySelectorTag,
   ConfirmationTag,
   GoalNamesScroller,
-  CreateTaskCardTag
+  CreateTaskCardTag,
+  CreateGoalCardTag
 } from '../AgentTags'
 import { colors } from '@/src/constants/colors'
 import { fonts } from '@/src/constants/fonts'
 import { styles } from './AgentMessage.styles'
 import { TaskData } from '../AgentTags/CreateTaskCardTag'
+import { GoalData } from '../AgentTags/CreateGoalCardTag'
 
 interface AgentMessageProps {
   id: string
@@ -153,6 +155,8 @@ export const AgentMessage: React.FC<AgentMessageProps> = ({
     shouldShowTags && isLatest && tags.includes('DAY_SELECTOR_TAG')
   const showCreateTaskCard =
     shouldShowTags && isLatest && tags.includes('CREATE_TASK_CARD_TAG')
+  const showCreateGoalCard =
+    shouldShowTags && isLatest && tags.includes('CREATE_GOAL_CARD_TAG')
 
   return (
     <>
@@ -229,6 +233,14 @@ export const AgentMessage: React.FC<AgentMessageProps> = ({
           {showCreateTaskCard && (
             <CreateTaskCardTag
               taskData={data as TaskData}
+              onConfirm={onSendMessage}
+              showHeader
+            />
+          )}
+
+          {showCreateGoalCard && (
+            <CreateGoalCardTag
+              goalData={data as GoalData}
               onConfirm={onSendMessage}
               showHeader
             />

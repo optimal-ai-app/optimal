@@ -13,7 +13,7 @@ interface GoalState {
 
 interface GoalActions {
     //add get userGoals later (connects to backend)
-    addGoal: (goal: Goal) => void
+    addGoal: (goal: Goal, userId: string, tags?: string[]) => void
     updateGoal: (goal: Goal) => void
     deleteGoal: (goal: Goal) => void
     getGoals: () => Goal[]
@@ -35,7 +35,7 @@ export const useGoalStore = create<GoalStore>((set, get) => ({
     goalMap: new Map(goals.map(goal => [goal.id, goal])),
 
     // Actions
-    addGoal: async (goal: Goal) => {
+    addGoal: async (goal: Goal, userId: string, tags?: string[]) => {
         const { setLoading, setError } = get()
         try {
             setLoading(true)
@@ -43,12 +43,11 @@ export const useGoalStore = create<GoalStore>((set, get) => ({
             set(state => ({
                 goals: [...state.goals, goal]
             }))
-            const response = await httpService.post('/api/goals/create', {
-                userId: useUserId(),
+            const response = await httpService.post('/api/goals/create', {                
                 title: goal.title,
                 description: goal.description,
                 dueDate: goal.dueDate,
-                tags: goal.tags
+                tags: tags || goal.tags
             })
             console.log(response)
         } catch (error) {
@@ -89,6 +88,7 @@ export const useGoalStore = create<GoalStore>((set, get) => ({
             // Transform backend task format to frontend format
             const transformedGoals: Goal[] = response.map(goal => ({
                 id: goal.id,
+                userId: goal.userId,
                 title: goal.title,
                 description: goal.description,
                 progress: goal.progress,
