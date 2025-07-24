@@ -19,14 +19,12 @@ import { StyleSheet } from 'react-native'
 
 interface TaskCompletionModalProps {
   visible: boolean
-  taskTitle: string
   onConfirm: () => void
   onCancel: () => void
 }
 
 export const TaskCompletionModal: React.FC<TaskCompletionModalProps> = ({
   visible,
-  taskTitle,
   onConfirm,
   onCancel
 }) => {

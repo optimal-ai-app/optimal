@@ -73,7 +73,9 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
             setLoading(true)
             const response = await httpService.post(`/api/tasks/update`, {
                 taskId: task.id,
-                status: task.status
+                status: task.status,
+                completionDate: task.completionDate ? task.completionDate.toISOString() : null,
+                updatedAt: new Date().toISOString()
             })
             console.log(response)
             set(state => ({
@@ -92,7 +94,7 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
             setLoading(true)
             setError(null)
             const response = await httpService.delete(`/api/tasks/${taskId}`)
-            get().fetchUserTasks(userId)
+            await get().fetchUserTasks(userId)
         } catch (error) {
             setError(error instanceof Error ? error.message : 'Failed to delete task')
         } finally {
@@ -106,7 +108,7 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
             setLoading(true)
             setError(null)
             const response = await httpService.delete(`/api/tasks/shared/${sharedId}`)
-            get().fetchUserTasks(userId)
+            await get().fetchUserTasks(userId)
         } catch (error) {
             setError(error instanceof Error ? error.message : 'Failed to delete task')
         } finally {
@@ -120,7 +122,7 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
             setLoading(true)
             setError(null)
             const response = await httpService.delete(`/api/tasks/after/${taskId}`)
-            get().fetchUserTasks(userId)
+            await get().fetchUserTasks(userId)
         } catch (error) {
             setError(error instanceof Error ? error.message : 'Failed to delete task')
         } finally {

@@ -189,12 +189,9 @@ export const CreateTaskCardTag: React.FC<CreateTaskCardTagProps> = ({
     // For repeating tasks, use today's date; for one-time tasks, use the selected date
     const dateToUse = isRepeating ? new Date() : repeatEndDate!
     const combinedDate = new Date(dateToUse)
-    console.log('goalId', goalId)
-    console.log('goals', goals)
     const goalUUID = goals.find(
       g => g.title.toLowerCase() === goalId?.toLowerCase()
     )?.id
-    console.log('goalUUID', goalUUID)
     combinedDate.setHours(parseInt(hours), parseInt(minutes), 0, 0)
 
     return {

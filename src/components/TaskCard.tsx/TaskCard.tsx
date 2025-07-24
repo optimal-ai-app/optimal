@@ -324,7 +324,6 @@ export const TaskCard: React.FC<Props> = ({ task, isLast, index = 0 }) => {
 
       <TaskCompletionModal
         visible={showCompletionModal}
-        taskTitle={task.title}
         onConfirm={handleConfirmCompletion}
         onCancel={handleCancelCompletion}
       />

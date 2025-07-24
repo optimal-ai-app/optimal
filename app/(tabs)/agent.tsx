@@ -53,34 +53,34 @@ import { globalStyles } from '@/src/constants/styles'
 const carouselOptions = [
   {
     id: '1',
-    text: 'I completed my workout today',
-    action: () => console.log('Workout completed')
+    text: 'Help me set a goal'
+    // action: () => console.log('Workout completed')
   },
   {
     id: '2',
-    text: 'I need help staying motivated',
-    action: () => console.log('Motivation help')
-  },
-  {
-    id: '3',
-    text: 'Set a new goal for me',
-    action: () => console.log('New goal')
-  },
-  {
-    id: '4',
-    text: "I'm feeling stuck on this task",
-    action: () => console.log('Feeling stuck')
-  },
-  {
-    id: '5',
-    text: 'Show me my progress',
-    action: () => console.log('Show progress')
-  },
-  {
-    id: '6',
-    text: 'I want to break down a big goal',
-    action: () => console.log('Break down goal')
+    text: 'Help me create a task for my goal'
+    // action: () => console.log('Motivation help')
   }
+  // {
+  //   id: '3',
+  //   text: 'Set a new goal for me',
+  //   action: () => console.log('New goal')
+  // },
+  // {
+  //   id: '4',
+  //   text: "I'm feeling stuck on this task",
+  //   action: () => console.log('Feeling stuck')
+  // },
+  // {
+  //   id: '5',
+  //   text: 'Show me my progress',
+  //   action: () => console.log('Show progress')
+  // },
+  // {
+  //   id: '6',
+  //   text: 'I want to break down a big goal',
+  //   action: () => console.log('Break down goal')
+  // }
 ]
 
 // Helper to extract tags and content from agent message

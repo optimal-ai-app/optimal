@@ -56,6 +56,15 @@ const generateChatTitle = (firstMessage: string): string => {
         : words.join(' ')
 }
 
+// Generate a unique session ID using UUID v4 format
+const generateSessionId = (): string => {
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+        const r = Math.random() * 16 | 0
+        const v = c === 'x' ? r : (r & 0x3 | 0x8)
+        return v.toString(16)
+    })
+}
+
 // Zustand store
 export const useChatStore = create<ChatStore>((set, get) => ({
     // Initial state
@@ -69,6 +78,13 @@ export const useChatStore = create<ChatStore>((set, get) => ({
     sendMessage: async (message: string, context?: ChatMessage['context'], userId?: string) => {
         try {
             set({ isLoading: true, error: null })
+
+            // Ensure we have a current session ID - create one if needed
+            let { currentSessionId } = get()
+            if (!currentSessionId) {
+                currentSessionId = generateSessionId()
+                set({ currentSessionId })
+            }
 
             // Add user message to store
             const userMessage: ChatMessage = {
@@ -86,15 +102,23 @@ export const useChatStore = create<ChatStore>((set, get) => ({
                 messages: [...state.messages, userMessage]
             }))
 
-            // --- HARDCODED USER AND CHAT ID FOR TESTING ---
-            const hardcodedUserId = '116077eb-0a53-4ae7-96f7-a811e56ede92'; // Supabase users table UUID
-            const hardcodedChatId = '123e4567-e89b-12d3-a456-426614174000'; // Any valid UUID for chat session
+            // <<<<<<< Updated upstream
+            //             // --- HARDCODED USER AND CHAT ID FOR TESTING ---
+            //             const hardcodedUserId = '116077eb-0a53-4ae7-96f7-a811e56ede92'; // Supabase users table UUID
+            //             const hardcodedChatId = '123e4567-e89b-12d3-a456-426614174000'; // Any valid UUID for chat session
 
-            // Send message to backend
+            //             // Send message to backend
+            //             const response = await httpService.post<any>('/chat', {
+            //                 date: new Date().toISOString(),
+            //                 userId: hardcodedUserId,
+            //                 chatId: hardcodedChatId,
+
+            // Send message to backend with chatId
             const response = await httpService.post<any>('/chat', {
                 date: new Date().toISOString(),
-                userId: hardcodedUserId,
-                chatId: hardcodedChatId,
+                userId: userId || 'user123',
+                chatId: currentSessionId,
+
                 messages: get().messages.map(msg => ({
                     role: msg.role,
                     content: JSON.stringify(msg.content)
@@ -156,7 +180,8 @@ export const useChatStore = create<ChatStore>((set, get) => ({
             get().saveChatSession()
         }
 
-        // Clear current chat and create new session
+        // Create new session ID and clear current chat
+        const newSessionId = generateSessionId()
         set({
             messages: [{
                 id: Date.now().toString(),
@@ -168,7 +193,7 @@ export const useChatStore = create<ChatStore>((set, get) => ({
                 role: 'agent',
                 timestamp: new Date()
             }],
-            currentSessionId: null,
+            currentSessionId: newSessionId,
             error: null
         })
 
@@ -200,10 +225,11 @@ export const useChatStore = create<ChatStore>((set, get) => ({
             get().saveChatSession()
         }
 
-        // Clear current chat and create new session
+        // Generate new session ID and clear current chat
+        const newSessionId = generateSessionId()
         set({
             messages: [],
-            currentSessionId: null,
+            currentSessionId: newSessionId,
             error: null
         })
     },
@@ -236,17 +262,36 @@ export const useChatStore = create<ChatStore>((set, get) => ({
         const timestamp = new Date()
 
         if (currentSessionId) {
-            // Update existing session
-            const updatedSessions = chatSessions.map(session =>
-                session.id === currentSessionId
-                    ? { ...session, messages, lastMessage, timestamp }
-                    : session
-            )
-            set({ chatSessions: updatedSessions })
+            // Check if session already exists
+            const existingSessionIndex = chatSessions.findIndex(session => session.id === currentSessionId)
+
+            if (existingSessionIndex !== -1) {
+                // Update existing session
+                const updatedSessions = chatSessions.map(session =>
+                    session.id === currentSessionId
+                        ? { ...session, messages, lastMessage, timestamp }
+                        : session
+                )
+                set({ chatSessions: updatedSessions })
+            } else {
+                // Create new session with existing currentSessionId
+                const newSession: ChatSession = {
+                    id: currentSessionId,
+                    title,
+                    lastMessage,
+                    timestamp,
+                    messages: [...messages]
+                }
+
+                set({
+                    chatSessions: [newSession, ...chatSessions]
+                })
+            }
         } else {
-            // Create new session
+            // This shouldn't happen with the new implementation, but keeping as fallback
+            const newSessionId = generateSessionId()
             const newSession: ChatSession = {
-                id: Date.now().toString(),
+                id: newSessionId,
                 title,
                 lastMessage,
                 timestamp,
@@ -255,7 +300,7 @@ export const useChatStore = create<ChatStore>((set, get) => ({
 
             set({
                 chatSessions: [newSession, ...chatSessions],
-                currentSessionId: newSession.id
+                currentSessionId: newSessionId
             })
         }
     }
@@ -266,6 +311,7 @@ export const useChatMessages = () => useChatStore(state => state.messages)
 export const useChatLoading = () => useChatStore(state => state.isLoading)
 export const useChatError = () => useChatStore(state => state.error)
 export const useChatSessions = () => useChatStore(state => state.getChatSessions())
+export const useCurrentSessionId = () => useChatStore(state => state.currentSessionId)
 
 // Individual action hooks to prevent object recreation
 export const useSendMessage = () => useChatStore(state => state.sendMessage)
