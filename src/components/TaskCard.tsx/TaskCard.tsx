@@ -18,7 +18,7 @@ import {
   Trash
 } from 'lucide-react-native'
 import { useRouter } from 'expo-router'
-import { Task, useUpdateTask, useDeleteTask, useUserId } from '@/src/stores'
+import { Task, useUpdateTask, useUserId } from '@/src/stores'
 import { colors } from '@/src/constants/colors'
 import { styles } from './TaskCard.styles'
 import { useGoalName } from '@/src/stores'

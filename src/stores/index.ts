@@ -39,7 +39,9 @@ export {
     useGetGoals,
     useGetGoal,
     useGoalName,
-    useFetchUserGoals
+    useFetchUserGoals,
+    useSetSelectedGoal,
+    useSelectedGoal,
 } from './goalStore'
 
 export {
@@ -49,7 +51,7 @@ export {
     useTaskError,
     useAddTask,
     useUpdateTask,
-    useDeleteTask,
+    // useDeleteTask,
     useGetTasks,
     useGetTask,
     useGetTasksByGoal,

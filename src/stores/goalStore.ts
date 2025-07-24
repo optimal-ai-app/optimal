@@ -9,6 +9,7 @@ interface GoalState {
     error: string | null
     isLoading: boolean
     goalMap: Map<string, Goal>
+    selectedGoal: Goal | null
 }
 
 interface GoalActions {
@@ -17,7 +18,7 @@ interface GoalActions {
     updateGoal: (goal: Goal) => void
     deleteGoal: (goal: Goal) => void
     getGoals: () => Goal[]
-    getGoal: (id: string) => Goal
+    getGoal: (id: string) => Goal | null
     getGoalName: (goalId?: string) => string | null
     setError: (error: string | null) => void
     setLoading: (loading: boolean) => void
@@ -33,7 +34,7 @@ export const useGoalStore = create<GoalStore>((set, get) => ({
     isLoading: false,
     error: null,
     goalMap: new Map(goals.map(goal => [goal.id, goal])),
-
+    selectedGoal: null,
     // Actions
     addGoal: async (goal: Goal, userId: string, tags?: string[]) => {
         const { setLoading, setError } = get()
@@ -43,7 +44,7 @@ export const useGoalStore = create<GoalStore>((set, get) => ({
             set(state => ({
                 goals: [...state.goals, goal]
             }))
-            const response = await httpService.post('/api/goals/create', {                
+            const response = await httpService.post('/api/goals/create', {
                 title: goal.title,
                 description: goal.description,
                 dueDate: goal.dueDate,
@@ -114,7 +115,7 @@ export const useGoalStore = create<GoalStore>((set, get) => ({
 
     getGoal: (id: string) => {
         const goal = get().goals.find(g => g.id === id)
-        if (!goal) throw new Error(`Goal with id ${id} not found`)
+        if (!goal) return null
         return goal
     },
 
@@ -131,6 +132,14 @@ export const useGoalStore = create<GoalStore>((set, get) => ({
     setLoading: (loading: boolean) => {
         set({ isLoading: loading })
     },
+
+    setSelectedGoal: (goal: Goal) => {
+        set({ selectedGoal: goal })
+    },
+
+    getSelectedGoal: () => {
+        return get().selectedGoal
+    }
 }))
 
 // Selector hooks for better performance
@@ -141,7 +150,8 @@ export const useAddGoal = () => useGoalStore(state => state.addGoal)
 export const useUpdateGoal = () => useGoalStore(state => state.updateGoal)
 export const useDeleteGoal = () => useGoalStore(state => state.deleteGoal)
 export const useGetGoals = () => useGoalStore(state => state.getGoals)
-export const useGetGoal = () => useGoalStore(state => state.getGoal)
+export const useGetGoal = (goalId: string) => useGoalStore(state => state.getGoal(goalId))
 export const useGoalName = (goalId?: string) =>
     useGoalStore(state => state.getGoalName(goalId))
 export const useFetchUserGoals = () => useGoalStore(state => state.fetchUserGoals)
+export const useSelectedGoal = () => useGoalStore(state => state.selectedGoal)
