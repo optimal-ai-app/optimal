@@ -81,6 +81,5 @@ class HttpService {
     }
 }
 
-
-const httpService = new HttpService("https://0b3d08eef178.ngrok-free.app");
+const httpService = new HttpService("http://localhost:8080");
 export default httpService;

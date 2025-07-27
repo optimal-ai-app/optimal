@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useRef, useEffect } from 'react'
 import {
   View,
   Text,
@@ -6,7 +6,8 @@ import {
   Dimensions,
   StyleSheet,
   TextInput,
-  Platform
+  Platform,
+  Alert
 } from 'react-native'
 import { LinearGradient } from 'expo-linear-gradient'
 import Animated, {
@@ -21,12 +22,17 @@ import Animated, {
 } from 'react-native-reanimated'
 import { Mic, MicOff } from 'lucide-react-native'
 import { BlurView } from 'expo-blur'
+import dailyLogUtil from '../../utils/dailyLogUtil'
+import { useUserId } from '@/src/stores/userStore'
 
 const { width: screenWidth } = Dimensions.get('window')
 
 export const DailyLog: React.FC = () => {
   const [isRecording, setIsRecording] = useState(false)
   const [transcript, setTranscript] = useState('')
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const textInputRef = useRef<TextInput>(null)
+  const userId = useUserId()
 
   const scale = useSharedValue(1)
   const pulse = useSharedValue(1)
@@ -53,15 +59,37 @@ export const DailyLog: React.FC = () => {
       -1,
       false
     )
+    // Focus the text input to show keyboard
+    setTranscript('')
+    setTimeout(() => {
+      textInputRef.current?.focus()
+    }, 100)
   }
 
-  const stop = () => {
+  const stop = async () => {
     setIsRecording(false)
     pulse.value = withSpring(1, { damping: 12, stiffness: 200 })
     rotation.value = withTiming(0, {
       duration: 500,
       easing: Easing.out(Easing.ease)
     })
+    // Hide keyboard
+    textInputRef.current?.blur()
+
+    // Submit daily log if there's a transcript and user is authenticated
+    if (transcript.trim() && userId) {
+      setIsSubmitting(true)
+      try {
+        await dailyLogUtil.submitDailyLog(userId, transcript)
+        Alert.alert('Success', 'Your daily log has been saved!')
+        setTranscript('') // Clear the transcript after successful submission
+      } catch (error) {
+        console.error('Failed to submit daily log:', error)
+        Alert.alert('Error', 'Failed to save your daily log. Please try again.')
+      } finally {
+        setIsSubmitting(false)
+      }
+    }
   }
 
   const buttonStyle = useAnimatedStyle(() => ({
@@ -117,8 +145,26 @@ export const DailyLog: React.FC = () => {
             </Pressable>
           </Animated.View>
         </View>
+
+        {isRecording && (
+          <TextInput
+            ref={textInputRef}
+            style={styles.transcript}
+            value={transcript}
+            onChangeText={setTranscript}
+            placeholder='Speak to add your thoughts...'
+            placeholderTextColor='rgba(255,255,255,0.6)'
+            multiline
+            autoFocus
+          />
+        )}
+
         <Text style={[styles.subtitle, { alignSelf: 'flex-start' }]}>
-          {isRecording ? 'Recording…' : 'Tap to record your thoughts'}
+          {isSubmitting
+            ? 'Saving your thoughts...'
+            : isRecording
+            ? 'Recording…'
+            : 'Tap to record your thoughts'}
         </Text>
       </LinearGradient>
     </View>
@@ -200,14 +246,33 @@ const styles = StyleSheet.create({
   },
   transcript: {
     width: '100%',
-    minHeight: 80,
-    backgroundColor: 'rgba(255,255,255,0.2)',
+    maxHeight: 80,
+    backgroundColor: 'rgba(255,255,255,0.1)',
     borderRadius: 12,
     padding: 12,
     color: '#fff',
     marginTop: 8,
+    fontSize: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.2)',
     ...Platform.select({
       android: { textAlignVertical: 'top' }
-    })
+    }),
+    overflow: 'scroll'
+  },
+  transcriptDisplay: {
+    width: '100%',
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    borderRadius: 8,
+    padding: 12,
+    marginTop: 8,
+    minHeight: 40,
+    justifyContent: 'center'
+  },
+  transcriptText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '500',
+    textAlign: 'center'
   }
 })
