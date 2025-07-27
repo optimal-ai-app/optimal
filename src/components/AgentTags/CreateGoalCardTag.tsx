@@ -39,8 +39,8 @@ export const CreateGoalCardTag: React.FC<CreateGoalCardTagProps> = ({
   const userId = useUserId()
   const [isCreating, setIsCreating] = React.useState(false)
 
-  // State for due date
-  const [dueDate, setDueDate] = React.useState<Date>(() => {
+  // Due date state (undefined until user selects a date)
+  const [dueDate, setDueDate] = React.useState<Date | undefined>(() => {
     if (goalData?.dueTime) {
       try {
         const parsed = new Date(goalData.dueTime)
@@ -49,7 +49,8 @@ export const CreateGoalCardTag: React.FC<CreateGoalCardTagProps> = ({
         console.warn('Failed to parse dueTime:', e)
       }
     }
-    return new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+    // Start undefined so the user must pick a date explicitly.
+    return undefined
   })
 
   const [showDatePicker, setShowDatePicker] = React.useState(false)
@@ -72,10 +73,12 @@ export const CreateGoalCardTag: React.FC<CreateGoalCardTagProps> = ({
     if (diffDays === 0) return 'Today'
     if (diffDays === 1) return 'Tomorrow'
     if (diffDays > 0) return `${diffDays} days left`
-    return 'Overdue'
+    return 'Select Due Date'
   }
 
-  const isOverdue = dueDate.getTime() + 1 * 24 * 60 * 60 * 1000 < new Date().getTime()
+  const isOverdue =
+    dueDate !== undefined &&
+    dueDate.getTime() + 1 * 24 * 60 * 60 * 1000 < new Date().getTime()
 
   const handleDateChange = (event: any, selected?: Date) => {
     if (selected) {
@@ -92,7 +95,7 @@ export const CreateGoalCardTag: React.FC<CreateGoalCardTagProps> = ({
       title: goalData?.goalTitle || 'New Goal',
       description: cappedDescription,
       createdAt: new Date(),
-      dueDate: dueDate,
+      dueDate: dueDate || new Date(), // Ensure a date is always present
       status: 'active',
       progress: 0,
       streak: 0,
@@ -102,7 +105,7 @@ export const CreateGoalCardTag: React.FC<CreateGoalCardTagProps> = ({
   }
 
   const handleCreateGoal = async () => {
-    if (!userId) return
+    if (!userId || !dueDate) return
 
     setIsCreating(true)
     try {
@@ -124,6 +127,8 @@ export const CreateGoalCardTag: React.FC<CreateGoalCardTagProps> = ({
   const handleReevaluateGoal = () => {
     onConfirm('Please suggest a different goal for me.')
   }
+
+  const canCreateGoal = !!dueDate && !isCreating
 
   return (
     <Animated.View
@@ -205,7 +210,7 @@ export const CreateGoalCardTag: React.FC<CreateGoalCardTagProps> = ({
             )}
 
             {/* Due date */}
-            <View style={styles.footerRow}>
+            <View style={[styles.footerRow, { justifyContent: 'center' }]}>
               <TouchableOpacity
                 style={styles.dueDateContainer}
                 onPress={() => setShowDatePicker(true)}
@@ -217,7 +222,7 @@ export const CreateGoalCardTag: React.FC<CreateGoalCardTagProps> = ({
                 <Text
                   style={[styles.dueDateText, isOverdue && styles.overdueText]}
                 >
-                  {formatDueDate(dueDate)}
+                  {dueDate ? formatDueDate(dueDate) : 'Select Due Date'}
                 </Text>
               </TouchableOpacity>
             </View>
@@ -225,7 +230,7 @@ export const CreateGoalCardTag: React.FC<CreateGoalCardTagProps> = ({
             {showDatePicker && Platform.OS !== 'web' && (
               <View style={styles.pickerContainer}>
                 <DateTimePicker
-                  value={dueDate}
+                  value={dueDate || new Date()} // Ensure a date is always passed
                   mode='date'
                   display='default'
                   onChange={handleDateChange}
@@ -262,10 +267,10 @@ export const CreateGoalCardTag: React.FC<CreateGoalCardTagProps> = ({
           <TouchableOpacity
             style={[
               styles.addGoalButton,
-              isCreating && styles.addGoalButtonDisabled
+              (!canCreateGoal || isCreating) && styles.addGoalButtonDisabled
             ]}
             onPress={handleCreateGoal}
-            disabled={isCreating}
+            disabled={!canCreateGoal}
           >
             <Send size={16} color={colors.text.primary} />
             <Text style={styles.addGoalButtonText}>

@@ -25,7 +25,7 @@ import { Card } from '@/src/components/Card'
 import { Button } from '@/src/components/Button'
 import { colors } from '@/src/constants/colors'
 import { fonts } from '@/src/constants/fonts'
-import { useGetGoal } from '@/src/stores/goalStore'
+import { useGetGoal, useDeleteGoal } from '@/src/stores/goalStore'
 import { Goal, Task } from '@/src/stores/types'
 import { useTasksByGoal } from '@/src/stores/taskStore'
 import { TaskCard } from '@/src/components/TaskCard.tsx/TaskCard'
@@ -36,12 +36,18 @@ export default function GoalDetailsScreen () {
   const { id } = useLocalSearchParams()
   const goal = useGetGoal(id as string) as Goal
   const tasks = useTasksByGoal()(id as string) as Task[]
+  const deleteGoal = useDeleteGoal()
 
   const handleDeleteGoal = () => {
+    const confirmAndDelete = async () => {
+      if (!goal) return
+      await deleteGoal(goal)
+      router.back()
+    }
+
     if (Platform.OS === 'web') {
       if (window.confirm('Are you sure you want to delete this goal?')) {
-        // Delete goal
-        router.back()
+        confirmAndDelete()
       }
     } else {
       Alert.alert('Delete Goal', 'Are you sure you want to delete this goal?', [
@@ -51,10 +57,7 @@ export default function GoalDetailsScreen () {
         },
         {
           text: 'Delete',
-          onPress: () => {
-            // Delete goal
-            router.back()
-          },
+          onPress: confirmAndDelete,
           style: 'destructive'
         }
       ])
@@ -63,10 +66,15 @@ export default function GoalDetailsScreen () {
 
   // Handle goal completion
   const handleCompleteGoal = () => {
+    const confirmAndComplete = async () => {
+      if (!goal) return
+      await deleteGoal(goal)
+      router.back()
+    }
+
     if (Platform.OS === 'web') {
       if (window.confirm('Mark this goal as complete?')) {
-        // Complete goal
-        router.back()
+        confirmAndComplete()
       }
     } else {
       Alert.alert('Complete Goal', 'Mark this goal as complete?', [
@@ -76,9 +84,7 @@ export default function GoalDetailsScreen () {
         },
         {
           text: 'Complete',
-          onPress: () => {
-            router.back()
-          }
+          onPress: confirmAndComplete
         }
       ])
     }

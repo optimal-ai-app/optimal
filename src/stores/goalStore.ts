@@ -44,12 +44,16 @@ export const useGoalStore = create<GoalStore>((set, get) => ({
             set(state => ({
                 goals: [...state.goals, goal]
             }))
-            const response = await httpService.post('/api/goals/create', {
+            const requestBody = {
+                userId: userId,
                 title: goal.title,
                 description: goal.description,
                 dueDate: goal.dueDate,
                 tags: tags || goal.tags
-            })
+            }
+            console.log('POST /api/goals/create →', JSON.stringify(requestBody, null, 2))
+
+            const response = await httpService.post('/api/goals/create', requestBody)
             console.log(response)
         } catch (error) {
             setError(error instanceof Error ? error.message : 'Failed to add goal')
@@ -65,15 +69,29 @@ export const useGoalStore = create<GoalStore>((set, get) => ({
         }))
     },
 
-    deleteGoal: (goal: Goal) => {
-        set(state => {
-            const newMap = new Map(state.goalMap)
-            newMap.delete(goal.id)
-            return {
-                goals: state.goals.filter(g => g.id !== goal.id),
-                goalMap: newMap
-            }
-        })
+    deleteGoal: async (goal: Goal) => {
+        const { setLoading, setError } = get()
+        try {
+            setLoading(true)
+            setError(null)
+
+            // Call backend to delete goal
+            await httpService.delete(`/api/goals/${goal.id}`)
+
+            // Remove from local state
+            set(state => {
+                const newMap = new Map(state.goalMap)
+                newMap.delete(goal.id)
+                return {
+                    goals: state.goals.filter(g => g.id !== goal.id),
+                    goalMap: newMap
+                }
+            })
+        } catch (error) {
+            setError(error instanceof Error ? error.message : 'Failed to delete goal')
+        } finally {
+            setLoading(false)
+        }
     },
 
     getGoals: () => {

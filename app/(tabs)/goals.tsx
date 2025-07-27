@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import {
   View,
   Text,
@@ -23,6 +23,7 @@ import {
   useSendMessageAndCreateNewChat,
   useUserId
 } from '@/src/stores'
+import { useFetchUserGoals } from '@/src/stores/goalStore'
 
 export default function GoalsScreen () {
   const router = useRouter()
@@ -30,6 +31,13 @@ export default function GoalsScreen () {
   const goals = useGoals() as unknown as Goal[]
   const sendMessageAndCreateNewChat = useSendMessageAndCreateNewChat()
   const userId = useUserId()
+  const fetchGoals = useFetchUserGoals()
+
+  useEffect(() => {
+    if (userId) {
+      fetchGoals(userId)
+    }
+  }, [userId])
 
   const handleCreateWithAgent = async () => {
     // Send message and create new chat directly through store
