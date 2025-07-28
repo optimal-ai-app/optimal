@@ -103,7 +103,7 @@ export const ManualGoalForm: React.FC<ManualGoalFormProps> = ({
     setIsCreating(true)
     try {
       const goalData = createGoalObject()
-      addGoal(goalData)
+      addGoal(goalData, userId, goalData.tags)
       const goal = {
         title: title.trim(),
         description: description.trim(),
@@ -137,7 +137,7 @@ export const ManualGoalForm: React.FC<ManualGoalFormProps> = ({
   }
 
   const handleViewGoals = () => {
-    router.push('/home/goals')
+    router.push('/(tabs)/goals')
   }
 
   const formatDate = (date: Date) => {
@@ -295,12 +295,20 @@ export const ManualGoalForm: React.FC<ManualGoalFormProps> = ({
           style={styles.actionButtons}
         >
           <TouchableOpacity
-            style={styles.createButton}
+            style={[
+              styles.createButton,
+              (!isFormValid || isCreating) && styles.createButtonDisabled
+            ]}
             onPress={handleCreateGoal}
             disabled={!isFormValid || isCreating}
             activeOpacity={0.8}
           >
-            <Text style={styles.createButtonText}>
+            <Text
+              style={[
+                styles.createButtonText,
+                (!isFormValid || isCreating) && styles.createButtonTextDisabled
+              ]}
+            >
               {isCreating ? 'Creating Goal...' : 'Create Goal'}
             </Text>
           </TouchableOpacity>

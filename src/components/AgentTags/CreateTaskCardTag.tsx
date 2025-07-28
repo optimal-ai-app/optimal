@@ -234,7 +234,7 @@ export const CreateTaskCardTag: React.FC<CreateTaskCardTagProps> = ({
         repeatDaysParam
       )
 
-      let successMessage = `I have created the task, thank you for your help!`
+      let successMessage = `Add Goal`
 
       onConfirm(successMessage)
     } catch (error) {

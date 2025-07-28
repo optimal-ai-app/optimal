@@ -546,4 +546,8 @@ export const styles = StyleSheet.create({
     fontWeight: '600',
     color: colors.text.primary,
   } as TextStyle,
+
+  addGoalButtonTextDisabled: {
+    color: colors.text.muted,
+  } as TextStyle,
 })

@@ -1,5 +1,5 @@
-import React from 'react'
-import { View, Text, TouchableOpacity, Platform } from 'react-native'
+import React, { useRef } from 'react'
+import { View, Text, TouchableOpacity, Platform, TextInput } from 'react-native'
 import {
   Target,
   Calendar,
@@ -39,21 +39,39 @@ export const CreateGoalCardTag: React.FC<CreateGoalCardTagProps> = ({
   const userId = useUserId()
   const [isCreating, setIsCreating] = React.useState(false)
 
-  // Due date state (undefined until user selects a date)
-  const [dueDate, setDueDate] = React.useState<Date | undefined>(() => {
+  // Suggested date coming from the agent (shown but NOT selected yet)
+  const suggestedDueDate = React.useMemo(() => {
     if (goalData?.dueTime) {
-      try {
-        const parsed = new Date(goalData.dueTime)
-        if (!isNaN(parsed.getTime())) return parsed
-      } catch (e) {
-        console.warn('Failed to parse dueTime:', e)
-      }
+      const parsed = new Date(goalData.dueTime)
+      return isNaN(parsed.getTime()) ? undefined : parsed
     }
-    // Start undefined so the user must pick a date explicitly.
     return undefined
-  })
+  }, [goalData?.dueTime])
+
+  // Actual date user picked. Starts undefined, must be set via picker.
+  const [dueDate, setDueDate] = React.useState<Date | undefined>(undefined)
 
   const [showDatePicker, setShowDatePicker] = React.useState(false)
+
+  // Web-only hidden input to trigger native date picker dialog
+  const webDateInputRef = useRef<TextInput>(null)
+
+  const handleDatePress = () => {
+    if (Platform.OS === 'web') {
+      webDateInputRef.current?.focus()
+    } else {
+      setShowDatePicker(true)
+    }
+  }
+
+  const handleWebDateChange = (dateString: string) => {
+    if (dateString) {
+      const selected = new Date(dateString)
+      if (!isNaN(selected.getTime())) {
+        setDueDate(selected)
+      }
+    }
+  }
 
   // Cap description to 300 characters while still showing full text in UI
   const cappedDescription = React.useMemo(() => {
@@ -77,8 +95,9 @@ export const CreateGoalCardTag: React.FC<CreateGoalCardTagProps> = ({
   }
 
   const isOverdue =
-    dueDate !== undefined &&
-    dueDate.getTime() + 1 * 24 * 60 * 60 * 1000 < new Date().getTime()
+    (dueDate ?? suggestedDueDate) !== undefined &&
+    (dueDate ?? suggestedDueDate)!.getTime() + 1 * 24 * 60 * 60 * 1000 <
+      new Date().getTime()
 
   const handleDateChange = (event: any, selected?: Date) => {
     if (selected) {
@@ -113,7 +132,7 @@ export const CreateGoalCardTag: React.FC<CreateGoalCardTagProps> = ({
 
       await addGoal(goalData, userId, goalData?.tags)
 
-      let successMessage = `I have created the goal, thank you for your help!`
+      let successMessage = `Add Goal`
 
       onConfirm(successMessage)
     } catch (error) {
@@ -213,8 +232,18 @@ export const CreateGoalCardTag: React.FC<CreateGoalCardTagProps> = ({
             <View style={[styles.footerRow, { justifyContent: 'center' }]}>
               <TouchableOpacity
                 style={styles.dueDateContainer}
-                onPress={() => setShowDatePicker(true)}
+                onPress={handleDatePress}
               >
+                {/* Hidden input for web platform to open date dialog */}
+                {Platform.OS === 'web' && (
+                  <TextInput
+                    ref={webDateInputRef}
+                    style={{ display: 'none' }}
+                    onChange={e => handleWebDateChange(e.nativeEvent.text)}
+                    // @ts-ignore - react-native-web supports type attribute
+                    type='date'
+                  />
+                )}
                 <Calendar
                   size={14}
                   color={isOverdue ? colors.status?.error : colors.text.secondary}
@@ -222,7 +251,11 @@ export const CreateGoalCardTag: React.FC<CreateGoalCardTagProps> = ({
                 <Text
                   style={[styles.dueDateText, isOverdue && styles.overdueText]}
                 >
-                  {dueDate ? formatDueDate(dueDate) : 'Select Due Date'}
+                  {dueDate
+                    ? formatDueDate(dueDate)
+                    : suggestedDueDate
+                    ? formatDueDate(suggestedDueDate)
+                    : 'Select Due Date'}
                 </Text>
               </TouchableOpacity>
             </View>
@@ -273,7 +306,12 @@ export const CreateGoalCardTag: React.FC<CreateGoalCardTagProps> = ({
             disabled={!canCreateGoal}
           >
             <Send size={16} color={colors.text.primary} />
-            <Text style={styles.addGoalButtonText}>
+            <Text
+              style={[
+                styles.addGoalButtonText,
+                (!canCreateGoal || isCreating) && styles.addGoalButtonTextDisabled
+              ]}
+            >
               {isCreating ? 'Creating...' : 'Add Goal'}
             </Text>
           </TouchableOpacity>
