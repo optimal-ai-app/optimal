@@ -1,5 +1,5 @@
 import React from 'react'
-import { CreateTaskCardTag } from '@/src/components/AgentTags/CreateTaskCardTag'
+import { CreateTaskCardTag } from '@/src/components/custom/AgentTags/CreateTaskCardTag'
 import { router } from 'expo-router'
 import { globalStyles } from '@/src/constants/styles'
 import { SafeAreaView, View } from 'react-native'

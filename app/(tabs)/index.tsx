@@ -38,17 +38,17 @@ import {
   BookOpenIcon
 } from 'lucide-react-native'
 
-import { Header } from '@/src/components/Header'
-import { Card } from '@/src/components/Card'
-import { Button } from '@/src/components/Button'
-import { GoalCreationModal } from '@/src/components/GoalCreationModal'
-import { TaskCreationModal } from '@/src/components/TaskCreationModal'
-import { DailyLog } from '@/src/components/DailyLog'
+import { Header } from '@/src/components/default/Header'
+import { Card } from '@/src/components/default/Card'
+import { Button } from '@/src/components/default/Button'
+import { GoalCreationModal } from '@/src/components/custom/GoalCreationModal'
+import { TaskCreationModal } from '@/src/components/custom/TaskCreationModal'
+import { DailyLog } from '@/src/components/custom/DailyLog'
 import {
   FloatingActionButton,
   GlassCard,
   PulseAnimation
-} from '@/src/components/PremiumFeatures'
+} from '@/src/components/custom/PremiumFeatures'
 import { colors } from '@/src/constants/colors'
 import { fonts } from '@/src/constants/fonts'
 import { useAuthContext } from '@/src/context/AuthContext'
@@ -65,13 +65,13 @@ import {
   useSendMessageAndCreateNewChat
 } from '@/src/stores'
 import { useUserId } from '@/src/stores/userStore'
-import { TaskCard } from '@/src/components/TaskCard.tsx/TaskCard'
-import { GoalCard } from '@/src/components/GoalCard/GoalCard'
+import { TaskCard } from '@/src/components/custom/TaskCard.tsx/TaskCard'
+import { GoalCard } from '@/src/components/custom/GoalCard/GoalCard'
 import {
   TaskFilter,
   TaskFilterType,
   TaskSortType
-} from '@/src/components/TaskFilter'
+} from '@/src/components/custom/TaskFilter'
 import { globalStyles } from '@/src/constants/styles'
 
 export default function HomeScreen () {
@@ -514,7 +514,7 @@ const styles = StyleSheet.create({
 
   heroTitle: {
     fontSize: fonts.sizes.xxxl,
-    fontWeight: fonts.weights.bold,
+    // fontWeight: fonts.weights.bold,
     color: colors.text.primary,
     marginBottom: 8,
     textAlign: 'center'
@@ -558,68 +558,11 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255, 255, 255, 0.3)'
   } as ViewStyle,
 
-  // Quick Actions Enhanced Styles
-  quickActionsCard: {
-    padding: 16
-  } as ViewStyle,
-
-  quickActionsGrid: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    gap: 16,
-    marginTop: 8
-  } as ViewStyle,
-
-  quickActionButton: {
-    flex: 1,
-    alignItems: 'center',
-    paddingVertical: 20,
-    paddingHorizontal: 10,
-    borderRadius: 16,
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.1)'
-  } as ViewStyle,
-
-  quickActionGradient: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 12,
-    shadowColor: colors.utility.shadow,
-    shadowOffset: {
-      width: 0,
-      height: 4
-    },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 6
-  } as ViewStyle,
-
-  quickActionText: {
-    fontSize: fonts.sizes.md,
-    color: colors.text.primary,
-    fontWeight: fonts.weights.semibold,
-    textAlign: 'center',
-    marginBottom: 4
-  } as TextStyle,
-
-  quickActionSubtext: {
-    fontSize: fonts.sizes.sm,
-    color: colors.text.secondary,
-    textAlign: 'center',
-    opacity: 0.8
-  } as TextStyle,
-
-  // Section Styles
   sectionCard: {
     padding: 16
   } as ViewStyle,
 
   tasksGrid: {
-    marginTop: 8,
     maxHeight: 500
   } as ViewStyle,
 
@@ -653,7 +596,6 @@ const styles = StyleSheet.create({
 
   sectionTitle: {
     fontSize: fonts.sizes.xl,
-    fontWeight: fonts.weights.bold,
     color: colors.text.primary
   } as TextStyle,
 

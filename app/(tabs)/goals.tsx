@@ -12,11 +12,11 @@ import { useRouter } from 'expo-router'
 import Animated, { FadeInDown } from 'react-native-reanimated'
 import { Plus } from 'lucide-react-native'
 
-import { Header } from '@/src/components/Header'
-import { GoalCreationModal } from '@/src/components/GoalCreationModal'
+import { Header } from '@/src/components/default/Header'
+import { GoalCreationModal } from '@/src/components/custom/GoalCreationModal'
 import { colors } from '@/src/constants/colors'
 import { fonts } from '@/src/constants/fonts'
-import { GoalCard } from '@/src/components/GoalCard/GoalCard'
+import { GoalCard } from '@/src/components/custom/GoalCard/GoalCard'
 import {
   useGoals,
   Goal,

@@ -22,10 +22,10 @@ import {
   Lock
 } from 'lucide-react-native'
 
-import { Card } from '@/src/components/Card'
-import { Header } from '@/src/components/Header'
-import { Slider } from '@/src/components/Slider'
-import { Button } from '@/src/components/Button'
+import { Card } from '@/src/components/default/Card'
+import { Header } from '@/src/components/default/Header'
+import { Slider } from '@/src/components/default/Slider'
+import { Button } from '@/src/components/default/Button'
 import { useAuthContext } from '@/src/context/AuthContext'
 import { colors } from '@/src/constants/colors'
 import { fonts } from '@/src/constants/fonts'

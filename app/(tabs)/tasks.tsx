@@ -10,10 +10,9 @@ import {
 } from 'react-native'
 import { useRouter } from 'expo-router'
 import { Plus } from 'lucide-react-native'
-import { Header } from '@/src/components/Header'
-import { Card } from '@/src/components/Card'
-import { TaskCard } from '@/src/components/TaskCard.tsx/TaskCard'
-import { TaskFilter } from '@/src/components/TaskFilter'
+import { Header } from '@/src/components/default/Header'
+import { TaskCard } from '@/src/components/custom/TaskCard.tsx/TaskCard'
+import { TaskFilter } from '@/src/components/custom/TaskFilter'
 import { colors } from '@/src/constants/colors'
 import { fonts } from '@/src/constants/fonts'
 import {
@@ -23,8 +22,11 @@ import {
 } from '@/src/stores'
 import { useUserTasks } from '@/src/hooks/useUserTasks'
 import { useState, useMemo } from 'react'
-import { TaskFilterType, TaskSortType } from '@/src/components/TaskFilter'
-import { TaskCreationModal } from '@/src/components/TaskCreationModal'
+import {
+  TaskFilterType,
+  TaskSortType
+} from '@/src/components/custom/TaskFilter'
+import { TaskCreationModal } from '@/src/components/custom/TaskCreationModal'
 import { globalStyles } from '@/src/constants/styles'
 
 export default function TasksScreen () {

@@ -1,15 +1,15 @@
-import React from 'react';
-import { ManualGoalForm } from '@/src/components/ManualGoalForm';
+import React from 'react'
+import { ManualGoalForm } from '@/src/components/custom/ManualGoalForm'
 
-export default function CreateGoalScreen() {
+export default function CreateGoalScreen () {
   const handleGoalCreated = (goal: {
-    title: string;
-    description: string;
-    completionDate: Date;
+    title: string
+    description: string
+    completionDate: Date
   }) => {
     // In a real app, this would save the goal to your data store
-    console.log('Goal created:', goal);
-  };
+    console.log('Goal created:', goal)
+  }
 
-  return <ManualGoalForm onGoalCreated={handleGoalCreated} />;
+  return <ManualGoalForm onGoalCreated={handleGoalCreated} />
 }

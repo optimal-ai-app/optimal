@@ -16,7 +16,7 @@ import {
 } from 'lucide-react-native'
 
 import { colors } from '@/src/constants/colors'
-import { Header } from '@/src/components/Header/Header'
+import { Header } from '@/src/components/default/Header'
 
 export default function TabsLayout () {
   return (

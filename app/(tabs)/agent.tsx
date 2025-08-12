@@ -13,25 +13,19 @@ import {
 
 import { LinearGradient } from 'expo-linear-gradient'
 import Animated, {
-  FadeInUp,
   FadeInLeft,
   FadeInRight,
   SlideInUp,
   useSharedValue,
-  useAnimatedStyle,
-  withTiming,
-  withSpring,
-  runOnJS,
-  interpolate
+  withSpring
 } from 'react-native-reanimated'
-import { MessageSquare, History, Plus } from 'lucide-react-native'
+import { History, Plus } from 'lucide-react-native'
 
-import { Header } from '@/src/components/Header'
-import { ChatInput } from '@/src/components/ChatInput'
-import { AgentMessage } from '@/src/components/AgentMessage'
-import { UserMessage } from '@/src/components/UserMessage'
-import { LoadingDots } from '@/src/components/LoadingDots'
-import { ChatHistoryModal } from '@/src/components/ChatHistoryModal'
+import { ChatInput } from '@/src/components/custom/ChatInput'
+import { AgentMessage } from '@/src/components/custom/Message/AgentMessage'
+import { UserMessage } from '@/src/components/custom/Message/UserMessage'
+import { LoadingDots } from '@/src/components/default/LoadingDots'
+import { ChatHistoryModal } from '@/src/components/custom/ChatHistoryModal'
 import { colors } from '@/src/constants/colors'
 import { fonts } from '@/src/constants/fonts'
 import {
@@ -39,8 +33,6 @@ import {
   useSendMessage,
   useAddMessage,
   useChatLoading,
-  type ChatMessage,
-  useGoals,
   useFetchUserGoals,
   useUserId,
   useChatSessions,

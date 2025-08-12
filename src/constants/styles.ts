@@ -9,3 +9,12 @@ export const globalStyles = {
         // paddingBottom: '20%'
     } as ViewStyle
 }
+
+export const itemCardStyle = {
+    flexDirection: 'row',
+    flex: 1,
+    alignItems: 'center',
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    position: 'relative',
+} as ViewStyle

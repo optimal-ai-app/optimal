@@ -20,15 +20,16 @@ import {
   CircleCheck as CheckCircle2
 } from 'lucide-react-native'
 
-import { Header } from '@/src/components/Header'
-import { Card } from '@/src/components/Card'
-import { Button } from '@/src/components/Button'
+import { Header } from '@/src/components/default/Header'
+import { Card } from '@/src/components/default/Card'
+import { Button } from '@/src/components/default/Button'
 import { colors } from '@/src/constants/colors'
 import { fonts } from '@/src/constants/fonts'
 import { useGetGoal, useDeleteGoal } from '@/src/stores/goalStore'
 import { Goal, Task } from '@/src/stores/types'
 import { useTasksByGoal } from '@/src/stores/taskStore'
-import { TaskCard } from '@/src/components/TaskCard.tsx/TaskCard'
+import { TaskCard } from '@/src/components/custom/TaskCard.tsx/TaskCard'
+import { SafeAreaView } from 'react-native-safe-area-context'
 
 export default function GoalDetailsScreen () {
   const router = useRouter()
@@ -95,7 +96,7 @@ export default function GoalDetailsScreen () {
   }
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       <Header
         title='Goal Details'
         showBackButton
@@ -232,7 +233,7 @@ export default function GoalDetailsScreen () {
           </View>
         </Animated.View>
       </ScrollView>
-    </View>
+    </SafeAreaView>
   )
 }
 
