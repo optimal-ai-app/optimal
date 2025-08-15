@@ -12,7 +12,14 @@ import { colors } from '@/src/constants/colors';
 import { fonts } from '@/src/constants/fonts';
 import { globalStyles } from '@/src/constants/styles';
 
-export type TaskFilterType = 'all' | 'todo' | 'overdue' | 'completed' | 'today';
+export type TaskFilterType =
+  | 'all'
+  | 'todo'
+  | 'overdue'
+  | 'completed'
+  | 'today'
+  | 'milestones'
+  | 'nonMilestones';
 export type TaskSortType = 'dueDate' | 'alphabetical' | 'priority';
 
 interface TaskFilterProps {
@@ -30,6 +37,8 @@ export const TaskFilter: React.FC<TaskFilterProps> = ({ onFilterChange }) => {
     { value: 'todo', label: 'To-Do' },
     { value: 'overdue', label: 'Overdue' },
     { value: 'completed', label: 'Completed' },
+    { value: 'milestones', label: 'Milestones' },
+    { value: 'nonMilestones', label: 'Non-milestones' },
   ];
 
   const sortOptions: { value: TaskSortType; label: string }[] = [

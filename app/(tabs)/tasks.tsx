@@ -66,12 +66,15 @@ export default function TasksScreen() {
         task.status !== 'completed';
       const isTodo = task.status !== 'completed';
       const isCompleted = task.status === 'completed';
+      const isMilestone = task.milestone === true;
 
       return (
         (activeFilters.includes('today') && (isToday || isCompletedToday)) ||
         (activeFilters.includes('todo') && isTodo) ||
         (activeFilters.includes('overdue') && isOverdue) ||
-        (activeFilters.includes('completed') && isCompleted)
+        (activeFilters.includes('completed') && isCompleted) ||
+        (activeFilters.includes('milestones') && isMilestone) ||
+        (activeFilters.includes('nonMilestones') && !isMilestone)
       );
     });
 

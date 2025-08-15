@@ -1,10 +1,10 @@
-import React, { useState } from 'react'
-import { View, Text, TouchableOpacity, Pressable, Modal } from 'react-native'
+import React, { useState } from 'react';
+import { View, Text, TouchableOpacity, Pressable, Modal } from 'react-native';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
-  withTiming
-} from 'react-native-reanimated'
+  withTiming,
+} from 'react-native-reanimated';
 import {
   Flag,
   MoreVertical,
@@ -14,182 +14,183 @@ import {
   AlertTriangle,
   Target,
   X,
-  Trash
-} from 'lucide-react-native'
-import { useRouter } from 'expo-router'
-import { Task, useUpdateTask, useUserId } from '@/src/stores'
-import { styles } from './TaskCard.styles'
-import { useGoalName } from '@/src/stores'
-import { TaskCompletionModal } from './TaskCompletionModal'
+  Trash,
+  Award,
+} from 'lucide-react-native';
+import { useRouter } from 'expo-router';
+import { Task, useUpdateTask, useUserId } from '@/src/stores';
+import { styles } from './TaskCard.styles';
+import { useGoalName } from '@/src/stores';
+import { TaskCompletionModal } from './TaskCompletionModal';
 import {
   useDeleteAllRelatedTasks,
   useDeleteTaskAndAfter,
-  useDeleteTaskInstance
-} from '@/src/stores/taskStore'
-import { Card } from '../../default/Card'
-import { itemCardStyle } from '@/src/constants/styles'
+  useDeleteTaskInstance,
+} from '@/src/stores/taskStore';
+import { Card } from '../../default/Card';
+import { itemCardStyle } from '@/src/constants/styles';
 
 type Props = {
-  task: Task
-  isLast: boolean
-  index?: number
-}
+  task: Task;
+  isLast: boolean;
+  index?: number;
+};
 
 export const TaskCard: React.FC<Props> = ({ task, isLast, index = 0 }) => {
-  const router = useRouter()
-  const goalName = useGoalName(task.goalId)
-  const updateTask = useUpdateTask()
-  const deleteTaskInstance = useDeleteTaskInstance()
-  const deleteAllRelatedTasks = useDeleteAllRelatedTasks()
-  const deleteTaskAndAfter = useDeleteTaskAndAfter()
-  const [showCompletionModal, setShowCompletionModal] = useState(false)
-  const [showMoreOptions, setShowMoreOptions] = useState(false)
-  const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const router = useRouter();
+  const goalName = useGoalName(task.goalId);
+  const updateTask = useUpdateTask();
+  const deleteTaskInstance = useDeleteTaskInstance();
+  const deleteAllRelatedTasks = useDeleteAllRelatedTasks();
+  const deleteTaskAndAfter = useDeleteTaskAndAfter();
+  const [showCompletionModal, setShowCompletionModal] = useState(false);
+  const [showMoreOptions, setShowMoreOptions] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
   // Only keep minimal checkbox animation
-  const checkboxScale = useSharedValue(1)
-  const userId = useUserId()
+  const checkboxScale = useSharedValue(1);
+  const userId = useUserId();
 
   // Simple checkbox animation on toggle
   const animateCheckbox = () => {
     checkboxScale.value = withTiming(0.9, { duration: 100 }, () => {
-      checkboxScale.value = withTiming(1, { duration: 100 })
-    })
-  }
+      checkboxScale.value = withTiming(1, { duration: 100 });
+    });
+  };
 
   // Animated styles - only checkbox
   const checkboxAnimatedStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: checkboxScale.value }]
-  }))
+    transform: [{ scale: checkboxScale.value }],
+  }));
 
   const getPriorityConfig = (priority: '!' | '!!' | '!!!') => {
     switch (priority) {
       case '!':
         return {
           color: '#10B981',
-          label: 'Low'
-        }
+          label: 'Low',
+        };
       case '!!':
         return {
           color: '#F59E0B',
-          label: 'Medium'
-        }
+          label: 'Medium',
+        };
       case '!!!':
         return {
           color: '#EF4444',
-          label: 'High'
-        }
+          label: 'High',
+        };
       default:
         return {
           color: '#9CA3AF',
-          label: 'Low'
-        }
+          label: 'Low',
+        };
     }
-  }
+  };
 
   const formatDate = (date: Date) => {
-    const now = new Date()
-    const isSameDay = now.toDateString() === date.toDateString()
+    const now = new Date();
+    const isSameDay = now.toDateString() === date.toDateString();
 
     if (isSameDay) {
       return (
         'Today, ' +
         date.toLocaleTimeString(undefined, {
           hour: 'numeric',
-          minute: '2-digit'
+          minute: '2-digit',
         })
-      )
+      );
     }
 
     return date.toLocaleString(undefined, {
       month: 'short',
       day: 'numeric',
       hour: 'numeric',
-      minute: '2-digit'
-    })
-  }
+      minute: '2-digit',
+    });
+  };
 
   const isOverdue = () => {
-    const now = new Date()
+    const now = new Date();
     return (
       task.dueDate.getTime() + 1 * 24 * 60 * 60 * 1000 < now.getTime() &&
       task.status !== 'completed'
-    )
-  }
+    );
+  };
 
-  const priorityConfig = getPriorityConfig(task.priority)
-  const overdue = isOverdue()
+  const priorityConfig = getPriorityConfig(task.priority);
+  const overdue = isOverdue();
 
   const handleToggleComplete = () => {
     // If task is completed, allow direct unchecking without modal
     if (task.status === 'completed') {
-      animateCheckbox()
+      animateCheckbox();
       const updatedTask = {
         ...task,
         status: 'todo' as any,
         completionDate: new Date(0),
-        updatedAt: new Date()
-      }
+        updatedAt: new Date(),
+      };
 
       setTimeout(() => {
-        updateTask(updatedTask)
-      }, 100)
-      return
+        updateTask(updatedTask);
+      }, 100);
+      return;
     }
 
     // If task is not completed, show confirmation modal
-    setShowCompletionModal(true)
-  }
+    setShowCompletionModal(true);
+  };
 
   const handleConfirmCompletion = () => {
-    animateCheckbox()
+    animateCheckbox();
 
     const updatedTask = {
       ...task,
       status: 'completed' as any,
       completionDate: new Date(),
-      updatedAt: new Date()
-    }
+      updatedAt: new Date(),
+    };
 
     setTimeout(() => {
-      updateTask(updatedTask)
-    }, 100)
+      updateTask(updatedTask);
+    }, 100);
 
-    setShowCompletionModal(false)
-  }
+    setShowCompletionModal(false);
+  };
 
   const handleShowMoreOptions = () => {
-    setShowMoreOptions(prev => !prev)
-  }
+    setShowMoreOptions((prev) => !prev);
+  };
 
   const handleCancelCompletion = () => {
-    setShowCompletionModal(false)
-  }
+    setShowCompletionModal(false);
+  };
 
   const handleDeleteOption = () => {
-    setShowMoreOptions(false)
-    setShowDeleteModal(true)
-  }
+    setShowMoreOptions(false);
+    setShowDeleteModal(true);
+  };
 
   const handleDeleteModalClose = () => {
-    setShowDeleteModal(false)
-  }
+    setShowDeleteModal(false);
+  };
 
   const handleDeleteInstance = () => {
-    deleteTaskInstance(userId, task.id)
-    setShowDeleteModal(false)
-  }
+    deleteTaskInstance(userId, task.id);
+    setShowDeleteModal(false);
+  };
 
   const handleDeleteInstanceAndAfter = () => {
     // TODO: Implement delete this instance and all after
-    deleteTaskAndAfter(userId, task.id)
-    setShowDeleteModal(false)
-  }
+    deleteTaskAndAfter(userId, task.id);
+    setShowDeleteModal(false);
+  };
 
   const handleDeleteAllInstances = () => {
     // TODO: Implement delete all instances
-    deleteAllRelatedTasks(userId, task.sharedId)
-    setShowDeleteModal(false)
-  }
+    deleteAllRelatedTasks(userId, task.sharedId);
+    setShowDeleteModal(false);
+  };
 
   return (
     <Card>
@@ -197,20 +198,11 @@ export const TaskCard: React.FC<Props> = ({ task, isLast, index = 0 }) => {
         style={[
           itemCardStyle,
           isLast && styles.lastTaskItem,
-          overdue && styles.overdueTask
+          overdue && styles.overdueTask,
         ]}
-        onLongPress={() =>
-          router.push({
-            pathname: '/(tabs)/agent',
-            params: {
-              action: 'edit-task',
-              taskId: task.id
-            }
-          })
-        }
         accessibilityLabel={`Task: ${task.title}`}
-        accessibilityRole='button'
-        accessibilityHint='Long press to edit task'
+        accessibilityRole="button"
+        accessibilityHint="Long press to edit task"
       >
         <Animated.View style={checkboxAnimatedStyle}>
           <TouchableOpacity
@@ -221,13 +213,13 @@ export const TaskCard: React.FC<Props> = ({ task, isLast, index = 0 }) => {
                 ? 'Mark as incomplete'
                 : 'Mark as complete'
             }
-            accessibilityRole='checkbox'
+            accessibilityRole="checkbox"
             accessibilityState={{ checked: task.status === 'completed' }}
           >
             {task.status === 'completed' ? (
-              <CheckCircle2 size={24} color='#10B981' />
+              <CheckCircle2 size={24} color="#10B981" />
             ) : (
-              <Circle size={24} color='#9CA3AF' strokeWidth={2} />
+              <Circle size={24} color="#9CA3AF" strokeWidth={2} />
             )}
           </TouchableOpacity>
         </Animated.View>
@@ -237,7 +229,7 @@ export const TaskCard: React.FC<Props> = ({ task, isLast, index = 0 }) => {
             <Text
               style={[
                 styles.taskTitle,
-                task.status === 'completed' && styles.completedTitle
+                task.status === 'completed' && styles.completedTitle,
               ]}
               numberOfLines={2}
             >
@@ -245,19 +237,35 @@ export const TaskCard: React.FC<Props> = ({ task, isLast, index = 0 }) => {
             </Text>
 
             <View style={styles.metaRow}>
-              <View
-                style={[
-                  styles.priorityBadge,
-                  { borderColor: priorityConfig.color }
-                ]}
-              >
-                <Flag size={10} color={priorityConfig.color} />
-                <Text
-                  style={[styles.priorityText, { color: priorityConfig.color }]}
+              {task.milestone ? (
+                <View
+                  style={styles.milestoneBadge}
+                  accessibilityLabel="Milestone"
+                  accessible
                 >
-                  {priorityConfig.label}
-                </Text>
-              </View>
+                  <Award size={20} color="#FFD700" />
+                  <Text style={[styles.priorityText, { color: '#FFD700' }]}>
+                    Milestone
+                  </Text>
+                </View>
+              ) : (
+                <View
+                  style={[
+                    styles.priorityBadge,
+                    { borderColor: priorityConfig.color },
+                  ]}
+                >
+                  <Flag size={10} color={priorityConfig.color} />
+                  <Text
+                    style={[
+                      styles.priorityText,
+                      { color: priorityConfig.color },
+                    ]}
+                  >
+                    {priorityConfig.label}
+                  </Text>
+                </View>
+              )}
 
               <View style={{ gap: 6 }}>
                 <View>
@@ -266,7 +274,7 @@ export const TaskCard: React.FC<Props> = ({ task, isLast, index = 0 }) => {
                   >
                     {goalName && (
                       <View style={[styles.goalBadge, { gap: 4 }]}>
-                        <Target size={12} color='#0066FF' />
+                        <Target size={12} color="#0066FF" />
                         <Text style={{ color: '#0066FF' }}>
                           {goalName.length > 15
                             ? goalName.substring(0, 15) + '..'
@@ -300,10 +308,10 @@ export const TaskCard: React.FC<Props> = ({ task, isLast, index = 0 }) => {
           <TouchableOpacity
             style={styles.moreButton}
             onPress={handleShowMoreOptions}
-            accessibilityLabel='More options'
-            accessibilityRole='button'
+            accessibilityLabel="More options"
+            accessibilityRole="button"
           >
-            <MoreVertical size={24} strokeWidth={1.5} color='#9CA3AF' />
+            <MoreVertical size={24} strokeWidth={1.5} color="#9CA3AF" />
           </TouchableOpacity>
 
           {showMoreOptions && (
@@ -311,10 +319,10 @@ export const TaskCard: React.FC<Props> = ({ task, isLast, index = 0 }) => {
               <TouchableOpacity
                 style={styles.dropdownItem}
                 onPress={handleDeleteOption}
-                accessibilityLabel='Delete task'
-                accessibilityRole='button'
+                accessibilityLabel="Delete task"
+                accessibilityRole="button"
               >
-                <Trash size={16} color='#EF4444' />
+                <Trash size={16} color="#EF4444" />
                 <Text style={styles.dropdownItemText}>Delete</Text>
               </TouchableOpacity>
             </View>
@@ -332,7 +340,7 @@ export const TaskCard: React.FC<Props> = ({ task, isLast, index = 0 }) => {
       <Modal
         visible={showDeleteModal}
         transparent={true}
-        animationType='fade'
+        animationType="fade"
         onRequestClose={handleDeleteModalClose}
       >
         <View style={styles.modalOverlay}>
@@ -343,7 +351,7 @@ export const TaskCard: React.FC<Props> = ({ task, isLast, index = 0 }) => {
                 onPress={handleDeleteModalClose}
                 style={styles.closeButton}
               >
-                <X size={20} color='#9CA3AF' />
+                <X size={20} color="#9CA3AF" />
               </TouchableOpacity>
             </View>
 
@@ -388,5 +396,5 @@ export const TaskCard: React.FC<Props> = ({ task, isLast, index = 0 }) => {
         </View>
       </Modal>
     </Card>
-  )
-}
+  );
+};

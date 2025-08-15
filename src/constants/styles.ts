@@ -38,6 +38,11 @@ export const globalStyles = {
     padding: 16,
     paddingBottom: 32,
   } as ViewStyle,
+
+  requiredField: {
+    borderColor: 'red',
+    borderWidth: 1,
+  } as ViewStyle,
 };
 
 export const itemCardStyle = {
