@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react'
+import React, { useState, useRef, useEffect } from 'react';
 import {
   View,
   Text,
@@ -8,26 +8,26 @@ import {
   Platform,
   ViewStyle,
   TextStyle,
-  TouchableOpacity
-} from 'react-native'
+  TouchableOpacity,
+} from 'react-native';
 
-import { LinearGradient } from 'expo-linear-gradient'
+import { LinearGradient } from 'expo-linear-gradient';
 import Animated, {
   FadeInLeft,
   FadeInRight,
   SlideInUp,
   useSharedValue,
-  withSpring
-} from 'react-native-reanimated'
-import { History, Plus } from 'lucide-react-native'
-
-import { ChatInput } from '@/src/components/custom/ChatInput'
-import { AgentMessage } from '@/src/components/custom/Message/AgentMessage'
-import { UserMessage } from '@/src/components/custom/Message/UserMessage'
-import { LoadingDots } from '@/src/components/default/LoadingDots'
-import { ChatHistoryModal } from '@/src/components/custom/ChatHistoryModal'
-import { colors } from '@/src/constants/colors'
-import { fonts } from '@/src/constants/fonts'
+  withSpring,
+} from 'react-native-reanimated';
+import { History, Plus } from 'lucide-react-native';
+import { styles as agentMessageStyles } from '@/src/components/custom/Message/AgentMessage/AgentMessage.styles';
+import { ChatInput } from '@/src/components/custom/ChatInput';
+import { AgentMessage } from '@/src/components/custom/Message/AgentMessage';
+import { UserMessage } from '@/src/components/custom/Message/UserMessage';
+import { LoadingDots } from '@/src/components/default/LoadingDots';
+import { ChatHistoryModal } from '@/src/components/custom/ChatHistoryModal';
+import { colors } from '@/src/constants/colors';
+import { fonts } from '@/src/constants/fonts';
 import {
   useChatMessages,
   useSendMessage,
@@ -37,103 +37,81 @@ import {
   useUserId,
   useChatSessions,
   useCreateNewChat,
-  useLoadChatSession
-} from '@/src/stores'
-import { globalStyles } from '@/src/constants/styles'
+  useLoadChatSession,
+} from '@/src/stores';
+import { globalStyles } from '@/src/constants/styles';
 
 // Carousel options
 const carouselOptions = [
   {
     id: '1',
-    text: 'Help me set a goal'
-    // action: () => console.log('Workout completed')
+    text: 'Help me set a goal',
   },
   {
     id: '2',
-    text: 'Help me create a task for my goal'
-    // action: () => console.log('Motivation help')
-  }
-  // {
-  //   id: '3',
-  //   text: 'Set a new goal for me',
-  //   action: () => console.log('New goal')
-  // },
-  // {
-  //   id: '4',
-  //   text: "I'm feeling stuck on this task",
-  //   action: () => console.log('Feeling stuck')
-  // },
-  // {
-  //   id: '5',
-  //   text: 'Show me my progress',
-  //   action: () => console.log('Show progress')
-  // },
-  // {
-  //   id: '6',
-  //   text: 'I want to break down a big goal',
-  //   action: () => console.log('Break down goal')
-  // }
-]
+    text: 'Help me create a task for my goal',
+  },
+];
 
 // Helper to extract tags and content from agent message
-function extractTagsAndContent (content: {
-  summary: string
-  tags: string[]
-  data?: any
+function extractTagsAndContent(content: {
+  summary: string;
+  tags: string[];
+  data?: any;
 }): {
-  text: string
-  tags: string[]
-  data?: any
+  text: string;
+  tags: string[];
+  data?: any;
 } {
   try {
-    const obj = typeof content === 'string' ? JSON.parse(content) : content
+    const obj = typeof content === 'string' ? JSON.parse(content) : content;
     return {
       text: obj.summary || obj.content || '',
       tags: Array.isArray(obj.tags) ? obj.tags : [],
-      data: obj.data
-    }
+      data: obj.data,
+    };
   } catch (error) {
-    return { text: typeof content === 'string' ? content : '', tags: [] }
+    return { text: typeof content === 'string' ? content : '', tags: [] };
   }
 }
 
-export default function AgentScreen () {
-  const scrollViewRef = useRef<ScrollView>(null)
-  const messagesLength = useSharedValue(0)
+export default function AgentScreen() {
+  const scrollViewRef = useRef<ScrollView>(null);
+  const messagesLength = useSharedValue(0);
 
-  const sendMessage = useSendMessage()
-  const addMessage = useAddMessage()
-  const isLoading = useChatLoading()
-  const createNewChat = useCreateNewChat()
-  const loadChatSession = useLoadChatSession()
+  const sendMessage = useSendMessage();
+  const addMessage = useAddMessage();
+  const isLoading = useChatLoading();
+  const createNewChat = useCreateNewChat();
+  const loadChatSession = useLoadChatSession();
 
-  const [message, setMessage] = useState('')
-  const [isRecording, setIsRecording] = useState(false)
-  const [showChatHistory, setShowChatHistory] = useState(false)
+  const [message, setMessage] = useState('');
+  const [isRecording, setIsRecording] = useState(false);
+  const [showChatHistory, setShowChatHistory] = useState(false);
 
-  const messages = useChatMessages()
-  const chatSessions = useChatSessions()
-  const fetchUserGoals = useFetchUserGoals()
-  const userId = useUserId()
+  const messages = useChatMessages();
+  const chatSessions = useChatSessions();
+  const fetchUserGoals = useFetchUserGoals();
+  const userId = useUserId();
 
   // Smooth scroll to bottom when new messages arrive
   const scrollToBottom = (animated: boolean = true) => {
     setTimeout(() => {
-      scrollViewRef.current?.scrollToEnd({ animated })
-    }, 100)
-  }
+      scrollViewRef.current?.scrollToEnd({ animated });
+    }, 100);
+  };
 
   // Enhanced auto-scroll when messages change
   useEffect(() => {
     if (messages.length > messagesLength.value) {
       messagesLength.value = withSpring(messages.length, {
         damping: 20,
-        stiffness: 100
-      })
-      scrollToBottom(true)
+        stiffness: 100,
+      });
+      scrollToBottom(true);
     }
-    messagesLength.value = messages.length
-  }, [messages.length])
+    messagesLength.value = messages.length;
+  }, [messages.length]);
 
   useEffect(() => {
     // Add welcome message if chat is empty
@@ -142,44 +120,44 @@ export default function AgentScreen () {
         id: 'welcome',
         content: {
           summary: 'Welcome! How can I help you today?',
-          tags: []
+          tags: [],
         },
         role: 'agent',
-        timestamp: new Date()
-      })
+        timestamp: new Date(),
+      });
     }
 
-    const shouldShowGoalNames = messages.some(msg => {
-      if (msg.role !== 'agent') return false
+    const shouldShowGoalNames = messages.some((msg) => {
+      if (msg.role !== 'agent') return false;
       try {
-        return msg.content.tags.includes('SHOW_USER_GOAL_NAMES')
+        return msg.content.tags.includes('SHOW_USER_GOAL_NAMES');
       } catch {
-        return false
+        return false;
       }
-    })
+    });
     if (shouldShowGoalNames && userId) {
-      fetchUserGoals(userId)
+      fetchUserGoals(userId);
     }
-  }, [messages, userId, addMessage, fetchUserGoals])
+  }, [messages, userId, addMessage, fetchUserGoals]);
 
   const handleSendMessage = async (messageText?: string) => {
-    const textToSend = messageText || message
-    if (!textToSend.trim() || isLoading) return // Prevent sending while loading
+    const textToSend = messageText || message;
+    if (!textToSend.trim() || isLoading) return; // Prevent sending while loading
 
-    setMessage('')
+    setMessage('');
 
     // Smooth scroll before sending
-    scrollToBottom(true)
+    scrollToBottom(true);
 
-    await sendMessage(textToSend, undefined, userId)
+    await sendMessage(textToSend, undefined, userId);
 
     // Scroll again after message is added
-    setTimeout(() => scrollToBottom(true), 200)
-  }
+    setTimeout(() => scrollToBottom(true), 200);
+  };
 
   const handleHelpRequest = () => {
-    console.log('Help requested')
-  }
+    console.log('Help requested');
+  };
 
   const handleVoiceRecord = () => {
     if (Platform.OS === 'web') {
@@ -187,40 +165,40 @@ export default function AgentScreen () {
         id: Date.now().toString(),
         content: {
           summary: 'Voice recording is not available on web.',
-          tags: []
+          tags: [],
         },
         role: 'agent',
-        timestamp: new Date()
-      })
-      scrollToBottom()
-      return
+        timestamp: new Date(),
+      });
+      scrollToBottom();
+      return;
     }
 
-    setIsRecording(!isRecording)
+    setIsRecording(!isRecording);
 
     if (!isRecording) {
       setTimeout(() => {
-        setIsRecording(false)
-        const transcribedText = 'I finished my workout today and feel great!'
-        setMessage(transcribedText)
-      }, 2000)
+        setIsRecording(false);
+        const transcribedText = 'I finished my workout today and feel great!';
+        setMessage(transcribedText);
+      }, 2000);
     }
-  }
+  };
 
   const handleNewChat = () => {
-    createNewChat()
-    setShowChatHistory(false)
-  }
+    createNewChat();
+    setShowChatHistory(false);
+  };
 
   const handleSelectChat = (sessionId: string) => {
-    loadChatSession(sessionId)
-    setShowChatHistory(false)
-  }
+    loadChatSession(sessionId);
+    setShowChatHistory(false);
+  };
 
   return (
     <Animated.View
       entering={FadeInRight.duration(400).springify()}
-      style={styles.container}
+      style={globalStyles.container}
     >
       <View
         style={[
@@ -229,23 +207,23 @@ export default function AgentScreen () {
             top: 64,
             right: 32,
             flexDirection: 'row',
-            zIndex: 10
-          }
+            zIndex: 10,
+          },
         ]}
       >
         <TouchableOpacity
-          style={[styles.headerButton, { marginRight: 12 }]}
+          style={[globalStyles.circleButton, { marginRight: 12 }]}
           onPress={handleNewChat}
-          accessibilityLabel='Start new chat'
-          accessibilityRole='button'
+          accessibilityLabel="Start new chat"
+          accessibilityRole="button"
         >
           <Plus size={20} color={colors.text.primary} />
         </TouchableOpacity>
         <TouchableOpacity
-          style={styles.headerButton}
+          style={globalStyles.circleButton}
           onPress={() => setShowChatHistory(true)}
-          accessibilityLabel='View chat history'
-          accessibilityRole='button'
+          accessibilityLabel="View chat history"
+          accessibilityRole="button"
         >
           <History size={20} color={colors.text.primary} />
         </TouchableOpacity>
@@ -260,20 +238,20 @@ export default function AgentScreen () {
           ref={scrollViewRef}
           style={[
             styles.messagesContainer,
-            { paddingBottom: 24, marginBottom: 24 }
+            { paddingBottom: 24, marginBottom: 24 },
           ]}
           contentContainerStyle={styles.messagesContent}
           showsVerticalScrollIndicator={false}
-          keyboardShouldPersistTaps='handled'
+          keyboardShouldPersistTaps="handled"
           onContentSizeChange={() => scrollToBottom(true)}
           onLayout={() => scrollToBottom(false)}
         >
           {messages.map((msg, index) => {
             if (msg.role === 'agent') {
-              const { text, tags, data } = extractTagsAndContent(msg.content)
+              const { text, tags, data } = extractTagsAndContent(msg.content);
               const isLatestAgentMessage =
                 index === messages.length - 1 ||
-                (index === messages.length - 2 && isLoading)
+                (index === messages.length - 2 && isLoading);
 
               return (
                 <AgentMessage
@@ -287,7 +265,7 @@ export default function AgentScreen () {
                   onSendMessage={handleSendMessage}
                   data={data}
                 />
-              )
+              );
             }
 
             return (
@@ -297,29 +275,37 @@ export default function AgentScreen () {
                 text={msg.content.summary}
                 timestamp={msg.timestamp}
               />
-            )
+            );
           })}
 
           {isLoading && (
             <Animated.View
               entering={FadeInLeft.duration(500).springify()}
-              style={[styles.messageWrapper, styles.agentMessageWrapper]}
+              style={[
+                agentMessageStyles.messageWrapper,
+                agentMessageStyles.agentMessageWrapper,
+              ]}
             >
-              <View style={styles.agentAvatar}>
+              <View style={agentMessageStyles.agentAvatar}>
                 <LinearGradient
                   colors={
                     colors.gradient.primary as readonly [
                       string,
                       string,
-                      ...string[]
+                      ...string[],
                     ]
                   }
-                  style={styles.avatarGradient}
+                  style={agentMessageStyles.avatarGradient}
                 >
-                  <Text style={styles.avatarText}>AI</Text>
+                  <Text style={agentMessageStyles.avatarText}>AI</Text>
                 </LinearGradient>
               </View>
-              <View style={[styles.messageBubble, styles.agentMessageBubble]}>
+              <View
+                style={[
+                  agentMessageStyles.messageBubble,
+                  agentMessageStyles.agentMessageBubble,
+                ]}
+              >
                 <LoadingDots />
               </View>
             </Animated.View>
@@ -353,38 +339,12 @@ export default function AgentScreen () {
         onNewChat={handleNewChat}
       />
     </Animated.View>
-  )
+  );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    ...globalStyles.container
-  } as ViewStyle,
-
-  headerActions: {
-    flexDirection: 'row',
-    gap: 8
-  } as ViewStyle,
-
-  headerButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: colors.button.primary,
-    justifyContent: 'center',
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 4
-    },
-    shadowOpacity: 0.4,
-    shadowRadius: 10,
-    elevation: 5
-  } as ViewStyle,
-
   keyboardAvoidingView: {
-    flex: 1
+    flex: 1,
   } as ViewStyle,
 
   messagesContainer: {
@@ -392,57 +352,16 @@ const styles = StyleSheet.create({
     paddingBottom: 24,
     marginBottom: 24,
     paddingTop: 24,
-    marginTop: 24
+    marginTop: 24,
   } as ViewStyle,
 
   messagesContent: {
-    padding: 16,
     paddingTop: 24,
-    paddingBottom: 16
-  } as ViewStyle,
-
-  messageWrapper: {
-    flexDirection: 'row',
-    marginBottom: 16,
-    maxWidth: '80%'
-  } as ViewStyle,
-
-  agentMessageWrapper: {
-    alignSelf: 'flex-start'
-  } as ViewStyle,
-
-  agentAvatar: {
-    marginRight: 8,
-    alignSelf: 'flex-end'
-  } as ViewStyle,
-
-  avatarGradient: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    justifyContent: 'center',
-    alignItems: 'center'
-  } as ViewStyle,
-
-  avatarText: {
-    color: colors.text.primary,
-    fontSize: fonts.sizes.xs,
-    fontWeight: '700'
-  } as TextStyle,
-
-  messageBubble: {
-    padding: 12,
-    borderRadius: 16,
-    maxWidth: '100%'
-  } as ViewStyle,
-
-  agentMessageBubble: {
-    backgroundColor: colors.background.container,
-    borderBottomLeftRadius: 4
+    ...globalStyles.content,
   } as ViewStyle,
 
   inputSection: {
     backgroundColor: colors.background.primary,
-    paddingBottom: 0
-  } as ViewStyle
-})
+    paddingBottom: 0,
+  } as ViewStyle,
+});

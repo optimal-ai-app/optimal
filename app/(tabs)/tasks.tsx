@@ -1,4 +1,4 @@
-import React from 'react'
+import React from 'react';
 import {
   View,
   Text,
@@ -6,130 +6,126 @@ import {
   ScrollView,
   TouchableOpacity,
   ActivityIndicator,
-  SafeAreaView
-} from 'react-native'
-import { useRouter } from 'expo-router'
-import { Plus } from 'lucide-react-native'
-import { Header } from '@/src/components/default/Header'
-import { TaskCard } from '@/src/components/custom/TaskCard.tsx/TaskCard'
-import { TaskFilter } from '@/src/components/custom/TaskFilter'
-import { colors } from '@/src/constants/colors'
-import { fonts } from '@/src/constants/fonts'
+  SafeAreaView,
+} from 'react-native';
+import { useRouter } from 'expo-router';
+import { Plus } from 'lucide-react-native';
+import { Header } from '@/src/components/default/Header';
+import { TaskCard } from '@/src/components/custom/TaskCard.tsx/TaskCard';
+import { TaskFilter } from '@/src/components/custom/TaskFilter';
+import { colors } from '@/src/constants/colors';
+import { fonts } from '@/src/constants/fonts';
 import {
   useTasks,
   useSendMessageAndCreateNewChat,
-  useUserId
-} from '@/src/stores'
-import { useUserTasks } from '@/src/hooks/useUserTasks'
-import { useState, useMemo } from 'react'
+  useUserId,
+} from '@/src/stores';
+import { useUserTasks } from '@/src/hooks/useUserTasks';
+import { useState, useMemo } from 'react';
 import {
   TaskFilterType,
-  TaskSortType
-} from '@/src/components/custom/TaskFilter'
-import { TaskCreationModal } from '@/src/components/custom/TaskCreationModal'
-import { globalStyles } from '@/src/constants/styles'
+  TaskSortType,
+} from '@/src/components/custom/TaskFilter';
+import { TaskCreationModal } from '@/src/components/custom/TaskCreationModal';
+import { globalStyles } from '@/src/constants/styles';
+import SecondaryPageHeader from '@/src/components/custom/SecondaryPageHeader/SecondaryPageHeader';
 
-export default function TasksScreen () {
-  const router = useRouter()
-  const { isLoading, error, hasUser, tasks } = useUserTasks()
-  const sendMessageAndCreateNewChat = useSendMessageAndCreateNewChat()
-  const userId = useUserId()
-  const [showTaskModal, setShowTaskModal] = useState(false)
-  const [activeFilters, setActiveFilters] = useState<TaskFilterType[]>(['all'])
-  const [activeSort, setActiveSort] = useState<TaskSortType>('dueDate')
+export default function TasksScreen() {
+  const router = useRouter();
+  const { isLoading, error, hasUser, tasks } = useUserTasks();
+  const sendMessageAndCreateNewChat = useSendMessageAndCreateNewChat();
+  const userId = useUserId();
+  const [showTaskModal, setShowTaskModal] = useState(false);
+  const [activeFilters, setActiveFilters] = useState<TaskFilterType[]>(['all']);
+  const [activeSort, setActiveSort] = useState<TaskSortType>('dueDate');
 
   const handleFilterChange = (
     filters: TaskFilterType[],
-    sortBy: TaskSortType
+    sortBy: TaskSortType,
   ) => {
-    setActiveFilters(filters)
-    setActiveSort(sortBy)
-  }
+    setActiveFilters(filters);
+    setActiveSort(sortBy);
+  };
 
   const filteredAndSortedTasks = useMemo(() => {
-    let filtered = tasks.filter(task => {
-      if (activeFilters.includes('all')) return true
+    let filtered = tasks.filter((task) => {
+      if (activeFilters.includes('all')) return true;
 
-      const taskDate = new Date(task.dueDate)
-      taskDate.setHours(0, 0, 0, 0)
-      const today = new Date()
-      today.setHours(0, 0, 0, 0)
+      const taskDate = new Date(task.dueDate);
+      taskDate.setHours(0, 0, 0, 0);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
 
-      const isToday = taskDate.getTime() === today.getTime()
+      const isToday = taskDate.getTime() === today.getTime();
       const isCompletedToday =
         task.status === 'completed' &&
         new Date(task?.completionDate ?? '').setHours(0, 0, 0, 0) ===
-          today.getTime()
+          today.getTime();
       const isOverdue =
         task.dueDate.getTime() + 24 * 60 * 60 * 1000 < new Date().getTime() &&
-        task.status !== 'completed'
-      const isTodo = task.status !== 'completed'
-      const isCompleted = task.status === 'completed'
+        task.status !== 'completed';
+      const isTodo = task.status !== 'completed';
+      const isCompleted = task.status === 'completed';
 
       return (
         (activeFilters.includes('today') && (isToday || isCompletedToday)) ||
         (activeFilters.includes('todo') && isTodo) ||
         (activeFilters.includes('overdue') && isOverdue) ||
         (activeFilters.includes('completed') && isCompleted)
-      )
-    })
+      );
+    });
 
     // Sort tasks
     return filtered.sort((a, b) => {
       switch (activeSort) {
         case 'alphabetical':
-          return a.title.localeCompare(b.title)
+          return a.title.localeCompare(b.title);
         case 'priority':
-          const priorityOrder = { '!!!': 3, '!!': 2, '!': 1 }
+          const priorityOrder = { '!!!': 3, '!!': 2, '!': 1 };
           return (
             (priorityOrder[b.priority] || 0) - (priorityOrder[a.priority] || 0)
-          )
+          );
         case 'dueDate':
         default:
-          return a.dueDate.getTime() - b.dueDate.getTime()
+          return a.dueDate.getTime() - b.dueDate.getTime();
       }
-    })
-  }, [tasks, activeFilters, activeSort])
+    });
+  }, [tasks, activeFilters, activeSort]);
 
   const handleNewTaskWithAgent = async () => {
-    router.navigate('/(tabs)/agent')
+    router.navigate('/(tabs)/agent');
 
     await sendMessageAndCreateNewChat(
       'Help me create a task',
       { type: 'help_request' },
-      userId
-    )
-  }
+      userId,
+    );
+  };
   return (
     <SafeAreaView style={globalStyles.container}>
-      <Header title='Tasks' showBackButton />
-
-      <ScrollView
-        style={styles.scrollView}
-        contentContainerStyle={styles.content}
-        showsVerticalScrollIndicator={false}
-      >
-        <View style={styles.tasksCard}>
-          <View style={styles.sectionHeader}>
-            <View>
-              <Text style={styles.sectionTitle}>All Tasks</Text>
-            </View>
-            <View style={styles.sectionActions}>
-              <TaskFilter onFilterChange={handleFilterChange} />
-              <TouchableOpacity
-                onPress={() => setShowTaskModal(true)}
-                style={styles.addTaskButton}
-                accessibilityLabel='Add new task'
-                accessibilityRole='button'
-              >
-                <Plus size={20} color={colors.text.primary} />
-              </TouchableOpacity>
-            </View>
+      <SecondaryPageHeader
+        title="Tasks"
+        showBackButton={true}
+        rightActionChildren={
+          <View style={styles.sectionActions}>
+            <TaskFilter onFilterChange={handleFilterChange} />
+            <TouchableOpacity
+              onPress={() => setShowTaskModal(true)}
+              style={globalStyles.circleButton}
+              accessibilityLabel="Add new task"
+              accessibilityRole="button"
+            >
+              <Plus size={20} color={colors.text.primary} />
+            </TouchableOpacity>
           </View>
+        }
+      />
 
+      <ScrollView showsVerticalScrollIndicator={false}>
+        <View style={globalStyles.content}>
           {isLoading && (
             <View style={styles.loadingContainer}>
-              <ActivityIndicator size='large' color={colors.button.primary} />
+              <ActivityIndicator size="large" color={colors.button.primary} />
               <Text style={styles.loadingText}>Loading tasks...</Text>
             </View>
           )}
@@ -167,77 +163,41 @@ export default function TasksScreen () {
         onCreateWithAgent={handleNewTaskWithAgent}
       />
     </SafeAreaView>
-  )
+  );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1
-  },
-  scrollView: {
-    flex: 1
-  },
-  content: {
-    padding: 16,
-    paddingBottom: 32
-  },
-  tasksCard: {
-    padding: 16
-  },
-  sectionHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 16
-  },
-  sectionTitleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center'
-  },
-  sectionTitle: {
-    fontSize: fonts.sizes.lg,
-    fontWeight: '700',
-    color: colors.text.primary
-  },
   sectionActions: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8
-  },
-  addTaskButton: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: colors.button.primary,
-    justifyContent: 'center',
-    alignItems: 'center'
+    gap: 8,
   },
   loadingContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    padding: 16
+    padding: 16,
   },
   loadingText: {
     fontSize: fonts.sizes.md,
     color: colors.text.primary,
-    marginLeft: 8
+    marginLeft: 8,
   },
   errorContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    padding: 16
+    padding: 16,
   },
   errorText: {
     fontSize: fonts.sizes.md,
     color: colors.status?.error,
-    marginLeft: 8
+    marginLeft: 8,
   },
   emptyText: {
     fontSize: fonts.sizes.md,
     color: colors.text.muted,
     textAlign: 'center',
-    marginTop: 8
-  }
-})
+    marginTop: 8,
+  },
+});
